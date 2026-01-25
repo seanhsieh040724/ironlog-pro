@@ -12,30 +12,30 @@ export const ProfileView: React.FC = () => {
   const [copied, setCopied] = useState(false);
   
   const bodyMetrics = context?.bodyMetrics || [];
-  const goal = context?.goal || { type: 'maintain', targetWeight: 70, startWeight: 70, activityLevel: 1.55 };
+  const goal = context?.goal || { type: 'maintain', targetWeight: 0, startWeight: 0, activityLevel: 1.55 };
   const history = context?.history || [];
   const setBodyMetrics = context?.setBodyMetrics || (() => {});
   const setGoal = context?.setGoal || (() => {});
 
   const latest = useMemo(() => bodyMetrics[0] || { 
-    weight: 70, 
-    height: 175, 
-    age: 25, 
+    weight: 0, 
+    height: 0, 
+    age: 0, 
     gender: 'male' as const 
   }, [bodyMetrics]);
 
   const bmi = useMemo(() => {
+    if (latest.height === 0 || latest.weight === 0) return 0;
     const h = latest.height / 100;
-    if (h === 0) return 0;
     return Number((latest.weight / (h * h)).toFixed(1));
   }, [latest.weight, latest.height]);
 
   const bmiAnalysis = useMemo(() => getBMIAnalysis(bmi), [bmi]);
   
-  const suggestedCals = useMemo(() => 
-    calculateSuggestedCalories(latest.weight, latest.height, latest.age || 25, latest.gender as any || 'male', goal.type),
-    [latest.weight, latest.height, latest.age, latest.gender, goal.type]
-  );
+  const suggestedCals = useMemo(() => {
+    if (latest.weight === 0 || latest.height === 0 || latest.age === 0) return 0;
+    return calculateSuggestedCalories(latest.weight, latest.height, latest.age, latest.gender as any || 'male', goal.type);
+  }, [latest.weight, latest.height, latest.age, latest.gender, goal.type]);
 
   if (!context) return null;
 
@@ -83,7 +83,7 @@ export const ProfileView: React.FC = () => {
            <div className="space-y-1">
              <h3 className="text-sm font-black italic uppercase tracking-tighter">個人生理數據</h3>
              <div className={`text-[10px] font-black uppercase tracking-widest flex items-center gap-1 ${bmiAnalysis.color}`}>
-                <Activity className="w-3 h-3" /> BMI: {bmi} ({bmiAnalysis.label})
+                <Activity className="w-3 h-3" /> BMI: {bmi || '--'} ({bmi > 0 ? bmiAnalysis.label : '未設定'})
              </div>
            </div>
            
@@ -101,7 +101,7 @@ export const ProfileView: React.FC = () => {
            <div className="flex-1 grid grid-cols-1 gap-3">
               <InputBox icon={<Ruler className="text-sky-400" />} label="身高" val={latest.height} unit="CM" onChange={v => updateLatest({ height: Number(v) })} />
               <InputBox icon={<Scale className="text-orange-400" />} label="當前體重" val={latest.weight} unit="KG" onChange={v => updateLatest({ weight: Number(v) })} />
-              <InputBox icon={<User className="text-purple-400" />} label="年齡" val={latest.age || 25} unit="歲" onChange={v => updateLatest({ age: Number(v) })} />
+              <InputBox icon={<User className="text-purple-400" />} label="年齡" val={latest.age} unit="歲" onChange={v => updateLatest({ age: Number(v) })} />
            </div>
            <div className="w-[140px]">
               <MuscleHeatmap scores={calculateMuscleActivation(history)} gender={latest.gender as any || 'male'} />
@@ -134,7 +134,8 @@ export const ProfileView: React.FC = () => {
                 <div className="flex items-baseline gap-1">
                   <input 
                     type="number" 
-                    value={goal.targetWeight} 
+                    value={goal.targetWeight === 0 ? '' : goal.targetWeight} 
+                    placeholder="--"
                     onChange={e => setGoal({ ...goal, targetWeight: Number(e.target.value) })}
                     className="bg-transparent text-2xl font-black italic text-white outline-none w-20"
                   />
@@ -145,7 +146,7 @@ export const ProfileView: React.FC = () => {
             <div className="text-right">
               <div className="text-[8px] font-black text-slate-600 uppercase tracking-widest mb-1">差距</div>
               <div className="text-sm font-black italic text-neon-green">
-                {Math.abs(latest.weight - goal.targetWeight).toFixed(1)} KG
+                {(latest.weight > 0 && goal.targetWeight > 0) ? Math.abs(latest.weight - goal.targetWeight).toFixed(1) : '--'} KG
               </div>
             </div>
           </div>
@@ -155,7 +156,7 @@ export const ProfileView: React.FC = () => {
           <div className="space-y-1">
              <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">建議每日攝取</span>
              <div className="flex items-baseline gap-1">
-               <span className="text-4xl font-black italic text-neon-green">{suggestedCals}</span>
+               <span className="text-4xl font-black italic text-neon-green">{suggestedCals || '--'}</span>
                <span className="text-xs font-bold text-neon-green/60 uppercase">KCAL</span>
              </div>
           </div>
@@ -262,7 +263,13 @@ const InputBox = ({ icon, label, val, unit, onChange }: any) => (
        <span className="text-[7px] font-black uppercase text-slate-300">{label}</span>
     </div>
     <div className="flex items-baseline gap-1">
-      <input type="number" className="bg-transparent text-lg font-black italic text-white outline-none w-full" value={val} onChange={e => onChange(e.target.value)} />
+      <input 
+        type="number" 
+        placeholder="--"
+        className="bg-transparent text-lg font-black italic text-white outline-none w-full" 
+        value={val === 0 ? '' : val} 
+        onChange={e => onChange(e.target.value)} 
+      />
       <span className="text-[8px] font-bold opacity-30 uppercase">{unit}</span>
     </div>
   </div>

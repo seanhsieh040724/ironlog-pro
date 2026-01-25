@@ -31,8 +31,8 @@ const App: React.FC = () => {
   const [bodyMetrics, setBodyMetrics] = useState<BodyMetric[]>([]);
   const [goal, setGoal] = useState<UserGoal>({
     type: 'maintain',
-    targetWeight: 70,
-    startWeight: 70,
+    targetWeight: 0,
+    startWeight: 0,
     activityLevel: 1.55
   });
   const [customRoutines, setCustomRoutines] = useState<RoutineTemplate[]>([]);
@@ -131,7 +131,7 @@ const App: React.FC = () => {
             <div className="space-y-1">
               <div className="flex items-center gap-2 text-neon-green">
                 <CalendarIcon className="w-3.5 h-3.5" />
-                <span className="text-[10px] font-black uppercase tracking-[0.2em]">今日訓練進度</span>
+                <span className="text-[10px] font-black uppercase tracking-[0.2em]">今日訓練進度 (TAIWAN TIME)</span>
               </div>
               <h1 className="text-3xl font-black italic tracking-tighter uppercase">
                 {format(new Date(), 'MM.dd EEEE', { locale: zhTW })}
@@ -146,7 +146,7 @@ const App: React.FC = () => {
           </div>
         </header>
 
-        <main className="flex-1 pb-32 px-5 pt-6 overflow-y-auto">
+        <main className="flex-1 pb-32 px-5 pt-6 overflow-y-auto no-scrollbar">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
@@ -164,7 +164,7 @@ const App: React.FC = () => {
               )}
               {activeTab === 'history' && (
                 <div className="space-y-6">
-                  <div className="bg-slate-900/40 rounded-[32px] p-2 border border-white/5 shadow-inner">
+                  <div className="bg-slate-900/40 rounded-[32px] border border-white/5 shadow-inner">
                     <CalendarStrip 
                       selectedDate={selectedDate} 
                       onDateSelect={setSelectedDate} 

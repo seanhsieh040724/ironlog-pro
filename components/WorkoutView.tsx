@@ -7,18 +7,22 @@ import { getMuscleGroup } from '../utils/fitnessMath';
 import { RestTimer } from './RestTimer';
 
 export const EXERCISE_DATABASE = [
-  '槓鈴平板臥推', '啞鈴平板臥推', '槓鈴上斜臥推', '啞鈴上斜臥推', '史密斯平板臥推', '史密斯上斜臥推', 
-  '器械推胸機', '蝴蝶機夾胸', '繩索十字夾胸', '雙槓撐體 (胸)', '引體向上', '寬握滑輪下拉', '窄握滑輪下拉', 'V柄滑輪下拉', '槓鈴划船', '單臂啞鈴划船', 
-  '坐姿划船機', 'T桿划船', '地雷管划船', '繩索直臂下拉', '硬舉', '相撲硬舉', '羅馬尼亞硬舉 (RDL)', '山羊挺身',
-  '槓鈴深蹲', '史密斯深蹲', '杯式深蹲', '腿部推蹬機 (Leg Press)', '腿部伸展機 (Leg Extension)', 
-  '俯臥腿彎舉機 (Leg Curl)', '坐姿腿彎舉機', '保加利亞分腿蹲', '史密斯分腿蹲', '啞鈴弓箭步', 
-  '器械提踵 (Calf Raise)', '臀推 (Hip Thrust)', '史密斯臀推',
-  '槓鈴肩推', '啞鈴肩推', '史密斯肩推', '阿諾推舉', '啞鈴側平舉', '繩索側平舉', '器械側平舉', 
-  '啞鈴前平舉', '反向蝴蝶機 (後三角)', '繩索面拉 (Face Pull)', '槓鈴聳肩', '啞鈴聳肩',
-  '繩索直桿三頭下壓', '繩索V柄三頭下壓', '繩索雙頭繩下壓', '窄握槓鈴臥推', '仰臥三頭伸展 (Skull Crusher)', 
-  '啞鈴三頭過頂伸展', '雙槓三頭撐體', '器械三頭伸展',
-  '槓鈴彎舉', '啞鈴彎舉', '啞鈴鎚式彎舉', '牧師椅彎舉', '繩索彎舉', '集中彎舉',
-  '捲腹', '懸垂抬腿', '俄羅斯轉體', '棒式 (Plank)', '健腹輪', '波比跳', '壺鈴擺盪', '藥球投擲'
+  // 胸部 (Chest)
+  '槓鈴平板臥推', '槓鈴上斜臥推', '啞鈴平板臥推', '啞鈴上斜臥推', '史密斯平板臥推', '史密斯上斜臥推', '坐姿器械推胸', '蝴蝶機夾胸', '滑輪高位交叉夾胸', '標準伏地挺身',
+  // 背部 (Back)
+  '引體向上', '滑輪下拉', '槓鈴划船', '啞鈴單臂划船', '坐姿划船', 'T 桿划船', '直臂滑輪下拉', '傳統硬舉', '羅馬尼亞硬舉', '山羊挺身',
+  // 肩部 (Shoulders)
+  '槓鈴站姿肩推', '啞鈴坐姿肩推', '阿諾肩推', '器械肩推', '啞鈴側平舉', '滑輪側平舉', '啞鈴前平舉', '蝴蝶機後三角飛鳥', '滑輪面拉', '槓鈴聳肩',
+  // 腿部 (Legs)
+  '槓鈴深蹲', '啞鈴杯式深蹲', '保加利亞分腿蹲', '器械腿部推蹬', '哈克深蹲', '器械腿伸展', '坐姿腿屈伸', '槓鈴臀推', '器械外展', '站姿提踵',
+  // 二頭肌 (Biceps)
+  '槓鈴彎舉', 'EZ 桿彎舉', '啞鈴交替彎舉', '啞鈴錘式彎舉', '啞鈴牧師椅彎舉', '器械彎舉', '滑輪彎舉', '啞鈴集中彎舉', '啞鈴上斜彎舉', '反握槓鈴彎舉',
+  // 三頭肌 (Triceps)
+  '滑輪繩索下壓', '滑輪直桿下壓', '仰臥槓鈴額頭碎裂者', '啞鈴頸後臂屈伸', '滑輪過頭臂屈伸', '窄握槓鈴臥推', '雙槓撐體', '板凳撐體', '啞鈴俯身臂屈伸', '單臂滑輪下壓',
+  // 核心 (Core)
+  '標準捲腹', '仰臥抬腿', '棒式', '俄羅斯轉體', '腹肌滾輪', '腳踏車捲腹', '懸垂提膝', '側棒式', '登山者式', '跪姿滑輪捲腹',
+  // 其他
+  '波比跳', '壺鈴擺盪', '藥球投擲'
 ];
 
 interface WorkoutViewProps {
@@ -104,7 +108,6 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
     onUpdate({ ...session, exercises: updatedExercises });
   };
 
-  // 修正後的組數刪除邏輯：即便是最後一組也能刪除（會詢問是否刪除動作）
   const removeSetFromExercise = (exerciseId: string, setId: string) => {
     const ex = session.exercises.find(e => e.id === exerciseId);
     if (!ex) return;
@@ -127,7 +130,6 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
     }
   };
 
-  // 強化動作刪除功能：確保點擊必生效
   const removeExercise = (id: string) => {
     const ex = session.exercises.find(e => e.id === id);
     if(confirm(`確定要完全移除「${ex?.name || '此動作'}」的所有紀錄嗎？`)) {
@@ -163,7 +165,6 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                   <h3 className="text-xl font-black italic uppercase text-white leading-none mb-2">{ex.name}</h3>
                   <span className="text-[8px] font-black bg-neon-green/10 text-neon-green px-2 py-0.5 rounded uppercase tracking-[0.2em]">{ex.muscleGroup}</span>
                 </div>
-                {/* 增加刪除熱區 */}
                 <button 
                   onClick={() => removeExercise(ex.id)} 
                   className="w-12 h-12 -mr-2 -mt-2 bg-slate-800/30 rounded-xl flex items-center justify-center text-slate-500 active:text-red-500 transition-colors"
@@ -185,7 +186,6 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                 {ex.sets.map((set, index) => (
                   <div key={set.id} className={`grid grid-cols-12 gap-2 items-center p-2 rounded-2xl transition-all ${set.completed ? 'bg-neon-green/5' : 'bg-black/30'}`}>
                     <div className="col-span-1 flex justify-center">
-                       {/* 增加組數刪除按鈕的大小與反饋 */}
                        <button 
                          onClick={() => removeSetFromExercise(ex.id, set.id)} 
                          className="w-8 h-8 -ml-2 text-red-500/20 active:text-red-500 p-1 transition-all"
