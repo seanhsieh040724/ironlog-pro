@@ -17,19 +17,24 @@ export const ProfileView: React.FC = () => {
   const setBodyMetrics = context?.setBodyMetrics || (() => {});
   const setGoal = context?.setGoal || (() => {});
 
-  const latest = bodyMetrics[0] || { weight: 70, height: 175, age: 25, gender: 'male' };
+  const latest = useMemo(() => bodyMetrics[0] || { 
+    weight: 70, 
+    height: 175, 
+    age: 25, 
+    gender: 'male' as const 
+  }, [bodyMetrics]);
 
   const bmi = useMemo(() => {
     const h = latest.height / 100;
-    if (h === 0) return "0";
-    return (latest.weight / (h * h)).toFixed(1);
-  }, [latest]);
+    if (h === 0) return 0;
+    return Number((latest.weight / (h * h)).toFixed(1));
+  }, [latest.weight, latest.height]);
 
-  const bmiAnalysis = useMemo(() => getBMIAnalysis(Number(bmi)), [bmi]);
+  const bmiAnalysis = useMemo(() => getBMIAnalysis(bmi), [bmi]);
   
   const suggestedCals = useMemo(() => 
     calculateSuggestedCalories(latest.weight, latest.height, latest.age || 25, latest.gender as any || 'male', goal.type),
-    [latest, goal.type]
+    [latest.weight, latest.height, latest.age, latest.gender, goal.type]
   );
 
   if (!context) return null;
@@ -37,10 +42,6 @@ export const ProfileView: React.FC = () => {
   const updateLatest = (updates: Partial<typeof latest>) => {
     const newMetric = { ...latest, id: crypto.randomUUID(), date: Date.now(), ...updates };
     setBodyMetrics([newMetric, ...bodyMetrics.slice(1)]);
-  };
-
-  const handleUpdateGoalWeight = (val: string) => {
-    setGoal({ ...goal, targetWeight: Number(val) });
   };
 
   const currentUrl = window.location.href;
@@ -82,7 +83,7 @@ export const ProfileView: React.FC = () => {
            <div className="space-y-1">
              <h3 className="text-sm font-black italic uppercase tracking-tighter">個人生理數據</h3>
              <div className={`text-[10px] font-black uppercase tracking-widest flex items-center gap-1 ${bmiAnalysis.color}`}>
-                <Activity className="w-3 h-3" /> {bmiAnalysis.label}
+                <Activity className="w-3 h-3" /> BMI: {bmi} ({bmiAnalysis.label})
              </div>
            </div>
            
@@ -134,7 +135,7 @@ export const ProfileView: React.FC = () => {
                   <input 
                     type="number" 
                     value={goal.targetWeight} 
-                    onChange={e => handleUpdateGoalWeight(e.target.value)}
+                    onChange={e => setGoal({ ...goal, targetWeight: Number(e.target.value) })}
                     className="bg-transparent text-2xl font-black italic text-white outline-none w-20"
                   />
                   <span className="text-xs font-bold text-slate-400 uppercase">KG</span>

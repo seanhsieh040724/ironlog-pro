@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { WorkoutSession } from '../types';
 import { Line } from 'react-chartjs-2';
 import {
@@ -113,7 +113,3 @@ const StatCard = ({ label, value }: any) => (
     <div className="text-3xl font-black text-white italic">{value}</div>
   </div>
 );
-
-function useMemo(factory: () => any, deps: any[]) {
-  return React.useMemo(factory, deps);
-}

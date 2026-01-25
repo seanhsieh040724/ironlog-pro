@@ -37,8 +37,8 @@ const App: React.FC = () => {
   });
   const [customRoutines, setCustomRoutines] = useState<RoutineTemplate[]>([]);
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [isLoaded, setIsLoaded] = useState(false);
 
-  // 1. 初始化資料載入 (僅在載入時執行一次)
   useEffect(() => {
     const savedHistory = localStorage.getItem('ironlog_v3_history');
     if (savedHistory) setHistory(JSON.parse(savedHistory));
@@ -52,21 +52,27 @@ const App: React.FC = () => {
     const savedRoutines = localStorage.getItem('ironlog_v3_routines');
     if (savedRoutines) setCustomRoutines(JSON.parse(savedRoutines));
 
-    // 自動建立今日 Session
     setCurrentSession({
       id: crypto.randomUUID(),
       startTime: Date.now(),
       title: `${format(new Date(), 'MM/dd')} 訓練`,
       exercises: []
     });
+    setIsLoaded(true);
   }, []);
 
-  // 2. 資料持久化 (當 State 改變時儲存)
   useEffect(() => {
-    if (history.length >= 0) localStorage.setItem('ironlog_v3_history', JSON.stringify(history));
-  }, [history]);
+    if (isLoaded) {
+      localStorage.setItem('ironlog_v3_history', JSON.stringify(history));
+    }
+  }, [history, isLoaded]);
 
-  // 3. 提供 Context Value (使用 useMemo 避免不必要的 Re-render)
+  useEffect(() => {
+    if (isLoaded) {
+      localStorage.setItem('ironlog_v3_routines', JSON.stringify(customRoutines));
+    }
+  }, [customRoutines, isLoaded]);
+
   const contextValue = useMemo(() => ({
     history, setHistory, 
     bodyMetrics, setBodyMetrics, 
@@ -74,34 +80,58 @@ const App: React.FC = () => {
     customRoutines, setCustomRoutines 
   }), [history, bodyMetrics, goal, customRoutines]);
 
-  const finishSession = () => {
-    if (currentSession && currentSession.exercises.length > 0) {
-      if (confirm('確定要完成並儲存本次訓練紀錄嗎？')) {
-        const completedSession = { ...currentSession, endTime: Date.now() };
-        setHistory(prev => [completedSession, ...prev]);
-        setCurrentSession({
-          id: crypto.randomUUID(),
-          startTime: Date.now(),
-          title: `${format(new Date(), 'MM/dd')} 訓練`,
-          exercises: []
-        });
-        setActiveTab('history');
-      }
-    } else {
+  const handleSaveWorkout = () => {
+    if (!currentSession || currentSession.exercises.length === 0) {
       alert('請先新增動作項目。');
+      return;
     }
+
+    const completedSession = { 
+      ...currentSession, 
+      endTime: Date.now() 
+    };
+    
+    const newHistory = [completedSession, ...history];
+    setHistory(newHistory);
+    
+    setCurrentSession({
+      id: crypto.randomUUID(),
+      startTime: Date.now(),
+      title: `${format(new Date(), 'MM/dd')} 訓練`,
+      exercises: []
+    });
+
+    setSelectedDate(new Date());
+    setActiveTab('history');
+  };
+
+  const handleSaveAsRoutine = (session: WorkoutSession) => {
+    const newRoutine: RoutineTemplate = {
+      id: crypto.randomUUID(),
+      name: `${session.title} (轉錄)`,
+      exercises: session.exercises.map(ex => ({
+        id: crypto.randomUUID(),
+        name: ex.name,
+        muscleGroup: ex.muscleGroup,
+        defaultSets: ex.sets.length,
+        defaultReps: ex.sets[0]?.reps || 10,
+        defaultWeight: ex.sets[0]?.weight || 0
+      }))
+    };
+    setCustomRoutines(prev => [newRoutine, ...prev]);
+    alert('已成功將此訓練紀錄存為自訂課表！');
+    setActiveTab('routines');
   };
 
   return (
     <AppContext.Provider value={contextValue}>
       <div className="min-h-screen bg-[#020617] text-slate-50 flex flex-col max-w-md mx-auto relative overflow-hidden font-['Outfit']">
-        {/* 頂部固定區域 */}
         <header className="pt-12 pb-6 px-6 sticky top-0 z-40 bg-[#020617]/90 backdrop-blur-2xl border-b border-white/5">
           <div className="flex justify-between items-end">
             <div className="space-y-1">
               <div className="flex items-center gap-2 text-neon-green">
                 <CalendarIcon className="w-3.5 h-3.5" />
-                <span className="text-[10px] font-black uppercase tracking-[0.2em]">Daily Routine</span>
+                <span className="text-[10px] font-black uppercase tracking-[0.2em]">今日訓練進度</span>
               </div>
               <h1 className="text-3xl font-black italic tracking-tighter uppercase">
                 {format(new Date(), 'MM.dd EEEE', { locale: zhTW })}
@@ -116,7 +146,6 @@ const App: React.FC = () => {
           </div>
         </header>
 
-        {/* 主要內容區塊 */}
         <main className="flex-1 pb-32 px-5 pt-6 overflow-y-auto">
           <AnimatePresence mode="wait">
             <motion.div
@@ -130,12 +159,11 @@ const App: React.FC = () => {
                 <WorkoutView 
                   session={currentSession} 
                   onUpdate={setCurrentSession}
-                  onFinish={finishSession}
+                  onFinish={handleSaveWorkout}
                 />
               )}
               {activeTab === 'history' && (
                 <div className="space-y-6">
-                  {/* 恢復日曆橫條 */}
                   <div className="bg-slate-900/40 rounded-[32px] p-2 border border-white/5 shadow-inner">
                     <CalendarStrip 
                       selectedDate={selectedDate} 
@@ -147,6 +175,7 @@ const App: React.FC = () => {
                     history={history} 
                     selectedDate={selectedDate} 
                     onUpdateHistory={setHistory} 
+                    onSaveAsRoutine={handleSaveAsRoutine}
                   />
                 </div>
               )}
@@ -159,11 +188,11 @@ const App: React.FC = () => {
                     id: crypto.randomUUID(),
                     name: te.name,
                     muscleGroup: te.muscleGroup,
-                    sets: Array.from({ length: te.defaultSets }).map(() => ({
+                    sets: Array.from({ length: te.defaultSets || 4 }).map(() => ({
                       id: crypto.randomUUID(),
                       weight: te.defaultWeight,
                       reps: te.defaultReps,
-                      completed: true
+                      completed: false
                     }))
                   }))
                 };
@@ -175,7 +204,6 @@ const App: React.FC = () => {
           </AnimatePresence>
         </main>
 
-        {/* 底部導覽列 - 配合單手操作 */}
         <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-[#020617]/95 backdrop-blur-3xl border-t border-white/5 safe-bottom z-50 px-8 py-4 flex justify-between items-center rounded-t-[40px]">
           <TabButton active={activeTab === 'workout'} onClick={() => setActiveTab('workout')} icon={<Dumbbell />} label="記錄" />
           <TabButton active={activeTab === 'history'} onClick={() => setActiveTab('history')} icon={<History />} label="歷史" />
