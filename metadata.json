@@ -4,11 +4,16 @@
   "description": "極簡、高效、充滿激勵的健身追蹤 PWA。鋼鐵般的意志，數位化的記錄。",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0F172A",
-  "theme_color": "#0F172A",
+  "background_color": "#020617",
+  "theme_color": "#020617",
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/2964/2964514.png",
+      "src": "https://cdn-icons-png.flaticon.com/512/10524/10524961.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/10524/10524961.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
