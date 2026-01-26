@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Timer, X, RotateCcw, Zap } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface RestTimerProps {
   active: boolean;
@@ -19,7 +20,7 @@ export const RestTimer: React.FC<RestTimerProps> = ({ active, seconds: initialSe
     const timer = setInterval(() => {
       setTimeLeft(prev => {
         if (prev <= 1) {
-          if ('vibrate' in navigator) navigator.vibrate([200, 100, 200]);
+          handleTimerEnd();
           return 0;
         }
         return prev - 1;
@@ -28,6 +29,21 @@ export const RestTimer: React.FC<RestTimerProps> = ({ active, seconds: initialSe
 
     return () => clearInterval(timer);
   }, [active, configSeconds]);
+
+  const handleTimerEnd = () => {
+    // 震動提醒
+    if ('vibrate' in navigator) {
+      navigator.vibrate([300, 100, 300, 100, 400]);
+    }
+
+    // 發送系統通知
+    if ("Notification" in window && Notification.permission === "granted") {
+      new Notification("IronLog: 休息時間結束！", {
+        body: "該開始下一組訓練了，鋼鐵般的意志不能停下！",
+        icon: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2NCIgaGVpZ2h0PSI2NCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiNBREZGMkYiIHN0cm9rZS13aWR0aD0iMiI+PHBhdGggZD0ibTYuNSA2LjUgMTEgMTEiLz48cGF0aCBkPSJtMjEgMjEtMS0xIi8+PHBhdGggZD0ibTMgMyAxIDEiLz48cGF0aCBkPSJtMTggMjIgNC00Ii8+PHBhdGggZD0ibTIgNiA0LTQiLz48cGF0aCBkPSJtMyAxMCA3LTciLz48cGF0aCBkPSJtMTQgMjEgNy03Ii8+PC9zdmc+"
+      });
+    }
+  };
 
   if (!active) return null;
 
@@ -43,14 +59,16 @@ export const RestTimer: React.FC<RestTimerProps> = ({ active, seconds: initialSe
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm">
-      <div className="w-full max-w-xs glass rounded-[40px] p-8 border-neon-green/20 animate-in zoom-in-95 duration-300 relative">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-black/80 backdrop-blur-md">
+      <motion.div 
+        initial={{ scale: 0.9, opacity: 0 }} 
+        animate={{ scale: 1, opacity: 1 }} 
+        exit={{ scale: 0.9, opacity: 0 }}
+        className="w-full max-w-xs glass rounded-[40px] p-8 border-neon-green/20 relative"
+      >
         <div className="flex flex-col items-center">
-          <div className="p-3 bg-neon-green/10 rounded-2xl mb-4 relative">
+          <div className="p-3 bg-neon-green/10 rounded-2xl mb-4">
             <Timer className={`w-8 h-8 text-neon-green ${timeLeft > 0 ? 'animate-pulse' : ''}`} />
-            {timeLeft === 0 && (
-              <div className="absolute -inset-1 bg-neon-green/20 rounded-2xl animate-ping" />
-            )}
           </div>
           <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">組間休息中</h3>
           <div className={`text-6xl font-black font-mono italic mb-8 transition-colors ${timeLeft === 0 ? 'text-neon-green' : 'text-white'}`}>
@@ -59,11 +77,7 @@ export const RestTimer: React.FC<RestTimerProps> = ({ active, seconds: initialSe
           
           <div className="grid grid-cols-4 gap-2 w-full mb-8">
             {[60, 90, 120, 180].map(s => (
-              <button 
-                key={s} 
-                onClick={() => handleQuickSelect(s)}
-                className={`py-2 rounded-xl text-[10px] font-black transition-all border ${configSeconds === s ? 'bg-neon-green text-black border-neon-green' : 'bg-slate-800/50 text-slate-500 border-white/5'}`}
-              >
+              <button key={s} onClick={() => handleQuickSelect(s)} className={`py-2 rounded-xl text-[10px] font-black transition-all border ${configSeconds === s ? 'bg-neon-green text-black border-neon-green' : 'bg-slate-800/50 text-slate-500 border-white/5'}`}>
                 {s}S
               </button>
             ))}
@@ -79,10 +93,10 @@ export const RestTimer: React.FC<RestTimerProps> = ({ active, seconds: initialSe
              </button>
           </div>
         </div>
-        <button onClick={onClose} className="absolute top-6 right-6 text-slate-700">
+        <button onClick={onClose} className="absolute top-6 right-6 text-slate-700 p-2">
           <X className="w-5 h-5" />
         </button>
-      </div>
+      </motion.div>
     </div>
   );
 };

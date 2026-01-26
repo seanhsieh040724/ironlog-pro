@@ -4,6 +4,8 @@ import { WorkoutView } from './components/WorkoutView';
 import { RoutineView } from './components/RoutineView';
 import { HistoryView } from './components/HistoryView';
 import { ProfileView } from './components/ProfileView';
+import { RestTimer } from './components/RestTimer';
+// Fix: Import the missing CalendarStrip component
 import { CalendarStrip } from './components/CalendarStrip';
 import { AppTab, WorkoutSession, BodyMetric, UserGoal, RoutineTemplate } from './types';
 import { Dumbbell, History, User, Calendar as CalendarIcon, LayoutGrid } from 'lucide-react';
@@ -20,6 +22,7 @@ export interface AppContextType {
   setGoal: React.Dispatch<React.SetStateAction<UserGoal>>;
   customRoutines: RoutineTemplate[];
   setCustomRoutines: React.Dispatch<React.SetStateAction<RoutineTemplate[]>>;
+  triggerRestTimer: (seconds?: number) => void;
 }
 
 export const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -38,6 +41,9 @@ const App: React.FC = () => {
   const [customRoutines, setCustomRoutines] = useState<RoutineTemplate[]>([]);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [isLoaded, setIsLoaded] = useState(false);
+
+  // 全局計時器狀態
+  const [restTimer, setRestTimer] = useState({ active: false, seconds: 90 });
 
   useEffect(() => {
     const savedHistory = localStorage.getItem('ironlog_v3_history');
@@ -58,6 +64,12 @@ const App: React.FC = () => {
       title: `${format(new Date(), 'MM/dd')} 訓練`,
       exercises: []
     });
+    
+    // 請求通知權限
+    if ("Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission();
+    }
+
     setIsLoaded(true);
   }, []);
 
@@ -73,11 +85,16 @@ const App: React.FC = () => {
     }
   }, [customRoutines, isLoaded]);
 
+  const triggerRestTimer = (seconds: number = 90) => {
+    setRestTimer({ active: true, seconds });
+  };
+
   const contextValue = useMemo(() => ({
     history, setHistory, 
     bodyMetrics, setBodyMetrics, 
     goal, setGoal, 
-    customRoutines, setCustomRoutines 
+    customRoutines, setCustomRoutines,
+    triggerRestTimer
   }), [history, bodyMetrics, goal, customRoutines]);
 
   const handleSaveWorkout = () => {
@@ -85,22 +102,14 @@ const App: React.FC = () => {
       alert('請先新增動作項目。');
       return;
     }
-
-    const completedSession = { 
-      ...currentSession, 
-      endTime: Date.now() 
-    };
-    
-    const newHistory = [completedSession, ...history];
-    setHistory(newHistory);
-    
+    const completedSession = { ...currentSession, endTime: Date.now() };
+    setHistory([completedSession, ...history]);
     setCurrentSession({
       id: crypto.randomUUID(),
       startTime: Date.now(),
       title: `${format(new Date(), 'MM/dd')} 訓練`,
       exercises: []
     });
-
     setSelectedDate(new Date());
     setActiveTab('history');
   };
@@ -131,7 +140,7 @@ const App: React.FC = () => {
             <div className="space-y-1">
               <div className="flex items-center gap-2 text-neon-green">
                 <CalendarIcon className="w-3.5 h-3.5" />
-                <span className="text-[10px] font-black uppercase tracking-[0.2em]">今日訓練進度 (TAIWAN TIME)</span>
+                <span className="text-[10px] font-black uppercase tracking-[0.2em]">今日訓練進度</span>
               </div>
               <h1 className="text-3xl font-black italic tracking-tighter uppercase">
                 {format(new Date(), 'MM.dd EEEE', { locale: zhTW })}
@@ -188,9 +197,9 @@ const App: React.FC = () => {
                     id: crypto.randomUUID(),
                     name: te.name,
                     muscleGroup: te.muscleGroup,
-                    sets: Array.from({ length: te.defaultSets || 4 }).map(() => ({
+                    sets: Array.from({ length: te.defaultSets || 4 }).map((_, idx) => ({
                       id: crypto.randomUUID(),
-                      weight: te.defaultWeight,
+                      weight: idx === 0 ? te.defaultWeight : 0, // 僅第一組有重量
                       reps: te.defaultReps,
                       completed: false
                     }))
@@ -210,6 +219,13 @@ const App: React.FC = () => {
           <TabButton active={activeTab === 'routines'} onClick={() => setActiveTab('routines')} icon={<LayoutGrid />} label="課表" />
           <TabButton active={activeTab === 'profile'} onClick={() => setActiveTab('profile')} icon={<User />} label="個人" />
         </nav>
+
+        {/* 全局休息計時器 */}
+        <RestTimer 
+          active={restTimer.active} 
+          seconds={restTimer.seconds} 
+          onClose={() => setRestTimer(prev => ({ ...prev, active: false }))} 
+        />
       </div>
     </AppContext.Provider>
   );

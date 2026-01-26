@@ -1,11 +1,18 @@
 
 import React, { useState, useContext, useMemo } from 'react';
 import { AppContext } from '../App';
-import { RoutineTemplate } from '../types';
-import { getMuscleGroup } from '../utils/fitnessMath';
-import { Eye, LayoutGrid, Trash2, ArrowLeft, Plus, ChevronRight, Save, X, Search, Edit2, Check } from 'lucide-react';
+import { RoutineTemplate, MuscleGroup } from '../types';
+import { getMuscleGroup, getMuscleGroupDisplay } from '../utils/fitnessMath';
+import { getExerciseIcon, ORGANIZED_EXERCISES, EXERCISE_DATABASE } from './WorkoutView';
+import { Eye, LayoutGrid, Trash2, ArrowLeft, Plus, ChevronRight, Save, X, Search, Edit2, Check, Sparkles, Layers, ListChecks } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { EXERCISE_DATABASE } from './WorkoutView';
+
+interface RoutineSplitGroup {
+  id: string;
+  title: string;
+  description: string;
+  routines: RoutineTemplate[];
+}
 
 export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate) => void }> = ({ onStartRoutine }) => {
   const context = useContext(AppContext);
@@ -16,26 +23,79 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
   const [isEditingName, setIsEditingName] = useState(false);
   const [tempName, setTempName] = useState('');
   
-  // 新動作編輯狀態
-  const [newEx, setNewEx] = useState({ name: '', weight: '0', sets: '4', reps: '10' });
+  const [activeCategory, setActiveCategory] = useState<string>('chest');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [newExConfig, setNewExConfig] = useState({ weight: '0', sets: '4', reps: '10' });
 
   if (!context) return null;
   const { customRoutines, setCustomRoutines } = context;
 
-  const recommendedRoutines: RoutineTemplate[] = [
-    { id: '2-split-upper', name: '二分化：上半身 (胸背肩手)', exercises: [
-      { id: 'u1', name: '槓鈴平板臥推', muscleGroup: 'chest', defaultSets: 4, defaultReps: 8, defaultWeight: 60 },
-      { id: 'u2', name: '引體向上', muscleGroup: 'back', defaultSets: 4, defaultReps: 8, defaultWeight: 0 },
-      { id: 'u3', name: '啞鈴肩推', muscleGroup: 'shoulders', defaultSets: 3, defaultReps: 10, defaultWeight: 20 }
-    ] },
-    { id: '2-split-lower', name: '二分化：下半身 (腿部/核心)', exercises: [
-      { id: 'l1', name: '槓鈴深蹲', muscleGroup: 'quads', defaultSets: 4, defaultReps: 8, defaultWeight: 80 },
-      { id: 'l2', name: '羅馬尼亞硬舉', muscleGroup: 'hamstrings', defaultSets: 3, defaultReps: 10, defaultWeight: 70 }
-    ] },
-    { id: '5-split-chest', name: '五分化：胸部專日 (PUMP)', exercises: [
-      { id: 'c1', name: '槓鈴平板臥推', muscleGroup: 'chest', defaultSets: 5, defaultReps: 8, defaultWeight: 60 },
-      { id: 'c2', name: '蝴蝶機夾胸', muscleGroup: 'chest', defaultSets: 3, defaultReps: 12, defaultWeight: 45 }
-    ] }
+  const filteredExercises = useMemo(() => {
+    if (!searchTerm.trim()) return ORGANIZED_EXERCISES[activeCategory] || [];
+    return EXERCISE_DATABASE.filter(ex => ex.toLowerCase().includes(searchTerm.toLowerCase())).slice(0, 20);
+  }, [searchTerm, activeCategory]);
+
+  const exactMatch = useMemo(() => {
+    return EXERCISE_DATABASE.some(ex => ex === searchTerm.trim());
+  }, [searchTerm]);
+
+  const splitSystems: RoutineSplitGroup[] = [
+    {
+      id: '2-split',
+      title: '二分化訓練系統 (Upper/Lower)',
+      description: '適合每週訓練 2-4 次，效率極高的全身平衡方案',
+      routines: [
+        { id: '2s-1', name: 'Day 1: 上半身 (胸/背/肩)', exercises: [
+          { id: '2s1e1', name: '槓鈴平板臥推', muscleGroup: 'chest', defaultSets: 4, defaultReps: 8, defaultWeight: 60 },
+          { id: '2s1e2', name: '滑輪下拉', muscleGroup: 'back', defaultSets: 4, defaultReps: 10, defaultWeight: 50 },
+          { id: '2s1e3', name: '啞鈴肩推', muscleGroup: 'shoulders', defaultSets: 3, defaultReps: 12, defaultWeight: 20 },
+          { id: '2s1e4', name: '滑輪下壓', muscleGroup: 'arms', defaultSets: 3, defaultReps: 12, defaultWeight: 25 }
+        ]},
+        { id: '2s-2', name: 'Day 2: 下半身 (腿/核心)', exercises: [
+          { id: '2s2e1', name: '槓鈴深蹲', muscleGroup: 'quads', defaultSets: 4, defaultReps: 8, defaultWeight: 80 },
+          { id: '2s2e2', name: '羅馬尼亞硬舉', muscleGroup: 'back', defaultSets: 3, defaultReps: 10, defaultWeight: 70 },
+          { id: '2s2e3', name: '器械腿伸展', muscleGroup: 'quads', defaultSets: 3, defaultReps: 12, defaultWeight: 40 },
+          { id: '2s2e4', name: '棒式', muscleGroup: 'core', defaultSets: 3, defaultReps: 1, defaultWeight: 0 }
+        ]}
+      ]
+    },
+    {
+      id: '3-split',
+      title: '三分化 PPL 系統 (Push/Pull/Legs)',
+      description: '最經典的科學分化，針對不同發力模式深度訓練',
+      routines: [
+        { id: '3s-1', name: 'Day 1: 推 (Push) - 胸肩三頭', exercises: [
+          { id: '3s1e1', name: '啞鈴上斜臥推', muscleGroup: 'chest', defaultSets: 4, defaultReps: 10, defaultWeight: 25 },
+          { id: '3s1e2', name: '槓鈴肩推', muscleGroup: 'shoulders', defaultSets: 3, defaultReps: 8, defaultWeight: 40 },
+          { id: '3s1e3', name: '啞鈴側平舉', muscleGroup: 'shoulders', defaultSets: 4, defaultReps: 15, defaultWeight: 8 },
+          { id: '3s1e4', name: '仰臥槓鈴臂屈伸', muscleGroup: 'arms', defaultSets: 3, defaultReps: 12, defaultWeight: 20 }
+        ]},
+        { id: '3s-2', name: 'Day 2: 拉 (Pull) - 背部二頭', exercises: [
+          { id: '3s2e1', name: '引體向上', muscleGroup: 'back', defaultSets: 4, defaultReps: 8, defaultWeight: 0 },
+          { id: '3s2e2', name: '槓鈴划船', muscleGroup: 'back', defaultSets: 4, defaultReps: 10, defaultWeight: 50 },
+          { id: '3s2e3', name: '啞鈴交替彎舉', muscleGroup: 'arms', defaultSets: 3, defaultReps: 12, defaultWeight: 14 },
+          { id: '3s2e4', name: '蝴蝶機後三角飛鳥', muscleGroup: 'shoulders', defaultSets: 3, defaultReps: 15, defaultWeight: 35 }
+        ]},
+        { id: '3s-3', name: 'Day 3: 腿 (Legs) - 下肢/臀部', exercises: [
+          { id: '3s3e1', name: '保加利亞分腿蹲', muscleGroup: 'quads', defaultSets: 3, defaultReps: 10, defaultWeight: 15 },
+          { id: '3s3e2', name: '槓鈴臀推', muscleGroup: 'quads', defaultSets: 4, defaultReps: 10, defaultWeight: 60 },
+          { id: '3s3e3', name: '器械腿屈伸', muscleGroup: 'quads', defaultSets: 3, defaultReps: 12, defaultWeight: 40 },
+          { id: '3s3e4', name: '站姿提踵', muscleGroup: 'quads', defaultSets: 3, defaultReps: 15, defaultWeight: 30 }
+        ]}
+      ]
+    },
+    {
+      id: '5-split',
+      title: '五分化專項系統 (Bro Split)',
+      description: '每天專攻一個肌群，給予肌肉最大的破壞與成長空間',
+      routines: [
+        { id: '5s-1', name: 'Day 1: 胸部專日 (Chest)', exercises: [{ id: '5s1e1', name: '槓鈴平板臥推', muscleGroup: 'chest', defaultSets: 5, defaultReps: 8, defaultWeight: 60 }, { id: '5s1e2', name: '啞鈴上斜臥推', muscleGroup: 'chest', defaultSets: 4, defaultReps: 10, defaultWeight: 24 }] },
+        { id: '5s-2', name: 'Day 2: 背部專日 (Back)', exercises: [{ id: '5s2e1', name: '滑輪下拉', muscleGroup: 'back', defaultSets: 5, defaultReps: 10, defaultWeight: 55 }, { id: '5s2e2', name: '坐姿划船', muscleGroup: 'back', defaultSets: 4, defaultReps: 12, defaultWeight: 45 }] },
+        { id: '5s-3', name: 'Day 3: 腿部專日 (Legs)', exercises: [{ id: '5s3e1', name: '槓鈴深蹲', muscleGroup: 'quads', defaultSets: 5, defaultReps: 8, defaultWeight: 80 }, { id: '5s3e2', name: '器械腿部推蹬', muscleGroup: 'quads', defaultSets: 4, defaultReps: 12, defaultWeight: 120 }] },
+        { id: '5s-4', name: 'Day 4: 肩部專日 (Shoulder)', exercises: [{ id: '5s4e1', name: '啞鈴肩推', muscleGroup: 'shoulders', defaultSets: 4, defaultReps: 10, defaultWeight: 20 }, { id: '5s4e2', name: '啞鈴側平舉', muscleGroup: 'shoulders', defaultSets: 5, defaultReps: 15, defaultWeight: 8 }] },
+        { id: '5s-5', name: 'Day 5: 手臂專日 (Arms)', exercises: [{ id: '5s5e1', name: '槓鈴彎舉', muscleGroup: 'arms', defaultSets: 4, defaultReps: 12, defaultWeight: 25 }, { id: '5s5e2', name: '滑輪繩索下壓', muscleGroup: 'arms', defaultSets: 4, defaultReps: 12, defaultWeight: 20 }] }
+      ]
+    }
   ];
 
   const createRoutine = () => {
@@ -47,9 +107,8 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
     setPreviewRoutine(newRoutine);
   };
 
-  // 強化課表刪除功能
   const deleteRoutine = (id: string) => {
-    if (confirm('確定要永久刪除此自訂課表範本嗎？此動作無法復原。')) {
+    if (confirm('確定要永久刪除此自訂課表範本嗎？')) {
       setCustomRoutines(prev => prev.filter(r => r.id !== id));
       setPreviewRoutine(null);
     }
@@ -63,176 +122,127 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
     setIsEditingName(false);
   };
 
-  const addExerciseToTemplate = () => {
-    if (!previewRoutine || !newEx.name) return;
-    
+  const addExerciseToTemplate = (exName: string) => {
+    if (!previewRoutine) return;
     const newEntry = {
       id: crypto.randomUUID(),
-      name: newEx.name,
-      muscleGroup: getMuscleGroup(newEx.name),
-      defaultSets: Number(newEx.sets) || 4,
-      defaultReps: Number(newEx.reps) || 10,
-      defaultWeight: Number(newEx.weight) || 0
+      name: exName,
+      muscleGroup: getMuscleGroup(exName),
+      defaultSets: Number(newExConfig.sets) || 4,
+      defaultReps: Number(newExConfig.reps) || 10,
+      defaultWeight: Number(newExConfig.weight) || 0
     };
-
-    const updatedRoutine = {
-      ...previewRoutine,
-      exercises: [...previewRoutine.exercises, newEntry]
-    };
-
+    const updatedRoutine = { ...previewRoutine, exercises: [...previewRoutine.exercises, newEntry] };
     setCustomRoutines(prev => prev.map(r => r.id === previewRoutine.id ? updatedRoutine : r));
     setPreviewRoutine(updatedRoutine);
-    setNewEx({ name: '', weight: '0', sets: '4', reps: '10' });
     setIsAddingExercise(false);
+    setSearchTerm('');
   };
 
-  // 強化動作移除功能
   const removeExerciseFromTemplate = (exId: string) => {
     if (!previewRoutine) return;
-    const exName = previewRoutine.exercises.find(e => e.id === exId)?.name;
-    if (confirm(`確定要從此課表中移除「${exName || '此動作'}」嗎？`)) {
-      const updatedRoutine = {
-        ...previewRoutine,
-        exercises: previewRoutine.exercises.filter(e => e.id !== exId)
-      };
-      setCustomRoutines(prev => prev.map(r => r.id === previewRoutine.id ? updatedRoutine : r));
-      setPreviewRoutine(updatedRoutine);
-    }
+    const updatedRoutine = { ...previewRoutine, exercises: previewRoutine.exercises.filter(e => e.id !== exId) };
+    setCustomRoutines(prev => prev.map(r => r.id === previewRoutine.id ? updatedRoutine : r));
+    setPreviewRoutine(updatedRoutine);
   };
-
-  const suggestions = useMemo(() => {
-    if (!newEx.name.trim()) return [];
-    return EXERCISE_DATABASE.filter(ex => ex.includes(newEx.name)).slice(0, 8);
-  }, [newEx.name]);
 
   if (previewRoutine) {
     const isCustom = customRoutines.some(r => r.id === previewRoutine.id);
     return (
       <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6 pb-44">
         <div className="flex items-center gap-4 px-1">
-          <button 
-            onClick={() => setPreviewRoutine(null)} 
-            className="w-10 h-10 bg-slate-800 rounded-xl flex items-center justify-center text-neon-green active:scale-90 transition-all border border-white/5"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
+          <button onClick={() => setPreviewRoutine(null)} className="w-10 h-10 bg-slate-800 rounded-xl flex items-center justify-center text-neon-green border border-white/5"><ArrowLeft className="w-5 h-5" /></button>
           <div className="flex-1 overflow-hidden">
             {isEditingName ? (
               <div className="flex gap-2">
-                <input 
-                  autoFocus
-                  value={tempName}
-                  onChange={e => setTempName(e.target.value)}
-                  onBlur={renameRoutine}
-                  onKeyDown={e => e.key === 'Enter' && renameRoutine()}
-                  className="bg-black/40 border-b border-neon-green text-lg font-black italic text-white outline-none w-full uppercase"
-                />
+                <input autoFocus value={tempName} onChange={e => setTempName(e.target.value)} onBlur={renameRoutine} className="bg-black/40 border-b border-neon-green text-lg font-black italic text-white outline-none w-full uppercase" />
                 <button onClick={renameRoutine} className="p-2 text-neon-green"><Check className="w-5 h-5" /></button>
               </div>
             ) : (
               <div className="flex items-center gap-2">
                 <h2 className="text-lg font-black italic tracking-tighter uppercase truncate text-white">{previewRoutine.name}</h2>
-                {isCustom && <button onClick={() => { setTempName(previewRoutine.name); setIsEditingName(true); }} className="p-1.5 bg-slate-800/50 rounded-lg text-slate-500 active:text-neon-green"><Edit2 className="w-3 h-3" /></button>}
+                {isCustom && <button onClick={() => { setTempName(previewRoutine.name); setIsEditingName(true); }} className="p-1.5 bg-slate-800/50 rounded-lg text-slate-500"><Edit2 className="w-3 h-3" /></button>}
               </div>
             )}
-            <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest leading-none mt-1">預覽訓練清單內容</p>
+            <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mt-1">訓練清單內容</p>
           </div>
-          {isCustom && (
-             <button onClick={() => deleteRoutine(previewRoutine.id)} className="w-12 h-12 bg-red-500/10 text-red-500 rounded-xl flex items-center justify-center active:scale-90 transition-all border border-red-500/10 shadow-lg" aria-label="刪除此課表">
-                <Trash2 className="w-5 h-5" />
-             </button>
-          )}
+          {isCustom && <button onClick={() => deleteRoutine(previewRoutine.id)} className="w-12 h-12 bg-red-500/10 text-red-500 rounded-xl flex items-center justify-center border border-red-500/10"><Trash2 className="w-5 h-5" /></button>}
         </div>
         
         <div className="space-y-3">
-          {previewRoutine.exercises.length === 0 ? (
-            <div className="py-20 text-center glass rounded-[32px] border-dashed border-white/10 italic text-slate-700 text-[10px] uppercase tracking-widest">
-              目前此課表範本尚無動作
-            </div>
-          ) : (
-            previewRoutine.exercises.map((ex, idx) => (
-              <div key={ex.id} className="glass rounded-[28px] p-5 border-white/5 flex items-center justify-between shadow-lg">
-                <div className="flex items-center space-x-4">
-                  <div className="w-9 h-9 rounded-xl bg-slate-800 flex items-center justify-center text-neon-green text-xs font-black italic border border-white/5">
-                    {idx + 1}
-                  </div>
-                  <div>
-                    <h4 className="font-black text-base text-white italic uppercase tracking-tight">{ex.name}</h4>
-                    <p className="text-[9px] font-bold text-slate-500 uppercase tracking-[0.2em] mt-1">{ex.defaultWeight}KG | {ex.defaultSets} 組 | {ex.defaultReps} 次</p>
-                  </div>
+          {previewRoutine.exercises.map((ex) => (
+            <div key={ex.id} className="glass rounded-[28px] p-5 border-white/5 flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-neon-green p-2 border border-white/5">
+                  {getExerciseIcon(ex.name)}
                 </div>
-                {isCustom && (
-                  <button onClick={() => removeExerciseFromTemplate(ex.id)} className="w-10 h-10 bg-slate-800/30 rounded-xl flex items-center justify-center text-slate-700 active:text-red-500 transition-colors" aria-label="移除動作">
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                )}
+                <div>
+                  <h4 className="font-black text-base text-white italic uppercase tracking-tight">{ex.name}</h4>
+                  <p className="text-[9px] font-bold text-slate-500 uppercase tracking-[0.2em] mt-1">{ex.defaultWeight}KG | {ex.defaultSets} 組 | {ex.defaultReps} 次</p>
+                </div>
               </div>
-            ))
-          )}
+              {isCustom && (
+                <button onClick={() => removeExerciseFromTemplate(ex.id)} className="w-10 h-10 bg-slate-800/30 rounded-xl flex items-center justify-center text-slate-700 active:text-red-500"><Trash2 className="w-4 h-4" /></button>
+              )}
+            </div>
+          ))}
         </div>
 
         {isCustom && (
-          <button 
-            onClick={() => setIsAddingExercise(true)}
-            className="w-full py-4 bg-white/5 border border-dashed border-white/10 rounded-2xl text-[10px] font-black uppercase text-slate-500 flex items-center justify-center gap-2 active:bg-white/10 active:text-slate-300 transition-all"
-          >
-            <Plus className="w-3.5 h-3.5" /> 新增動作到此課表範本
+          <button onClick={() => setIsAddingExercise(true)} className="w-full py-4 bg-white/5 border border-dashed border-white/10 rounded-2xl text-[10px] font-black uppercase text-slate-500 flex items-center justify-center gap-2">
+            <Plus className="w-3.5 h-3.5" /> 新增動作項目
           </button>
         )}
         
         <div className="fixed bottom-[95px] left-0 right-0 z-50 flex justify-center px-6">
-          <div className="w-full max-w-md">
-            <button 
-              onClick={() => { onStartRoutine(previewRoutine); setPreviewRoutine(null); }} 
-              className="w-full bg-neon-green text-black font-black h-14 rounded-2xl uppercase italic tracking-tighter text-base shadow-[0_10px_30px_rgba(173,255,47,0.2)] flex items-center justify-center gap-3 active:scale-[0.98] transition-all border border-black/5"
-            >
-              帶入今日訓練開始行動 <ChevronRight className="w-5 h-5 stroke-[3]" />
-            </button>
-          </div>
+          <button onClick={() => { onStartRoutine(previewRoutine); setPreviewRoutine(null); }} className="w-full bg-neon-green text-black font-black h-14 rounded-2xl uppercase italic tracking-tighter text-base shadow-lg flex items-center justify-center gap-3">
+            帶入今日訓練開始行動 <ChevronRight className="w-5 h-5 stroke-[3]" />
+          </button>
         </div>
 
         <AnimatePresence>
           {isAddingExercise && (
             <div className="fixed inset-0 z-[100] flex items-end justify-center">
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/90 backdrop-blur-md" onClick={() => setIsAddingExercise(false)} />
-              <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} className="relative w-full max-w-md bg-slate-900 rounded-t-[44px] p-8 pb-12 border-t border-white/10 shadow-2xl safe-bottom">
+              <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} className="relative w-full max-w-md bg-slate-900 rounded-t-[44px] p-8 pb-12 border-t border-white/10 shadow-2xl safe-bottom max-h-[90vh] overflow-y-auto no-scrollbar">
                 <div className="w-12 h-1.5 bg-slate-800 rounded-full mx-auto mb-8" />
                 <div className="flex justify-between items-center mb-8">
-                  <div>
-                    <h3 className="text-xl font-black italic uppercase tracking-tighter text-white">設定課表預設動作</h3>
-                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-1">這些設定將在開始訓練時自動帶入</p>
-                  </div>
-                  <button onClick={() => setIsAddingExercise(false)} className="w-10 h-10 bg-slate-800 rounded-xl flex items-center justify-center text-slate-400 active:scale-90 transition-all"><X className="w-6 h-6" /></button>
+                  <h3 className="text-xl font-black italic uppercase text-white">選取課表動作</h3>
+                  <button onClick={() => setIsAddingExercise(false)} className="w-10 h-10 bg-slate-800 rounded-xl flex items-center justify-center text-slate-400"><X className="w-6 h-6" /></button>
                 </div>
                 <div className="space-y-6">
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">動作名稱</label>
-                    <div className="flex items-center gap-4 bg-black/40 border border-white/10 rounded-2xl px-5 py-4">
-                      <Search className="w-5 h-5 text-slate-600" />
-                      <input 
-                        autoFocus 
-                        placeholder="搜尋或手動輸入動作..." 
-                        value={newEx.name} 
-                        onChange={e => setNewEx({...newEx, name: e.target.value})} 
-                        className="bg-transparent w-full text-lg font-black italic outline-none text-white placeholder:text-slate-800" 
-                      />
-                    </div>
-                    {suggestions.length > 0 && (
-                      <div className="flex flex-wrap gap-2 pt-2">
-                        {suggestions.map(s => (
-                          <button key={s} onClick={() => setNewEx({...newEx, name: s})} className="px-3 py-1.5 bg-slate-800/50 text-neon-green text-[10px] font-black rounded-xl border border-neon-green/10 uppercase transition-all active:bg-neon-green active:text-black">{s}</button>
-                        ))}
-                      </div>
+                  <div className="flex items-center gap-4 bg-black/40 border border-white/10 rounded-2xl px-5 py-4">
+                    <Search className="w-5 h-5 text-slate-600" />
+                    <input placeholder="搜尋動作庫..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="bg-transparent w-full text-lg font-black italic outline-none text-white placeholder:text-slate-800" />
+                  </div>
+                  <AnimatePresence>
+                    {searchTerm.trim() && !exactMatch && (
+                      <button onClick={() => addExerciseToTemplate(searchTerm.trim())} className="w-full p-4 rounded-2xl bg-neon-green/10 border border-neon-green/40 flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-neon-green text-black rounded-xl flex items-center justify-center"><Plus className="w-6 h-6 stroke-[3]" /></div>
+                          <div className="text-left"><div className="text-[10px] font-black text-neon-green uppercase">建立新動作</div><div className="text-sm font-black italic text-white uppercase">{searchTerm}</div></div>
+                        </div>
+                        <ChevronRight className="w-5 h-5 text-neon-green" />
+                      </button>
                     )}
+                  </AnimatePresence>
+                  <div className="flex gap-2 overflow-x-auto no-scrollbar">
+                    {Object.keys(ORGANIZED_EXERCISES).map(cat => (
+                      <button key={cat} onClick={() => { setActiveCategory(cat); setSearchTerm(''); }} className={`shrink-0 px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border ${!searchTerm && activeCategory === cat ? 'bg-neon-green text-black border-neon-green' : 'bg-slate-800 text-slate-500 border-white/5'}`}>{getMuscleGroupDisplay(cat as MuscleGroup).cn}</button>
+                    ))}
                   </div>
-                  <div className="grid grid-cols-3 gap-4">
-                    <InputSmall label="重量" unit="KG" val={newEx.weight} onChange={v => setNewEx({...newEx, weight: v})} />
-                    <InputSmall label="組數" unit="組" val={newEx.sets} onChange={v => setNewEx({...newEx, sets: v})} />
-                    <InputSmall label="次數" unit="次" val={newEx.reps} onChange={v => setNewEx({...newEx, reps: v})} />
+                  <div className="grid grid-cols-2 gap-3 max-h-[300px] overflow-y-auto pr-1 no-scrollbar">
+                    {filteredExercises.map(exName => (
+                      <button key={exName} onClick={() => addExerciseToTemplate(exName)} className="p-3 rounded-2xl text-left bg-slate-800/40 border border-white/5 active:bg-neon-green/5">
+                        <div className="flex items-center gap-3"><div className="w-8 h-8 shrink-0 bg-slate-700 rounded-lg flex items-center justify-center p-1">{getExerciseIcon(exName)}</div><div className="text-[10px] font-black italic uppercase text-slate-200 truncate">{exName}</div></div>
+                      </button>
+                    ))}
                   </div>
-                  <button onClick={addExerciseToTemplate} className="w-full bg-neon-green text-black font-black h-16 rounded-[28px] uppercase italic tracking-tighter text-lg flex items-center justify-center gap-3 active:scale-[0.98] transition-all mt-4 shadow-xl">
-                     儲存到課表範本 <Save className="w-5 h-5 stroke-[2.5]" />
-                  </button>
+                  <div className="grid grid-cols-3 gap-3">
+                    <InputSmall label="預設重量" unit="KG" val={newExConfig.weight} onChange={v => setNewExConfig({...newExConfig, weight: v})} />
+                    <InputSmall label="預設組數" unit="組" val={newExConfig.sets} onChange={v => setNewExConfig({...newExConfig, sets: v})} />
+                    <InputSmall label="預設次數" unit="次" val={newExConfig.reps} onChange={v => setNewExConfig({...newExConfig, reps: v})} />
+                  </div>
                 </div>
               </motion.div>
             </div>
@@ -243,66 +253,83 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
   }
 
   return (
-    <div className="space-y-8 pb-32">
+    <div className="space-y-12 pb-32">
       <div className="flex justify-between items-center px-1">
         <h2 className="text-sm font-black italic tracking-tighter uppercase flex items-center gap-2 text-slate-400">
-          <LayoutGrid className="w-5 h-5 text-neon-green" /> 訓練課表範本庫
+          <LayoutGrid className="w-5 h-5 text-neon-green" /> 我的自訂課表
         </h2>
-        <button onClick={() => setIsCreating(true)} className="px-4 py-2 bg-white/5 text-neon-green text-[10px] font-black rounded-xl uppercase border border-white/5 active:bg-neon-green active:text-black transition-all shadow-lg shadow-neon-green/5">
-          + 建立課表
+        <button onClick={() => setIsCreating(true)} className="px-4 py-2 bg-white/5 text-neon-green text-[10px] font-black rounded-xl uppercase border border-white/5 active:bg-neon-green active:text-black transition-all">
+          + 建立範本
         </button>
       </div>
 
       <AnimatePresence>
         {isCreating && (
-          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="glass rounded-[32px] p-8 border-neon-green/30 space-y-6 overflow-hidden shadow-2xl">
+          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="glass rounded-[32px] p-8 border-neon-green/30 space-y-6 overflow-hidden">
             <div className="space-y-2">
               <label className="text-[10px] font-black text-neon-green uppercase tracking-[0.3em] ml-1">新課表範本名稱</label>
-              <input autoFocus placeholder="例如：胸背拉推日..." value={newRoutineName} onChange={e => setNewRoutineName(e.target.value)} className="w-full bg-transparent border-b-2 border-neon-green/30 py-3 text-2xl font-black italic uppercase outline-none text-white placeholder:text-slate-800 focus:border-neon-green transition-all" />
+              <input autoFocus placeholder="例如：胸背拉推日..." value={newRoutineName} onChange={e => setNewRoutineName(e.target.value)} className="w-full bg-transparent border-b-2 border-neon-green/30 py-3 text-2xl font-black italic uppercase outline-none text-white focus:border-neon-green" />
             </div>
             <div className="flex gap-4">
-              <button onClick={createRoutine} className="flex-1 bg-neon-green text-black font-black py-4 rounded-2xl uppercase italic text-sm active:scale-95 transition-all shadow-lg shadow-neon-green/10">建立範本</button>
-              <button onClick={() => setIsCreating(false)} className="px-8 bg-slate-800 text-white font-bold py-4 rounded-2xl uppercase text-[11px] active:scale-95 transition-all">取消</button>
+              <button onClick={createRoutine} className="flex-1 bg-neon-green text-black font-black py-4 rounded-2xl uppercase italic text-sm">建立範本</button>
+              <button onClick={() => setIsCreating(false)} className="px-8 bg-slate-800 text-white font-bold py-4 rounded-2xl uppercase text-[11px]">取消</button>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      <div className="space-y-10">
-        <div className="space-y-4">
-          <p className="text-[10px] font-black text-slate-600 uppercase tracking-[0.4em] ml-2">自訂範本 (CUSTOM)</p>
-          {customRoutines.length === 0 ? (
-            <div className="p-12 text-center glass rounded-[36px] border-white/5 italic text-slate-700 text-[10px] uppercase tracking-widest leading-loose">
-              目前尚未建立任何自訂課表範本<br/>點擊右上方按鈕開始建立
-            </div>
-          ) : (
-            customRoutines.map(r => (
-              <div key={r.id} onClick={() => setPreviewRoutine(r)} className="glass rounded-[32px] p-6 border-white/5 active:scale-[0.98] transition-all flex justify-between items-center group relative overflow-hidden shadow-xl">
-                <div className="absolute inset-0 bg-neon-green/5 opacity-0 group-active:opacity-100 transition-opacity" />
-                <div className="relative z-10">
-                  <h3 className="text-lg font-black text-white italic uppercase leading-tight tracking-tight">{r.name}</h3>
-                  <p className="text-[10px] font-bold text-slate-500 uppercase mt-2 tracking-widest">{r.exercises.length} 項訓練項目</p>
-                </div>
-                <div className="relative z-10 w-12 h-12 bg-slate-800 text-slate-500 group-active:text-neon-green rounded-2xl flex items-center justify-center transition-all border border-white/5">
-                  <Eye className="w-5 h-5" />
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-
-        <div className="space-y-4">
-          <p className="text-[10px] font-black text-slate-600 uppercase tracking-[0.4em] ml-2">推薦科學分化 (SPLITS)</p>
-          {recommendedRoutines.map(r => (
-            <div key={r.id} onClick={() => setPreviewRoutine(r)} className="glass rounded-[32px] p-6 border-white/5 opacity-80 active:opacity-100 active:scale-[0.98] transition-all flex justify-between items-center group shadow-md">
+      <div className="space-y-4">
+        {customRoutines.length === 0 ? (
+          <div className="p-10 text-center glass rounded-[36px] border-white/5 italic text-slate-700 text-[10px] uppercase tracking-widest leading-loose">
+            尚未建立任何自訂範本
+          </div>
+        ) : (
+          customRoutines.map(r => (
+            <div key={r.id} onClick={() => setPreviewRoutine(r)} className="glass rounded-[32px] p-6 border-white/5 active:scale-[0.98] transition-all flex justify-between items-center">
               <div>
-                <h3 className="text-lg font-black text-slate-300 italic uppercase leading-none tracking-tight">{r.name}</h3>
-                <p className="text-[10px] font-bold text-slate-600 uppercase mt-2 tracking-widest">官方預設科學訓練流程</p>
+                <h3 className="text-lg font-black text-white italic uppercase tracking-tight">{r.name}</h3>
+                <p className="text-[10px] font-bold text-slate-500 uppercase mt-2 tracking-widest">{r.exercises.length} 項訓練項目</p>
               </div>
-              <ChevronRight className="text-slate-700 group-active:text-neon-green w-5 h-5 transition-colors" />
+              <div className="w-12 h-12 bg-slate-800 text-slate-500 rounded-2xl flex items-center justify-center border border-white/5 shrink-0"><Eye className="w-5 h-5" /></div>
             </div>
-          ))}
-        </div>
+          ))
+        )}
+      </div>
+
+      <div className="space-y-8 pt-4">
+        <p className="text-[11px] font-black text-slate-600 uppercase tracking-[0.4em] ml-2 flex items-center gap-2">
+           <Layers className="w-4 h-4 text-neon-green" /> 科學分化系統系統庫
+        </p>
+        
+        {splitSystems.map(system => (
+          <div key={system.id} className="glass rounded-[44px] p-8 border-white/5 space-y-6 relative overflow-hidden bg-gradient-to-br from-slate-900/40 to-transparent">
+            <div className="space-y-2">
+               <h3 className="text-xl font-black italic uppercase text-white tracking-tighter">{system.title}</h3>
+               <p className="text-[10px] font-medium text-slate-500 leading-relaxed">{system.description}</p>
+            </div>
+            
+            <div className="grid grid-cols-1 gap-3">
+               {system.routines.map((r, idx) => (
+                 <button 
+                   key={r.id} 
+                   onClick={() => setPreviewRoutine(r)}
+                   className="flex items-center justify-between p-5 bg-black/40 border border-white/5 rounded-[24px] hover:border-neon-green/30 transition-all active:scale-[0.98]"
+                 >
+                   <div className="flex items-center gap-4 overflow-hidden">
+                      <div className="w-10 h-10 bg-slate-800 rounded-xl flex items-center justify-center text-[11px] font-black text-neon-green shrink-0">
+                         D{idx + 1}
+                      </div>
+                      <div className="text-left overflow-hidden">
+                        <div className="text-sm font-black italic uppercase text-slate-200 truncate">{r.name.split(': ')[1] || r.name}</div>
+                        <div className="text-[8px] font-bold text-slate-600 uppercase tracking-widest mt-0.5">{r.exercises.length} EXERCISES</div>
+                      </div>
+                   </div>
+                   <ChevronRight className="w-4 h-4 text-slate-700" />
+                 </button>
+               ))}
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

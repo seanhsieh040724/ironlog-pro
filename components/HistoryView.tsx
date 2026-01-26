@@ -1,8 +1,9 @@
 
 import React, { useState, useMemo } from 'react';
-import { WorkoutSession, MuscleGroup } from '../types';
+import { WorkoutSession, MuscleGroup, ExerciseEntry } from '../types';
 import { getMuscleGroupDisplay } from '../utils/fitnessMath';
-import { Clock, Activity, BarChart3, Trash2, LayoutGrid, Save } from 'lucide-react';
+import { getExerciseIcon } from './WorkoutView';
+import { Clock, Activity, BarChart3, Trash2, LayoutGrid, Save, CalendarDays, ChevronRight } from 'lucide-react';
 import { isSameDay, format } from 'date-fns';
 import startOfWeek from 'date-fns/startOfWeek';
 import startOfMonth from 'date-fns/startOfMonth';
@@ -23,10 +24,43 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
     history.filter(s => isSameDay(new Date(s.startTime), selectedDate)),
   [history, selectedDate]);
 
+  // 計算當日總計數據
+  const dailyStats = useMemo(() => {
+    if (filteredHistory.length === 0) return null;
+    
+    let totalMinutes = 0;
+    let totalExercises: ExerciseEntry[] = [];
+    
+    filteredHistory.forEach(s => {
+      totalMinutes += Math.round(((s.endTime || Date.now()) - s.startTime) / 60000);
+      totalExercises = [...totalExercises, ...s.exercises];
+    });
+
+    return {
+      totalMinutes,
+      totalExercises,
+      sessionCount: filteredHistory.length
+    };
+  }, [filteredHistory]);
+
   const handleDeleteSession = (sessionId: string) => {
     if (window.confirm('確定要永久刪除這筆訓練紀錄嗎？此動作無法復原。')) {
       onUpdateHistory(prev => prev.filter(s => s.id !== sessionId));
     }
+  };
+
+  const handleSaveDayAsRoutine = () => {
+    if (!dailyStats) return;
+    
+    // 建立一個包含當日所有動作的虛擬 Session
+    const combinedSession: WorkoutSession = {
+      id: 'combined-' + selectedDate.getTime(),
+      title: `${format(selectedDate, 'MM/dd')} 訓練課表`,
+      startTime: selectedDate.getTime(),
+      exercises: dailyStats.totalExercises
+    };
+    
+    onSaveAsRoutine(combinedSession);
   };
 
   const allMuscleGroups: MuscleGroup[] = ['chest', 'back', 'quads', 'hamstrings', 'shoulders', 'arms', 'core', 'glutes'];
@@ -55,120 +89,151 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
   }, [history, analysisPeriod]);
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-4">
-        <h2 className="text-sm font-black italic tracking-tighter uppercase px-1 text-slate-500">
-          訓練日報 - {format(selectedDate, 'MM月dd日')}
-        </h2>
+    <div className="space-y-10">
+      <div className="space-y-6">
+        <div className="flex items-center justify-between px-2">
+          <div className="flex items-center gap-2 text-slate-400">
+             <CalendarDays className="w-4 h-4 text-neon-green" />
+             <h2 className="text-sm font-black italic tracking-tighter uppercase">
+               訓練日報 <span className="text-white">/ {format(selectedDate, 'MM.dd')}</span>
+             </h2>
+          </div>
+          {dailyStats && (
+            <div className="text-[10px] font-black text-slate-600 uppercase tracking-widest">
+              {dailyStats.sessionCount} Sessions Total
+            </div>
+          )}
+        </div>
 
         <AnimatePresence mode="popLayout">
-          {filteredHistory.length === 0 ? (
+          {!dailyStats ? (
             <motion.div 
-              initial={{ opacity: 0 }} 
-              animate={{ opacity: 1 }} 
-              className="py-12 flex flex-col items-center justify-center glass rounded-[32px] border-white/5 opacity-40 italic"
+              initial={{ opacity: 0, y: 10 }} 
+              animate={{ opacity: 1, y: 0 }} 
+              className="py-16 flex flex-col items-center justify-center glass rounded-[40px] border-white/5 bg-slate-900/20"
             >
-              <Activity className="w-10 h-10 mb-2" />
-              <p className="text-xs font-black uppercase tracking-widest">當天無任何紀錄</p>
+              <div className="w-16 h-16 bg-slate-800/50 rounded-full flex items-center justify-center mb-4 text-slate-700">
+                <Activity className="w-8 h-8" />
+              </div>
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-600">這天沒有訓練紀錄</p>
+              <p className="text-[8px] font-bold uppercase tracking-widest text-slate-800 mt-2 italic">Rest is part of the process</p>
             </motion.div>
           ) : (
-            filteredHistory.map(session => (
-              <motion.div 
-                key={session.id} 
-                layout
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9, x: -20 }}
-                className="glass rounded-[32px] p-6 border-white/5 space-y-4 shadow-xl relative overflow-hidden group"
-              >
-                <div className="flex justify-between items-center">
-                  <div className="flex-1">
-                    <h4 className="text-xl font-black italic uppercase text-neon-green leading-tight truncate mr-4">{session.title}</h4>
-                    <div className="flex items-center space-x-3 text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">
-                      <span className="flex items-center"><Clock className="w-3 h-3 mr-1" /> {Math.round(((session.endTime || Date.now()) - session.startTime) / 60000)} 分鐘</span>
-                      <span>{session.exercises.length} 項動作</span>
-                    </div>
-                  </div>
-                  
-                  <div className="flex gap-2">
-                    <button 
-                      onClick={() => onSaveAsRoutine(session)}
-                      className="w-10 h-10 bg-white/5 text-slate-400 rounded-xl flex items-center justify-center active:scale-90 transition-all hover:text-neon-green"
-                      title="存為課表"
-                    >
-                      <LayoutGrid className="w-4 h-4" />
-                    </button>
-                    <button 
-                      onClick={() => handleDeleteSession(session.id)} 
-                      className="w-10 h-10 bg-red-500/10 text-red-500 rounded-xl flex items-center justify-center active:scale-90 transition-all"
-                      title="刪除紀錄"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="glass rounded-[44px] p-7 border-white/5 space-y-6 shadow-2xl relative overflow-hidden group"
+            >
+              {/* 日報頂部總覽 */}
+              <div className="flex justify-between items-start">
+                <div className="space-y-1.5">
+                  <h4 className="text-2xl font-black italic uppercase text-white leading-tight">當日總訓練</h4>
+                  <div className="flex items-center space-x-4 text-[10px] text-slate-500 font-bold uppercase tracking-widest">
+                    <span className="flex items-center gap-1.5 bg-slate-800/50 px-2 py-0.5 rounded-md">
+                      <Clock className="w-3 h-3 text-neon-green" /> {dailyStats.totalMinutes} MINS
+                    </span>
+                    <span className="bg-slate-800/50 px-2 py-0.5 rounded-md">
+                      {dailyStats.totalExercises.length} EXERCISES
+                    </span>
                   </div>
                 </div>
-                
-                <div className="space-y-2">
-                  {session.exercises.map(ex => (
-                    <div key={ex.id} className="flex justify-between items-center bg-black/40 p-4 rounded-2xl border border-white/5">
-                      <div>
-                        <span className="text-sm font-black text-white italic uppercase tracking-tight">{ex.name}</span>
-                        <div className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">{ex.sets.length} 組訓練</div>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-sm font-black italic text-neon-green">{ex.sets[0]?.weight}kg</span>
-                        <span className="mx-1 text-slate-700 font-black">×</span>
-                        <span className="text-sm font-black italic text-white">{ex.sets[0]?.reps}次</span>
-                      </div>
-                    </div>
-                  ))}
+                <div className="w-12 h-12 bg-neon-green/10 rounded-2xl flex items-center justify-center text-neon-green">
+                   <Activity className="w-6 h-6 animate-pulse" />
                 </div>
+              </div>
 
-                <button 
-                  onClick={() => onSaveAsRoutine(session)}
-                  className="w-full py-3 bg-white/5 rounded-2xl border border-white/5 text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center justify-center gap-2 active:bg-neon-green/10 active:text-neon-green transition-all"
-                >
-                  <Save className="w-3 h-3" /> 將此訓練加入為自訂課表
-                </button>
-              </motion.div>
-            ))
+              {/* 依時段列出所有動作 */}
+              <div className="space-y-6">
+                {filteredHistory.map((session, sIdx) => (
+                  <div key={session.id} className="space-y-3">
+                    <div className="flex items-center justify-between px-2">
+                       <div className="flex items-center gap-2">
+                          <div className="w-1 h-3 bg-neon-green/30 rounded-full" />
+                          <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">時段 {sIdx + 1}: {format(new Date(session.startTime), 'HH:mm')}</span>
+                       </div>
+                       <button 
+                         onClick={() => handleDeleteSession(session.id)}
+                         className="text-slate-700 hover:text-red-500 active:scale-90 transition-all"
+                       >
+                         <Trash2 className="w-3 h-3" />
+                       </button>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      {session.exercises.map(ex => (
+                        <div key={ex.id} className="flex justify-between items-center bg-black/40 p-4 rounded-3xl border border-white/5">
+                          <div className="flex items-center gap-3 overflow-hidden">
+                            <div className="w-9 h-9 bg-white/5 rounded-xl p-2 text-neon-green shrink-0">
+                              {getExerciseIcon(ex.name)}
+                            </div>
+                            <div className="overflow-hidden">
+                              <span className="text-sm font-black text-white italic uppercase tracking-tight truncate block">{ex.name}</span>
+                              <div className="text-[8px] font-bold text-slate-600 uppercase tracking-widest mt-0.5">{ex.sets.length} SETS TOTAL</div>
+                            </div>
+                          </div>
+                          <div className="text-right shrink-0 ml-4">
+                            <span className="text-base font-black italic text-neon-green">{ex.sets[0]?.weight}kg</span>
+                            <span className="mx-1 text-slate-800 font-black italic">×</span>
+                            <span className="text-base font-black italic text-white">{ex.sets[0]?.reps}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* 統一的儲存按鈕 */}
+              <button 
+                onClick={handleSaveDayAsRoutine}
+                className="w-full py-5 bg-neon-green text-black font-black rounded-3xl text-[11px] uppercase tracking-tighter flex items-center justify-center gap-3 active:scale-[0.98] transition-all shadow-[0_10px_30px_rgba(173,255,47,0.1)]"
+              >
+                <Save className="w-4 h-4 stroke-[3]" /> 將今日訓練存為自訂課表
+              </button>
+            </motion.div>
           )}
         </AnimatePresence>
       </div>
 
-      <div className="glass rounded-[40px] p-8 border-white/5 space-y-6">
+      {/* 容量分布圖表區塊保持不變 */}
+      <div className="glass rounded-[44px] p-8 border-white/5 space-y-8 bg-gradient-to-b from-transparent to-slate-900/20">
         <div className="flex justify-between items-center">
-           <div className="flex items-center gap-2">
-              <BarChart3 className="w-5 h-5 text-neon-green" />
-              <h3 className="text-sm font-black italic uppercase tracking-tighter">訓練量分析 (總組數)</h3>
+           <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-neon-green/10 rounded-xl flex items-center justify-center">
+                <BarChart3 className="w-5 h-5 text-neon-green" />
+              </div>
+              <div>
+                <h3 className="text-sm font-black italic uppercase tracking-tighter text-white">訓練容量分佈</h3>
+                <p className="text-[8px] font-black text-slate-600 uppercase tracking-widest mt-1">Muscle stimulation breakdown</p>
+              </div>
            </div>
-           <div className="flex bg-slate-800 rounded-lg p-1">
+           <div className="flex bg-slate-800/80 p-1.5 rounded-2xl border border-white/5">
               {(['week', 'month'] as const).map(p => (
-                <button key={p} onClick={() => setAnalysisPeriod(p)} className={`px-2 py-1 rounded text-[9px] font-black uppercase transition-all ${analysisPeriod === p ? 'bg-neon-green text-black' : 'text-slate-500'}`}>
+                <button key={p} onClick={() => setAnalysisPeriod(p)} className={`px-4 py-2 rounded-xl text-[9px] font-black uppercase transition-all ${analysisPeriod === p ? 'bg-neon-green text-black shadow-lg shadow-neon-green/10' : 'text-slate-500 hover:text-slate-400'}`}>
                   {p === 'week' ? '週' : '月'}
                 </button>
               ))}
            </div>
         </div>
 
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 gap-5">
            {allMuscleGroups.map(muscle => {
              const setTotal = analysisData[muscle] || 0;
              const max = Math.max(...(Object.values(analysisData) as number[]), 1);
              const percentage = (setTotal / max) * 100;
              
              return (
-               <div key={muscle} className="space-y-1.5">
-                  <div className="flex justify-between text-[8px] font-black uppercase tracking-widest">
-                     <span className="text-slate-400">{getMuscleGroupDisplay(muscle).cn}</span>
-                     <span className={setTotal > 0 ? "text-neon-green" : "text-slate-600"}>{setTotal} 組</span>
+               <div key={muscle} className="space-y-2">
+                  <div className="flex justify-between text-[9px] font-black uppercase tracking-widest px-1">
+                     <span className="text-slate-500">{getMuscleGroupDisplay(muscle).cn}</span>
+                     <span className={setTotal > 0 ? "text-neon-green italic" : "text-slate-800"}>{setTotal} SETS</span>
                   </div>
-                  <div className="h-1.5 w-full bg-slate-900 rounded-full overflow-hidden">
+                  <div className="h-2 w-full bg-slate-900 rounded-full overflow-hidden border border-white/5">
                      <motion.div 
                        initial={{ width: 0 }} 
                        animate={{ width: `${percentage}%` }} 
-                       transition={{ duration: 1, ease: "circOut" }}
-                       className={`h-full ${setTotal > 0 ? "bg-neon-green" : "bg-slate-800"}`} 
+                       transition={{ duration: 1.5, ease: "circOut" }}
+                       className={`h-full ${setTotal > 0 ? "bg-neon-green shadow-[0_0_10px_rgba(173,255,47,0.2)]" : "bg-slate-800"}`} 
                      />
                   </div>
                </div>
