@@ -209,11 +209,11 @@ export const ProfileView: React.FC = () => {
               <div className="grid grid-cols-2 gap-4 w-full">
                 <div className="bg-white/5 rounded-3xl p-5 border border-white/5 space-y-2">
                   <Apple className="w-6 h-6 text-sky-400" />
-                  <p className="text-[9px] font-bold text-slate-300 leading-relaxed uppercase">Safari: 分享 -> 加入主畫面</p>
+                  <p className="text-[9px] font-bold text-slate-300 leading-relaxed uppercase">Safari: 分享 &rarr; 加入主畫面</p>
                 </div>
                 <div className="bg-white/5 rounded-3xl p-5 border border-white/5 space-y-2">
                   <Chrome className="w-6 h-6 text-orange-400" />
-                  <p className="text-[9px] font-bold text-slate-300 leading-relaxed uppercase">Chrome: 設定 -> 安裝應用程式</p>
+                  <p className="text-[9px] font-bold text-slate-300 leading-relaxed uppercase">Chrome: 設定 &rarr; 安裝應用程式</p>
                 </div>
               </div>
             </motion.div>
