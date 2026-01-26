@@ -87,7 +87,7 @@ export const ProfileView: React.FC = () => {
                 <Activity className="w-3.5 h-3.5" />
                 <h3 className="text-[10px] font-black italic uppercase tracking-[0.3em]">ANATOMICAL MUSCLE SCAN</h3>
              </div>
-             <h2 className="text-2xl font-black italic uppercase tracking-tighter text-white leading-none">生理數據分析</h2>
+             <h2 className="text-2xl font-black italic uppercase tracking-tighter text-white leading-none">肌群熱力圖</h2>
            </div>
            
            <div className="flex bg-slate-800/80 p-1.5 rounded-2xl border border-white/5">
@@ -121,7 +121,6 @@ export const ProfileView: React.FC = () => {
               <MuscleHeatmap scores={muscleScores} gender={latest.gender} />
               <div className="mt-6 grid grid-cols-2 gap-x-6 gap-y-2 w-full px-2">
                 {Object.entries(muscleScores).map(([mg, s]) => (
-                  /* Fix: Cast 's' to number because Object.entries can return unknown values in some TS environments */
                   <div key={mg} className={`flex items-center justify-between p-2 rounded-xl border ${(s as number) > 0 ? 'border-neon-green/20 bg-neon-green/5' : 'border-white/5 bg-white/5 opacity-40'}`}>
                     <span className="text-[8px] font-black text-slate-400 uppercase truncate mr-2">{getMuscleGroupDisplay(mg as any).cn}</span>
                     <span className={`text-[9px] font-black ${(s as number) > 0 ? 'text-neon-green' : 'text-slate-600'}`}>{(s as number)}%</span>

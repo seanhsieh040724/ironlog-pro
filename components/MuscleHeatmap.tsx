@@ -9,124 +9,120 @@ interface MuscleHeatmapProps {
 }
 
 export const MuscleHeatmap: React.FC<MuscleHeatmapProps> = ({ scores }) => {
-  // 依照熱力值計算顏色：深灰 (0) -> 綠色 -> 金色
-  const getMuscleColor = (score: number) => {
-    if (score === 0) return '#334155'; // 預設深灰色 (對應參考圖肌肉色)
-    if (score < 30) return '#4d7c0f'; // 低強度綠
-    if (score < 70) return '#ADFF2F'; // 霓虹綠
-    return '#facc15'; // 高強度金
+  // 依照範本色調調整：
+  // 底色：淺灰藍 #cbd5e1
+  // 低活化：淡藍 #93c5fd
+  // 中活化：亮藍 #3b82f6
+  // 高活化：強效藍 #2563eb (匹配圖片中的深度藍)
+  const getHeatColor = (score: number) => {
+    if (score === 0) return '#cbd5e1'; 
+    if (score < 35) return '#93c5fd';  
+    if (score < 75) return '#3b82f6';  
+    return '#2563eb';                  
   };
 
-  // 身體基底色 (對應參考圖皮膚色)
-  const BODY_BASE = '#94a3b8';
+  const transition = { duration: 0.8, ease: [0.4, 0, 0.2, 1] };
 
   return (
-    <div className="w-full max-w-[320px] mx-auto py-4">
-      <div className="grid grid-cols-2 gap-4">
-        {/* 正面圖 (Front View) */}
-        <div className="flex flex-col items-center">
-          <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-4">Anterior</span>
-          <svg viewBox="0 0 100 180" className="w-full h-auto drop-shadow-lg">
-            {/* 身體基底 */}
-            <path d="M50 5 Q55 5 58 12 V22 Q58 25 54 26 C65 28 75 35 80 45 L82 85 C80 100 78 115 73 120 L71 165 C70 170 62 170 60 165 L57 125 C54 122 46 122 43 125 L40 165 C38 170 30 170 29 165 L27 120 C22 115 20 100 18 85 L20 45 C25 35 35 28 46 26 Q42 25 42 22 V12 Q45 5 50 5 Z" fill={BODY_BASE} />
-            
-            {/* 胸部 Pectorals */}
-            <motion.g animate={{ fill: getMuscleColor(scores.chest) }}>
-              <path d="M35 38 Q42 35 50 37 V58 Q42 62 31 58 Z" />
-              <path d="M65 38 Q58 35 50 37 V58 Q58 62 69 58 Z" />
-            </motion.g>
-
-            {/* 三角肌 Shoulders (Front) */}
-            <motion.g animate={{ fill: getMuscleColor(scores.shoulders) }}>
-              <path d="M22 42 Q17 45 20 58 Q23 65 30 58 L32 40 Z" />
-              <path d="M78 42 Q83 45 80 58 Q77 65 70 58 L68 40 Z" />
-            </motion.g>
-
-            {/* 核心 Core (Abs) */}
-            <motion.g animate={{ fill: getMuscleColor(scores.core) }}>
-              {[62, 75, 88].map((y, i) => (
-                <React.Fragment key={i}>
-                  <rect x="42" y={y} width="7" height="11" rx="1" />
-                  <rect x="51" y={y} width="7" height="11" rx="1" />
-                </React.Fragment>
-              ))}
-              <path d="M30 70 L38 115" stroke="currentColor" strokeWidth="2" opacity="0.3" fill="none" />
-              <path d="M70 70 L62 115" stroke="currentColor" strokeWidth="2" opacity="0.3" fill="none" />
-            </motion.g>
-
-            {/* 手臂 Arms (Front) */}
-            <motion.g animate={{ fill: getMuscleColor(scores.arms) }}>
-              <path d="M18 62 Q15 75 18 90 H25 Q23 75 27 62 Z" />
-              <path d="M82 62 Q85 75 82 90 H75 Q77 75 73 62 Z" />
-              <path d="M19 95 Q17 110 22 115 H28 V95 Z" />
-              <path d="M81 95 Q83 110 78 115 H72 V95 Z" />
-            </motion.g>
-
-            {/* 股四頭肌 Quads */}
-            <motion.g animate={{ fill: getMuscleColor(scores.quads) }}>
-              <path d="M30 122 Q27 145 32 165 H46 V122 Z" />
-              <path d="M70 122 Q73 145 68 165 H54 V122 Z" />
-            </motion.g>
-          </svg>
+    <div className="w-full flex flex-col items-center py-4 select-none">
+      <div className="relative w-full max-w-[550px] aspect-[1.4] rounded-[32px] p-6 bg-[#f1f5f9] border border-slate-200 shadow-inner flex items-center justify-center overflow-hidden">
+        
+        {/* 視圖標籤 */}
+        <div className="absolute top-6 left-0 right-0 flex justify-around pointer-events-none px-12">
+          <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em]">正面</span>
+          <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em]">背面</span>
         </div>
 
-        {/* 背面圖 (Back View) */}
-        <div className="flex flex-col items-center">
-          <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-4">Posterior</span>
-          <svg viewBox="0 0 100 180" className="w-full h-auto drop-shadow-lg">
-            {/* 身體基底 */}
-            <path d="M50 5 Q55 5 58 12 V22 Q58 25 54 26 C65 28 75 35 80 45 L82 85 C80 100 78 115 73 120 L71 165 C70 170 62 170 60 165 L57 125 C54 122 46 122 43 125 L40 165 C38 170 30 170 29 165 L27 120 C22 115 20 100 18 85 L20 45 C25 35 35 28 46 26 Q42 25 42 22 V12 Q45 5 50 5 Z" fill={BODY_BASE} />
+        <svg viewBox="0 0 800 500" className="w-full h-full drop-shadow-sm">
+          {/* 正面視圖 (Anterior) */}
+          <g transform="translate(100, 50) scale(1.05)">
+            {/* 靜態底色輪廓 (頭部、頸部、關節) */}
+            <path d="M100 15 C95 15 92 18 92 25 V45 L100 55 L108 45 V25 C108 18 105 15 100 15" fill="#94a3b8" />
+            <circle cx="100" cy="25" r="9" fill="#94a3b8" />
             
-            {/* 背肌 Back/Lats */}
-            <motion.g animate={{ fill: getMuscleColor(scores.back) }}>
-              {/* 斜方肌 */}
-              <path d="M50 28 L35 45 L50 60 L65 45 Z" />
-              {/* 背闊肌 */}
-              <path d="M35 48 Q25 70 48 105 V60 Z" />
-              <path d="M65 48 Q75 70 52 105 V60 Z" />
-            </motion.g>
+            {/* 胸肌 (Chest) - 左右瓣狀 */}
+            <motion.path animate={{ fill: getHeatColor(scores.chest) }} transition={transition}
+              d="M100 85 C115 85 132 90 138 110 C132 130 115 135 100 132 Z" stroke="white" strokeWidth="1" />
+            <motion.path animate={{ fill: getHeatColor(scores.chest) }} transition={transition}
+              d="M100 85 C85 85 68 90 62 110 C68 130 85 135 100 132 Z" stroke="white" strokeWidth="1" />
 
-            {/* 三角肌 Shoulders (Back) */}
-            <motion.g animate={{ fill: getMuscleColor(scores.shoulders) }}>
-              <path d="M22 42 Q18 45 20 55 L32 40 Z" />
-              <path d="M78 42 Q82 45 80 55 L68 40 Z" />
-            </motion.g>
+            {/* 肩部 (Shoulders) */}
+            <motion.path animate={{ fill: getHeatColor(scores.shoulders) }} transition={transition}
+              d="M60 82 C50 92 48 125 62 135 C68 120 68 98 60 82 Z" stroke="white" strokeWidth="1" />
+            <motion.path animate={{ fill: getHeatColor(scores.shoulders) }} transition={transition}
+              d="M140 82 C150 92 152 125 138 135 C132 120 132 98 140 82 Z" stroke="white" strokeWidth="1" />
 
-            {/* 臀部 Glutes */}
-            <motion.g animate={{ fill: getMuscleColor(scores.glutes) }}>
-              <path d="M30 108 Q28 128 48 128 V108 Z" />
-              <path d="M70 108 Q72 128 52 128 V108 Z" />
-            </motion.g>
+            {/* 六塊肌 (Abs) */}
+            <g stroke="white" strokeWidth="0.8">
+              <motion.path animate={{ fill: getHeatColor(scores.core) }} transition={transition} d="M88 145 H112 V155 H88 Z" />
+              <motion.path animate={{ fill: getHeatColor(scores.core) }} transition={transition} d="M88 158 H112 V168 H88 Z" />
+              <motion.path animate={{ fill: getHeatColor(scores.core) }} transition={transition} d="M88 171 H112 V181 H88 Z" />
+              {/* 核心側翼 */}
+              <motion.path animate={{ fill: getHeatColor(scores.core) }} transition={transition} fillOpacity="0.4"
+                d="M75 140 C80 180 85 220 100 235 C115 220 120 180 125 140 Z" />
+            </g>
 
-            {/* 膕繩肌 Hamstrings (Back of legs) */}
-            <motion.g animate={{ fill: getMuscleColor(scores.hamstrings || scores.quads) }}>
-              <path d="M31 132 Q28 150 33 165 H46 V132 Z" />
-              <path d="M69 132 Q72 150 67 165 H54 V132 Z" />
-            </motion.g>
+            {/* 手臂 (Arms) */}
+            <motion.path animate={{ fill: getHeatColor(scores.arms) }} transition={transition}
+              d="M55 145 C45 185 50 240 60 260 L68 255 C62 230 62 180 65 148 Z" stroke="white" strokeWidth="1" />
+            <motion.path animate={{ fill: getHeatColor(scores.arms) }} transition={transition}
+              d="M145 145 C155 185 150 240 140 260 L132 255 C138 230 138 180 135 148 Z" stroke="white" strokeWidth="1" />
 
-            {/* 手臂 Arms (Back) */}
-            <motion.g animate={{ fill: getMuscleColor(scores.arms) }}>
-              <path d="M19 58 Q16 75 20 90 H27 V58 Z" />
-              <path d="M81 58 Q84 75 80 90 H73 V58 Z" />
-            </motion.g>
-          </svg>
-        </div>
+            {/* 股四頭肌 (Quads) - 解剖學水滴狀 */}
+            <motion.path animate={{ fill: getHeatColor(scores.quads) }} transition={transition}
+              d="M72 245 C65 295 70 380 82 430 H98 V245 Z" stroke="white" strokeWidth="1.5" />
+            <motion.path animate={{ fill: getHeatColor(scores.quads) }} transition={transition}
+              d="M128 245 C135 295 130 380 118 430 H102 V245 Z" stroke="white" strokeWidth="1.5" />
+            
+            {/* 小腿 (Calves) - 底色 */}
+            <path d="M82 435 C80 460 85 480 100 480 C115 480 120 460 118 435 Z" fill="#94a3b8" />
+          </g>
+
+          {/* 背面視圖 (Posterior) */}
+          <g transform="translate(450, 50) scale(1.05)">
+            <path d="M100 15 C95 15 92 18 92 25 V45 L100 55 L108 45 V25 C108 18 105 15 100 15" fill="#94a3b8" />
+            <circle cx="100" cy="25" r="9" fill="#94a3b8" />
+            
+            {/* 上背與斜方 (Back - Traps/Lats) */}
+            <motion.path animate={{ fill: getHeatColor(scores.back) }} transition={transition}
+              d="M100 55 L138 85 C145 125 125 195 100 215 C75 195 55 125 62 85 Z" stroke="white" strokeWidth="1.2" />
+            
+            {/* 後三角肌 */}
+            <motion.path animate={{ fill: getHeatColor(scores.shoulders) }} transition={transition}
+              d="M62 82 C52 92 52 125 62 138 C68 120 68 100 62 82 Z" stroke="white" strokeWidth="1" />
+            <motion.path animate={{ fill: getHeatColor(scores.shoulders) }} transition={transition}
+              d="M138 82 C148 92 148 125 138 138 C132 120 132 100 138 82 Z" stroke="white" strokeWidth="1" />
+
+            {/* 臀部 (Glutes) */}
+            <motion.path animate={{ fill: getHeatColor(scores.glutes) }} transition={transition}
+              d="M72 215 C70 265 100 280 100 280 C100 280 130 265 128 215 C120 205 80 205 72 215 Z" stroke="white" strokeWidth="1.5" />
+
+            {/* 腿後肌 (Hamstrings) */}
+            <motion.path animate={{ fill: getHeatColor(scores.hamstrings || scores.quads) }} transition={transition}
+              d="M75 285 C70 340 75 430 82 430 H98 V285 Z" stroke="white" strokeWidth="1.2" />
+            <motion.path animate={{ fill: getHeatColor(scores.hamstrings || scores.quads) }} transition={transition}
+              d="M125 285 C130 340 125 430 118 430 H102 V285 Z" stroke="white" strokeWidth="1.2" />
+            
+            {/* 手臂三頭 (Triceps) */}
+            <motion.path animate={{ fill: getHeatColor(scores.arms) }} transition={transition}
+              d="M55 145 C45 185 50 240 60 260 L68 255 C62 230 62 180 65 148 Z" stroke="white" strokeWidth="1" />
+            <motion.path animate={{ fill: getHeatColor(scores.arms) }} transition={transition}
+              d="M145 145 C155 185 150 240 140 260 L132 255 C138 230 138 180 135 148 Z" stroke="white" strokeWidth="1" />
+
+            {/* 小腿底色 */}
+            <path d="M82 435 C80 460 85 480 100 480 C115 480 120 460 118 435 Z" fill="#94a3b8" />
+          </g>
+        </svg>
       </div>
-      
-      {/* 底部圖例 */}
-      <div className="mt-8 flex justify-center gap-6">
-        <div className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#334155' }} />
-          <span className="text-[7px] font-black text-slate-500 uppercase tracking-widest">Rest</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-neon-green shadow-[0_0_5px_#ADFF2F]" />
-          <span className="text-[7px] font-black text-slate-500 uppercase tracking-widest">Active</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-yellow-400 shadow-[0_0_5px_#facc15]" />
-          <span className="text-[7px] font-black text-slate-500 uppercase tracking-widest">Peak</span>
-        </div>
+
+      {/* 圖例 */}
+      <div className="mt-6 flex gap-12">
+        {[0, 35, 75, 100].map((s, i) => (
+          <div key={i} className="flex flex-col items-center gap-1.5">
+            <div className="w-2.5 h-2.5 rounded-full shadow-sm" style={{ backgroundColor: getHeatColor(s) }} />
+            <div className="w-[1px] h-2 bg-slate-300" />
+          </div>
+        ))}
       </div>
     </div>
   );
