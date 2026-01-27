@@ -52,47 +52,47 @@ export const CalendarStrip: React.FC<CalendarStripProps> = ({ selectedDate, onDa
   const weekdays = ['一', '二', '三', '四', '五', '六', '日'];
 
   return (
-    <div className="p-4 select-none">
+    <div className="p-5 select-none">
       {/* 月份切換標題 */}
-      <div className="flex items-center justify-between mb-6 px-2">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-neon-green/10 rounded-xl flex items-center justify-center text-neon-green">
-            <CalendarIcon className="w-5 h-5" />
+      <div className="flex items-center justify-between mb-8 px-2">
+        <div className="flex items-center gap-4">
+          <div className="w-11 h-11 bg-neon-green/10 rounded-xl flex items-center justify-center text-neon-green">
+            <CalendarIcon className="w-6 h-6" />
           </div>
           <div>
-            <h3 className="text-xl font-black italic uppercase tracking-tighter text-white leading-none">
+            <h3 className="text-2xl font-black italic uppercase tracking-tighter text-white leading-none">
               {format(viewDate, 'yyyy MMM', { locale: zhTW })}
             </h3>
-            <p className="text-[8px] font-black text-slate-600 uppercase tracking-widest mt-1">
+            <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest mt-1.5">
               左右滑動切換月份
             </p>
           </div>
         </div>
         
-        <div className="flex gap-2">
-          <button onClick={prevMonth} className="w-8 h-8 rounded-lg bg-slate-800/50 flex items-center justify-center text-slate-400 active:text-neon-green">
-            <ChevronLeft className="w-4 h-4" />
+        <div className="flex gap-2.5">
+          <button onClick={prevMonth} className="w-9 h-9 rounded-lg bg-slate-800/50 flex items-center justify-center text-slate-400 active:text-neon-green">
+            <ChevronLeft className="w-5 h-5" />
           </button>
-          <button onClick={() => { setViewDate(new Date()); onDateSelect(new Date()); }} className="px-3 rounded-lg bg-slate-800/50 text-[10px] font-black text-slate-400 uppercase tracking-widest active:text-neon-green">
+          <button onClick={() => { setViewDate(new Date()); onDateSelect(new Date()); }} className="px-4 rounded-lg bg-slate-800/50 text-[11px] font-black text-slate-400 uppercase tracking-widest active:text-neon-green">
             Today
           </button>
-          <button onClick={nextMonth} className="w-8 h-8 rounded-lg bg-slate-800/50 flex items-center justify-center text-slate-400 active:text-neon-green">
-            <ChevronRight className="w-4 h-4" />
+          <button onClick={nextMonth} className="w-9 h-9 rounded-lg bg-slate-800/50 flex items-center justify-center text-slate-400 active:text-neon-green">
+            <ChevronRight className="w-5 h-5" />
           </button>
         </div>
       </div>
 
       {/* 星期標題 */}
-      <div className="grid grid-cols-7 gap-1 mb-2">
+      <div className="grid grid-cols-7 gap-1.5 mb-3">
         {weekdays.map(d => (
-          <div key={d} className="text-center text-[9px] font-black text-slate-700 uppercase py-2">
+          <div key={d} className="text-center text-[11px] font-black text-slate-700 uppercase py-2">
             {d}
           </div>
         ))}
       </div>
 
       {/* 日曆網格與滑動動畫 */}
-      <div className="relative overflow-hidden min-h-[240px]">
+      <div className="relative overflow-hidden min-h-[260px]">
         <AnimatePresence mode="popLayout" custom={direction}>
           <motion.div
             key={viewDate.getMonth() + '-' + viewDate.getFullYear()}
@@ -104,7 +104,7 @@ export const CalendarStrip: React.FC<CalendarStripProps> = ({ selectedDate, onDa
             drag="x"
             dragConstraints={{ left: 0, right: 0 }}
             onDragEnd={handleDragEnd}
-            className="grid grid-cols-7 gap-1"
+            className="grid grid-cols-7 gap-1.5"
           >
             {days.map((day) => {
               const isSelected = isSameDay(day, selectedDate);
@@ -127,13 +127,13 @@ export const CalendarStrip: React.FC<CalendarStripProps> = ({ selectedDate, onDa
                     }
                   `}
                 >
-                  <span className={`text-sm ${isSelected ? 'scale-110' : ''}`}>
+                  <span className={`text-base ${isSelected ? 'scale-110' : ''}`}>
                     {format(day, 'd')}
                   </span>
                   
                   {hasWorkout && (
                     <div className={`
-                      absolute bottom-1.5 w-1 h-1 rounded-full 
+                      absolute bottom-2 w-1.5 h-1.5 rounded-full 
                       ${isSelected ? 'bg-black' : 'bg-neon-green'}
                       ${isToday && !isSelected ? 'animate-pulse' : ''}
                     `} />

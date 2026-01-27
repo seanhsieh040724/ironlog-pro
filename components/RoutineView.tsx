@@ -150,53 +150,53 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
     const isCustom = customRoutines.some(r => r.id === previewRoutine.id);
     return (
       <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6 pb-44">
-        <div className="flex items-center gap-4 px-1">
-          <button onClick={() => setPreviewRoutine(null)} className="w-10 h-10 bg-slate-800 rounded-xl flex items-center justify-center text-neon-green border border-white/5"><ArrowLeft className="w-5 h-5" /></button>
+        <div className="flex items-center gap-5 px-1">
+          <button onClick={() => setPreviewRoutine(null)} className="w-11 h-11 bg-slate-800 rounded-xl flex items-center justify-center text-neon-green border border-white/5"><ArrowLeft className="w-6 h-6" /></button>
           <div className="flex-1 overflow-hidden">
             {isEditingName ? (
               <div className="flex gap-2">
-                <input autoFocus value={tempName} onChange={e => setTempName(e.target.value)} onBlur={renameRoutine} className="bg-black/40 border-b border-neon-green text-lg font-black italic text-white outline-none w-full uppercase" />
-                <button onClick={renameRoutine} className="p-2 text-neon-green"><Check className="w-5 h-5" /></button>
+                <input autoFocus value={tempName} onChange={e => setTempName(e.target.value)} onBlur={renameRoutine} className="bg-black/40 border-b border-neon-green text-xl font-black italic text-white outline-none w-full uppercase" />
+                <button onClick={renameRoutine} className="p-2 text-neon-green"><Check className="w-6 h-6" /></button>
               </div>
             ) : (
-              <div className="flex items-center gap-2">
-                <h2 className="text-lg font-black italic tracking-tighter uppercase truncate text-white">{previewRoutine.name}</h2>
-                {isCustom && <button onClick={() => { setTempName(previewRoutine.name); setIsEditingName(true); }} className="p-1.5 bg-slate-800/50 rounded-lg text-slate-500"><Edit2 className="w-3 h-3" /></button>}
+              <div className="flex items-center gap-2.5">
+                <h2 className="text-xl font-black italic tracking-tighter uppercase truncate text-white">{previewRoutine.name}</h2>
+                {isCustom && <button onClick={() => { setTempName(previewRoutine.name); setIsEditingName(true); }} className="p-2 bg-slate-800/50 rounded-lg text-slate-500"><Edit2 className="w-4 h-4" /></button>}
               </div>
             )}
-            <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mt-1">訓練清單內容</p>
+            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-1.5">訓練清單內容</p>
           </div>
-          {isCustom && <button onClick={() => deleteRoutine(previewRoutine.id)} className="w-12 h-12 bg-red-500/10 text-red-500 rounded-xl flex items-center justify-center border border-red-500/10"><Trash2 className="w-5 h-5" /></button>}
+          {isCustom && <button onClick={() => deleteRoutine(previewRoutine.id)} className="w-13 h-13 bg-red-500/10 text-red-500 rounded-xl flex items-center justify-center border border-red-500/10"><Trash2 className="w-6 h-6" /></button>}
         </div>
         
-        <div className="space-y-3">
+        <div className="space-y-4">
           {previewRoutine.exercises.map((ex) => (
-            <div key={ex.id} className="glass rounded-[28px] p-5 border-white/5 flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-neon-green p-2 border border-white/5">
+            <div key={ex.id} className="glass rounded-[28px] p-6 border-white/5 flex items-center justify-between">
+              <div className="flex items-center space-x-5">
+                <div className="w-12 h-12 rounded-xl bg-slate-800 flex items-center justify-center text-neon-green p-2 border border-white/5">
                   {getExerciseIcon(ex.name)}
                 </div>
                 <div>
-                  <h4 className="font-black text-base text-white italic uppercase tracking-tight">{ex.name}</h4>
-                  <p className="text-[9px] font-bold text-slate-500 uppercase tracking-[0.2em] mt-1">{ex.defaultWeight}KG | {ex.defaultSets} 組 | {ex.defaultReps} 次</p>
+                  <h4 className="font-black text-lg text-white italic uppercase tracking-tight">{ex.name}</h4>
+                  <p className="text-[11px] font-bold text-slate-500 uppercase tracking-[0.2em] mt-1.5">{ex.defaultWeight}KG | {ex.defaultSets} 組 | {ex.defaultReps} 次</p>
                 </div>
               </div>
               {isCustom && (
-                <button onClick={() => removeExerciseFromTemplate(ex.id)} className="w-10 h-10 bg-slate-800/30 rounded-xl flex items-center justify-center text-slate-700 active:text-red-500"><Trash2 className="w-4 h-4" /></button>
+                <button onClick={() => removeExerciseFromTemplate(ex.id)} className="w-11 h-11 bg-slate-800/30 rounded-xl flex items-center justify-center text-slate-700 active:text-red-500"><Trash2 className="w-5 h-5" /></button>
               )}
             </div>
           ))}
         </div>
 
         {isCustom && (
-          <button onClick={() => setIsAddingExercise(true)} className="w-full py-4 bg-white/5 border border-dashed border-white/10 rounded-2xl text-[10px] font-black uppercase text-slate-500 flex items-center justify-center gap-2">
-            <Plus className="w-3.5 h-3.5" /> 新增動作項目
+          <button onClick={() => setIsAddingExercise(true)} className="w-full py-5 bg-white/5 border border-dashed border-white/10 rounded-2xl text-[11px] font-black uppercase text-slate-500 flex items-center justify-center gap-2.5">
+            <Plus className="w-4 h-4" /> 新增動作項目
           </button>
         )}
         
         <div className="fixed bottom-[95px] left-0 right-0 z-50 flex justify-center px-6">
-          <button onClick={() => { onStartRoutine(previewRoutine); setPreviewRoutine(null); }} className="w-full bg-neon-green text-black font-black h-14 rounded-2xl uppercase italic tracking-tighter text-base shadow-lg flex items-center justify-center gap-3">
-            帶入今日訓練開始行動 <ChevronRight className="w-5 h-5 stroke-[3]" />
+          <button onClick={() => { onStartRoutine(previewRoutine); setPreviewRoutine(null); }} className="w-full bg-neon-green text-black font-black h-16 rounded-2xl uppercase italic tracking-tighter text-lg shadow-lg flex items-center justify-center gap-4">
+            帶入今日訓練開始行動 <ChevronRight className="w-6 h-6 stroke-[4]" />
           </button>
         </div>
 
@@ -204,41 +204,41 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
           {isAddingExercise && (
             <div className="fixed inset-0 z-[100] flex items-end justify-center">
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/90 backdrop-blur-md" onClick={() => setIsAddingExercise(false)} />
-              <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} className="relative w-full max-w-md bg-slate-900 rounded-t-[44px] p-8 pb-12 border-t border-white/10 shadow-2xl safe-bottom max-h-[90vh] overflow-y-auto no-scrollbar">
-                <div className="w-12 h-1.5 bg-slate-800 rounded-full mx-auto mb-8" />
-                <div className="flex justify-between items-center mb-8">
-                  <h3 className="text-xl font-black italic uppercase text-white">選取課表動作</h3>
-                  <button onClick={() => setIsAddingExercise(false)} className="w-10 h-10 bg-slate-800 rounded-xl flex items-center justify-center text-slate-400"><X className="w-6 h-6" /></button>
+              <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} className="relative w-full max-w-md bg-slate-900 rounded-t-[44px] p-8 pb-14 border-t border-white/10 shadow-2xl safe-bottom max-h-[90vh] overflow-y-auto no-scrollbar">
+                <div className="w-14 h-1.5 bg-slate-800 rounded-full mx-auto mb-10" />
+                <div className="flex justify-between items-center mb-10">
+                  <h3 className="text-2xl font-black italic uppercase text-white">選取課表動作</h3>
+                  <button onClick={() => setIsAddingExercise(false)} className="w-12 h-12 bg-slate-800 rounded-xl flex items-center justify-center text-slate-400"><X className="w-7 h-7" /></button>
                 </div>
-                <div className="space-y-6">
-                  <div className="flex items-center gap-4 bg-black/40 border border-white/10 rounded-2xl px-5 py-4">
-                    <Search className="w-5 h-5 text-slate-600" />
-                    <input placeholder="搜尋動作庫..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="bg-transparent w-full text-lg font-black italic outline-none text-white placeholder:text-slate-800" />
+                <div className="space-y-7">
+                  <div className="flex items-center gap-5 bg-black/40 border border-white/10 rounded-2xl px-6 py-5">
+                    <Search className="w-6 h-6 text-slate-600" />
+                    <input placeholder="搜尋動作庫..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="bg-transparent w-full text-xl font-black italic outline-none text-white placeholder:text-slate-800" />
                   </div>
                   <AnimatePresence>
                     {searchTerm.trim() && !exactMatch && (
-                      <button onClick={() => addExerciseToTemplate(searchTerm.trim())} className="w-full p-4 rounded-2xl bg-neon-green/10 border border-neon-green/40 flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-neon-green text-black rounded-xl flex items-center justify-center"><Plus className="w-6 h-6 stroke-[3]" /></div>
-                          <div className="text-left"><div className="text-[10px] font-black text-neon-green uppercase">建立新動作</div><div className="text-sm font-black italic text-white uppercase">{searchTerm}</div></div>
+                      <button onClick={() => addExerciseToTemplate(searchTerm.trim())} className="w-full p-5 rounded-2xl bg-neon-green/10 border border-neon-green/40 flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 bg-neon-green text-black rounded-xl flex items-center justify-center"><Plus className="w-7 h-7 stroke-[4]" /></div>
+                          <div className="text-left"><div className="text-[11px] font-black text-neon-green uppercase">建立新動作</div><div className="text-base font-black italic text-white uppercase">{searchTerm}</div></div>
                         </div>
-                        <ChevronRight className="w-5 h-5 text-neon-green" />
+                        <ChevronRight className="w-6 h-6 text-neon-green" />
                       </button>
                     )}
                   </AnimatePresence>
-                  <div className="flex gap-2 overflow-x-auto no-scrollbar">
+                  <div className="flex gap-2.5 overflow-x-auto no-scrollbar">
                     {Object.keys(ORGANIZED_EXERCISES).map(cat => (
-                      <button key={cat} onClick={() => { setActiveCategory(cat); setSearchTerm(''); }} className={`shrink-0 px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border ${!searchTerm && activeCategory === cat ? 'bg-neon-green text-black border-neon-green' : 'bg-slate-800 text-slate-500 border-white/5'}`}>{getMuscleGroupDisplay(cat as MuscleGroup).cn}</button>
+                      <button key={cat} onClick={() => { setActiveCategory(cat); setSearchTerm(''); }} className={`shrink-0 px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${!searchTerm && activeCategory === cat ? 'bg-neon-green text-black border-neon-green' : 'bg-slate-800 text-slate-500 border-white/5'}`}>{getMuscleGroupDisplay(cat as MuscleGroup).cn}</button>
                     ))}
                   </div>
-                  <div className="grid grid-cols-2 gap-3 max-h-[300px] overflow-y-auto pr-1 no-scrollbar">
+                  <div className="grid grid-cols-2 gap-4 max-h-[350px] overflow-y-auto pr-1 no-scrollbar">
                     {filteredExercises.map(exName => (
-                      <button key={exName} onClick={() => addExerciseToTemplate(exName)} className="p-3 rounded-2xl text-left bg-slate-800/40 border border-white/5 active:bg-neon-green/5">
-                        <div className="flex items-center gap-3"><div className="w-8 h-8 shrink-0 bg-slate-700 rounded-lg flex items-center justify-center p-1">{getExerciseIcon(exName)}</div><div className="text-[10px] font-black italic uppercase text-slate-200 truncate">{exName}</div></div>
+                      <button key={exName} onClick={() => addExerciseToTemplate(exName)} className="p-4 rounded-2xl text-left bg-slate-800/40 border border-white/5 active:bg-neon-green/5">
+                        <div className="flex items-center gap-4"><div className="w-9 h-9 shrink-0 bg-slate-700 rounded-lg flex items-center justify-center p-1">{getExerciseIcon(exName)}</div><div className="text-[11px] font-black italic uppercase text-slate-200 truncate">{exName}</div></div>
                       </button>
                     ))}
                   </div>
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-3 gap-4">
                     <InputSmall label="預設重量" unit="KG" val={newExConfig.weight} onChange={v => setNewExConfig({...newExConfig, weight: v})} />
                     <InputSmall label="預設組數" unit="組" val={newExConfig.sets} onChange={v => setNewExConfig({...newExConfig, sets: v})} />
                     <InputSmall label="預設次數" unit="次" val={newExConfig.reps} onChange={v => setNewExConfig({...newExConfig, reps: v})} />
@@ -255,76 +255,76 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
   return (
     <div className="space-y-12 pb-32">
       <div className="flex justify-between items-center px-1">
-        <h2 className="text-sm font-black italic tracking-tighter uppercase flex items-center gap-2 text-slate-400">
-          <LayoutGrid className="w-5 h-5 text-neon-green" /> 我的自訂課表
+        <h2 className="text-base font-black italic tracking-tighter uppercase flex items-center gap-3 text-slate-400">
+          <LayoutGrid className="w-6 h-6 text-neon-green" /> 我的自訂課表
         </h2>
-        <button onClick={() => setIsCreating(true)} className="px-4 py-2 bg-white/5 text-neon-green text-[10px] font-black rounded-xl uppercase border border-white/5 active:bg-neon-green active:text-black transition-all">
+        <button onClick={() => setIsCreating(true)} className="px-5 py-2.5 bg-white/5 text-neon-green text-[11px] font-black rounded-xl uppercase border border-white/5 active:bg-neon-green active:text-black transition-all">
           + 建立範本
         </button>
       </div>
 
       <AnimatePresence>
         {isCreating && (
-          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="glass rounded-[32px] p-8 border-neon-green/30 space-y-6 overflow-hidden">
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-neon-green uppercase tracking-[0.3em] ml-1">新課表範本名稱</label>
-              <input autoFocus placeholder="例如：胸背拉推日..." value={newRoutineName} onChange={e => setNewRoutineName(e.target.value)} className="w-full bg-transparent border-b-2 border-neon-green/30 py-3 text-2xl font-black italic uppercase outline-none text-white focus:border-neon-green" />
+          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="glass rounded-[32px] p-9 border-neon-green/30 space-y-7 overflow-hidden">
+            <div className="space-y-3">
+              <label className="text-[11px] font-black text-neon-green uppercase tracking-[0.3em] ml-1.5">新課表範本名稱</label>
+              <input autoFocus placeholder="例如：胸背拉推日..." value={newRoutineName} onChange={e => setNewRoutineName(e.target.value)} className="w-full bg-transparent border-b-2 border-neon-green/30 py-4 text-3xl font-black italic uppercase outline-none text-white focus:border-neon-green" />
             </div>
-            <div className="flex gap-4">
-              <button onClick={createRoutine} className="flex-1 bg-neon-green text-black font-black py-4 rounded-2xl uppercase italic text-sm">建立範本</button>
-              <button onClick={() => setIsCreating(false)} className="px-8 bg-slate-800 text-white font-bold py-4 rounded-2xl uppercase text-[11px]">取消</button>
+            <div className="flex gap-5">
+              <button onClick={createRoutine} className="flex-1 bg-neon-green text-black font-black py-5 rounded-2xl uppercase italic text-base">建立範本</button>
+              <button onClick={() => setIsCreating(false)} className="px-10 bg-slate-800 text-white font-bold py-5 rounded-2xl uppercase text-xs">取消</button>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      <div className="space-y-4">
+      <div className="space-y-5">
         {customRoutines.length === 0 ? (
-          <div className="p-10 text-center glass rounded-[36px] border-white/5 italic text-slate-700 text-[10px] uppercase tracking-widest leading-loose">
+          <div className="p-12 text-center glass rounded-[36px] border-white/5 italic text-slate-700 text-[11px] uppercase tracking-widest leading-loose">
             尚未建立任何自訂範本
           </div>
         ) : (
           customRoutines.map(r => (
-            <div key={r.id} onClick={() => setPreviewRoutine(r)} className="glass rounded-[32px] p-6 border-white/5 active:scale-[0.98] transition-all flex justify-between items-center">
+            <div key={r.id} onClick={() => setPreviewRoutine(r)} className="glass rounded-[32px] p-7 border-white/5 active:scale-[0.98] transition-all flex justify-between items-center">
               <div>
-                <h3 className="text-lg font-black text-white italic uppercase tracking-tight">{r.name}</h3>
-                <p className="text-[10px] font-bold text-slate-500 uppercase mt-2 tracking-widest">{r.exercises.length} 項訓練項目</p>
+                <h3 className="text-xl font-black text-white italic uppercase tracking-tight">{r.name}</h3>
+                <p className="text-[11px] font-bold text-slate-500 uppercase mt-2.5 tracking-widest">{r.exercises.length} 項訓練項目</p>
               </div>
-              <div className="w-12 h-12 bg-slate-800 text-slate-500 rounded-2xl flex items-center justify-center border border-white/5 shrink-0"><Eye className="w-5 h-5" /></div>
+              <div className="w-13 h-13 bg-slate-800 text-slate-500 rounded-2xl flex items-center justify-center border border-white/5 shrink-0"><Eye className="w-6 h-6" /></div>
             </div>
           ))
         )}
       </div>
 
-      <div className="space-y-8 pt-4">
-        <p className="text-[11px] font-black text-slate-600 uppercase tracking-[0.4em] ml-2 flex items-center gap-2">
-           <Layers className="w-4 h-4 text-neon-green" /> 科學分化系統系統庫
+      <div className="space-y-10 pt-4">
+        <p className="text-xs font-black text-slate-600 uppercase tracking-[0.4em] ml-2 flex items-center gap-3">
+           <Layers className="w-5 h-5 text-neon-green" /> 科學分化系統系統庫
         </p>
         
         {splitSystems.map(system => (
-          <div key={system.id} className="glass rounded-[44px] p-8 border-white/5 space-y-6 relative overflow-hidden bg-gradient-to-br from-slate-900/40 to-transparent">
-            <div className="space-y-2">
-               <h3 className="text-xl font-black italic uppercase text-white tracking-tighter">{system.title}</h3>
-               <p className="text-[10px] font-medium text-slate-500 leading-relaxed">{system.description}</p>
+          <div key={system.id} className="glass rounded-[44px] p-9 border-white/5 space-y-7 relative overflow-hidden bg-gradient-to-br from-slate-900/40 to-transparent">
+            <div className="space-y-2.5">
+               <h3 className="text-2xl font-black italic uppercase text-white tracking-tighter">{system.title}</h3>
+               <p className="text-xs font-medium text-slate-500 leading-relaxed">{system.description}</p>
             </div>
             
-            <div className="grid grid-cols-1 gap-3">
+            <div className="grid grid-cols-1 gap-4">
                {system.routines.map((r, idx) => (
                  <button 
                    key={r.id} 
                    onClick={() => setPreviewRoutine(r)}
-                   className="flex items-center justify-between p-5 bg-black/40 border border-white/5 rounded-[24px] hover:border-neon-green/30 transition-all active:scale-[0.98]"
+                   className="flex items-center justify-between p-6 bg-black/40 border border-white/5 rounded-[24px] hover:border-neon-green/30 transition-all active:scale-[0.98]"
                  >
-                   <div className="flex items-center gap-4 overflow-hidden">
-                      <div className="w-10 h-10 bg-slate-800 rounded-xl flex items-center justify-center text-[11px] font-black text-neon-green shrink-0">
+                   <div className="flex items-center gap-5 overflow-hidden">
+                      <div className="w-11 h-11 bg-slate-800 rounded-xl flex items-center justify-center text-[12px] font-black text-neon-green shrink-0">
                          D{idx + 1}
                       </div>
                       <div className="text-left overflow-hidden">
-                        <div className="text-sm font-black italic uppercase text-slate-200 truncate">{r.name.split(': ')[1] || r.name}</div>
-                        <div className="text-[8px] font-bold text-slate-600 uppercase tracking-widest mt-0.5">{r.exercises.length} EXERCISES</div>
+                        <div className="text-base font-black italic uppercase text-slate-200 truncate">{r.name.split(': ')[1] || r.name}</div>
+                        <div className="text-[9px] font-bold text-slate-600 uppercase tracking-widest mt-1">{r.exercises.length} EXERCISES</div>
                       </div>
                    </div>
-                   <ChevronRight className="w-4 h-4 text-slate-700" />
+                   <ChevronRight className="w-5 h-5 text-slate-700" />
                  </button>
                ))}
             </div>
@@ -336,11 +336,11 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
 };
 
 const InputSmall = ({ label, unit, val, onChange }: any) => (
-  <div className="space-y-2">
-    <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest text-center block">{label}</label>
+  <div className="space-y-2.5">
+    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest text-center block">{label}</label>
     <div className="relative">
-      <input type="number" value={val} onChange={e => onChange(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-2xl py-4 text-center text-base font-black italic outline-none text-white focus:border-neon-green/20" />
-      <span className="absolute bottom-1 right-2 text-[6px] font-black text-slate-700 uppercase">{unit}</span>
+      <input type="number" value={val} onChange={e => onChange(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-2xl py-5 text-center text-lg font-black italic outline-none text-white focus:border-neon-green/20" />
+      <span className="absolute bottom-1.5 right-2.5 text-[8px] font-black text-slate-700 uppercase">{unit}</span>
     </div>
   </div>
 );
