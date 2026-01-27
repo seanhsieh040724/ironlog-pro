@@ -49,22 +49,18 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
   const [isGifLoading, setIsGifLoading] = useState(false);
   const [hasGifError, setHasGifError] = useState(false);
 
-  const filteredExercises = useMemo(() => {
-    if (!searchTerm.trim()) return ORGANIZED_EXERCISES[activeCategory] || [];
-    return EXERCISE_DATABASE.filter(ex => ex.toLowerCase().includes(searchTerm.toLowerCase())).slice(0, 20);
-  }, [searchTerm, activeCategory]);
-
   const currentDetailEx = useMemo(() => session?.exercises.find(e => e.id === activeExerciseId), [session, activeExerciseId]);
 
-  // 物理級硬編碼網址
-  const DUMBBELL_INCLINE_URL = "https://raw.githubusercontent.com/seanhsieh040724/ironlog-pro/refs/heads/main/incline-press.gif";
+  // 物理級硬編碼 GIF 網址
+  const DUMBBELL_INCLINE_GIF = "https://raw.githubusercontent.com/seanhsieh040724/ironlog-pro/refs/heads/main/incline-press.gif";
 
   useEffect(() => {
     if (activeExerciseId && currentDetailEx) {
       const name = currentDetailEx.name.trim();
-      // 模糊比對：只要包含關鍵字就強制使用
+      
+      // 如果是目標動作，直接設置並跳過後續請求
       if (name.includes('啞鈴') && name.includes('上斜')) {
-        setCurrentGif(DUMBBELL_INCLINE_URL);
+        setCurrentGif(DUMBBELL_INCLINE_GIF);
         setIsGifLoading(false);
         setHasGifError(false);
         return;
@@ -80,7 +76,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
 
   if (!session) return null;
 
-  const isHardcodedAction = currentDetailEx?.name.includes('啞鈴') && currentDetailEx?.name.includes('上斜');
+  const isSpecialGif = currentDetailEx?.name.includes('啞鈴') && currentDetailEx?.name.includes('上斜');
 
   return (
     <div className="relative min-h-screen">
@@ -98,17 +94,16 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                 ))}
               </div>
               <div className="grid grid-cols-2 gap-3">
-                {filteredExercises.map(exName => (
+                {Object.values(ORGANIZED_EXERCISES).flat().filter(ex => searchTerm ? ex.toLowerCase().includes(searchTerm.toLowerCase()) : (ORGANIZED_EXERCISES[activeCategory]?.includes(ex))).slice(0, 20).map(exName => (
                   <motion.button key={exName} whileTap={{ scale: 0.95 }} onClick={() => {
                     const newExId = crypto.randomUUID();
                     onUpdate({ ...session, exercises: [...session.exercises, { id: newExId, name: exName, muscleGroup: getMuscleGroup(exName), sets: Array.from({ length: 4 }).map(() => ({ id: crypto.randomUUID(), weight: 0, reps: 10, completed: false })) }] });
                     setActiveExerciseId(newExId);
-                    setSearchTerm('');
-                  }} className="p-4 rounded-2xl text-left bg-slate-900/40 border border-white/5 hover:border-neon-green/30 transition-all flex items-start gap-3">
+                  }} className="p-4 rounded-2xl text-left bg-slate-900/40 border border-white/5 flex items-start gap-3">
                     <div className="w-9 h-9 shrink-0 bg-slate-800 rounded-lg flex items-center justify-center p-1">{getExerciseIcon(exName)}</div>
                     <div className="overflow-hidden">
                       <div className="text-[11px] font-black italic uppercase text-slate-200 truncate">{exName}</div>
-                      <div className="text-[7px] font-bold text-slate-700 uppercase tracking-widest mt-1">{getMuscleGroupDisplay(getMuscleGroup(exName)).cn}</div>
+                      <div className="text-[7px] font-bold text-slate-700 uppercase mt-1">{getMuscleGroupDisplay(getMuscleGroup(exName)).cn}</div>
                     </div>
                   </motion.button>
                 ))}
@@ -118,51 +113,60 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
         ) : (
           <motion.div key="detail" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="space-y-6 pb-40">
             <div className="flex items-center justify-between">
-              <button onClick={() => setActiveExerciseId(null)} className="flex items-center gap-2 text-slate-400 active:text-neon-green transition-colors py-2"><ChevronLeft className="w-6 h-6" /><span className="text-[10px] font-black uppercase tracking-widest">返回</span></button>
+              <button onClick={() => setActiveExerciseId(null)} className="flex items-center gap-2 text-slate-400 py-2"><ChevronLeft className="w-6 h-6" /><span className="text-[10px] font-black uppercase tracking-widest">返回</span></button>
               <h2 className="text-xl font-black italic uppercase text-white truncate max-w-[200px]">{currentDetailEx?.name}</h2>
-              <button onClick={() => { if(confirm(`確定要移除此動作紀錄嗎？`)) { onUpdate({ ...session, exercises: session.exercises.filter(e => e.id !== currentDetailEx!.id) }); setActiveExerciseId(null); } }} className="w-10 h-10 bg-red-500/10 rounded-xl flex items-center justify-center text-red-500/40"><Trash2 className="w-4 h-4" /></button>
+              <button onClick={() => { if(confirm('移除？')) { onUpdate({ ...session, exercises: session.exercises.filter(e => e.id !== currentDetailEx!.id) }); setActiveExerciseId(null); } }} className="w-10 h-10 bg-red-500/10 rounded-xl flex items-center justify-center text-red-500/40"><Trash2 className="w-4 h-4" /></button>
             </div>
 
+            {/* 核心示範區塊：針對 GIF 進行物理級優化 */}
             <div className="w-full relative px-1">
-              {(isGifLoading && !isHardcodedAction) ? (
-                <div className="w-full aspect-video bg-slate-900/50 rounded-[15px] flex items-center justify-center border border-white/5"><Loader2 className="w-8 h-8 animate-spin text-neon-green" /></div>
-              ) : (hasGifError && !isHardcodedAction) ? (
-                <div className="w-full aspect-video bg-slate-900/50 rounded-[15px] flex flex-col items-center justify-center text-slate-700 border border-white/5 p-8 text-center"><AlertCircle className="w-8 h-8 mb-2" /><span className="text-[10px] font-black uppercase tracking-widest">示範圖載入失敗</span></div>
-              ) : (
-                <div className="relative overflow-hidden rounded-[15px] shadow-2xl border border-white/5 bg-slate-900">
-                  <img 
-                    key={currentDetailEx?.id}
-                    src={isHardcodedAction ? DUMBBELL_INCLINE_URL : (currentGif || '')} 
-                    className="w-full h-auto block" 
-                    alt="exercise demonstration" 
-                    style={{ borderRadius: '15px', width: '100%', display: 'block', height: 'auto' }}
-                  />
-                  {isHardcodedAction && <div className="absolute top-2 right-2 px-2 py-1 bg-neon-green/80 text-black text-[8px] font-black rounded uppercase">專屬圖源</div>}
-                  <div className="absolute inset-0 bg-gradient-to-b from-transparent via-neon-green/5 to-transparent h-24 w-full animate-[scan_3s_linear_infinite] pointer-events-none" />
-                </div>
+              {/* 如果不是特殊 GIF 且正在加載，顯示 Loading */}
+              {isGifLoading && !isSpecialGif && (
+                <div className="w-full aspect-video bg-slate-900/50 rounded-[20px] flex items-center justify-center border border-white/5"><Loader2 className="w-8 h-8 animate-spin text-neon-green" /></div>
               )}
+              
+              {/* 如果不是特殊 GIF 且發生錯誤，顯示錯誤 */}
+              {hasGifError && !isSpecialGif && (
+                <div className="w-full aspect-video bg-slate-900/50 rounded-[20px] flex flex-col items-center justify-center text-slate-700 border border-white/5 p-8 text-center"><AlertCircle className="w-8 h-8 mb-2" /><span className="text-[10px] font-black">載入失敗</span></div>
+              )}
+
+              {/* 只要是特殊 GIF (或是普通 GIF 載入成功)，直接強制渲染 <img> */}
+              <div className={`relative overflow-hidden rounded-[20px] shadow-2xl border border-white/5 bg-slate-900 ${(!isSpecialGif && isGifLoading) ? 'hidden' : 'block'}`}>
+                <img 
+                  key={currentDetailEx?.id}
+                  src={isSpecialGif ? DUMBBELL_INCLINE_GIF : (currentGif || '')} 
+                  className="w-full h-auto block" 
+                  alt="Workout Animation GIF" 
+                  loading="eager"
+                  style={{ borderRadius: '20px', width: '100%', height: 'auto', minHeight: '150px' }}
+                />
+                {isSpecialGif && (
+                  <div className="absolute top-3 right-3 px-3 py-1 bg-neon-green/90 text-black text-[9px] font-black rounded-full uppercase tracking-tighter animate-pulse shadow-lg">
+                    LIVE GIF
+                  </div>
+                )}
+                {/* 裝飾性掃描線 */}
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-neon-green/5 to-transparent h-24 w-full animate-[scan_3s_linear_infinite] pointer-events-none" />
+              </div>
             </div>
 
             <div className="space-y-4 px-1">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2"><Target className="w-4 h-4 text-neon-green" /><h3 className="text-xs font-black italic uppercase tracking-widest text-white">訓練數據錄入</h3></div>
-                <button onClick={() => onUpdate({ ...session, exercises: session.exercises.map(ex => ex.id === currentDetailEx!.id ? { ...ex, sets: [...ex.sets, { id: crypto.randomUUID(), weight: ex.sets[ex.sets.length-1]?.weight || 0, reps: ex.sets[ex.sets.length-1]?.reps || 10, completed: false }] } : ex) })} className="flex items-center gap-1 text-neon-green text-[9px] font-black uppercase"><PlusCircle className="w-3.5 h-3.5" /> 新增下一組</button>
+                <div className="flex items-center gap-2"><Target className="w-4 h-4 text-neon-green" /><h3 className="text-xs font-black italic uppercase text-white">訓練錄入</h3></div>
+                <button onClick={() => onUpdate({ ...session, exercises: session.exercises.map(ex => ex.id === currentDetailEx!.id ? { ...ex, sets: [...ex.sets, { id: crypto.randomUUID(), weight: ex.sets[ex.sets.length-1]?.weight || 0, reps: ex.sets[ex.sets.length-1]?.reps || 10, completed: false }] } : ex) })} className="flex items-center gap-1 text-neon-green text-[9px] font-black uppercase"><PlusCircle className="w-3.5 h-3.5" /> 加一組</button>
               </div>
               <div className="space-y-3">
-                <div className="grid grid-cols-12 gap-2 text-[8px] font-black text-slate-600 uppercase tracking-widest px-4">
-                  <div className="col-span-1"></div><div className="col-span-2 text-center">組數</div><div className="col-span-4 text-center">重量 (KG)</div><div className="col-span-3 text-center">次數</div><div className="col-span-2"></div>
-                </div>
                 {currentDetailEx!.sets.map((set, index) => (
                   <div key={set.id} className={`grid grid-cols-12 gap-2 items-center p-3 rounded-[24px] border transition-all ${set.completed ? 'bg-neon-green/5 border-neon-green/20' : 'bg-slate-900/60 border-white/5'}`}>
-                    <div className="col-span-1 flex justify-center"><button onClick={() => onUpdate({ ...session, exercises: session.exercises.map(e => e.id === currentDetailEx!.id ? { ...e, sets: e.sets.filter(s => s.id !== set.id) } : e) })} className="text-slate-800 active:text-red-500"><MinusCircle className="w-4 h-4" /></button></div>
+                    <div className="col-span-1 flex justify-center"><button onClick={() => onUpdate({ ...session, exercises: session.exercises.map(e => e.id === currentDetailEx!.id ? { ...e, sets: e.sets.filter(s => s.id !== set.id) } : e) })} className="text-slate-800"><MinusCircle className="w-4 h-4" /></button></div>
                     <div className="col-span-2 text-sm font-black italic text-slate-500 text-center">#{index + 1}</div>
-                    <div className="col-span-4"><input type="number" value={set.weight || ''} placeholder="0" onChange={(e) => onUpdate({ ...session, exercises: session.exercises.map(ex => ex.id === currentDetailEx!.id ? { ...ex, sets: ex.sets.map(s => s.id === set.id ? { ...s, weight: Number(e.target.value) } : s) } : ex) })} className="w-full bg-black/40 rounded-xl py-3 text-center text-lg font-black text-white outline-none focus:ring-1 ring-neon-green/30" /></div>
-                    <div className="col-span-3"><input type="number" value={set.reps || ''} placeholder="0" onChange={(e) => onUpdate({ ...session, exercises: session.exercises.map(ex => ex.id === currentDetailEx!.id ? { ...ex, sets: ex.sets.map(s => s.id === set.id ? { ...s, reps: Number(e.target.value) } : s) } : ex) })} className="w-full bg-black/40 rounded-xl py-3 text-center text-lg font-black text-white outline-none focus:ring-1 ring-neon-green/30" /></div>
+                    <div className="col-span-4"><input type="number" value={set.weight || ''} placeholder="KG" onChange={(e) => onUpdate({ ...session, exercises: session.exercises.map(ex => ex.id === currentDetailEx!.id ? { ...ex, sets: ex.sets.map(s => s.id === set.id ? { ...s, weight: Number(e.target.value) } : s) } : ex) })} className="w-full bg-black/40 rounded-xl py-3 text-center text-lg font-black text-white outline-none" /></div>
+                    <div className="col-span-3"><input type="number" value={set.reps || ''} placeholder="REP" onChange={(e) => onUpdate({ ...session, exercises: session.exercises.map(ex => ex.id === currentDetailEx!.id ? { ...ex, sets: ex.sets.map(s => s.id === set.id ? { ...s, reps: Number(e.target.value) } : s) } : ex) })} className="w-full bg-black/40 rounded-xl py-3 text-center text-lg font-black text-white outline-none" /></div>
                     <div className="col-span-2 flex justify-center"><button onClick={() => { const newComp = !set.completed; if(newComp && context) context.triggerRestTimer(); onUpdate({ ...session, exercises: session.exercises.map(ex => ex.id === currentDetailEx!.id ? { ...ex, sets: ex.sets.map(s => s.id === set.id ? { ...s, completed: newComp } : s) } : ex) }); }} className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${set.completed ? 'bg-neon-green text-black' : 'bg-slate-800 text-slate-600'}`}><Check className="w-5 h-5 stroke-[4]" /></button></div>
                   </div>
                 ))}
               </div>
-              <div className="pt-6"><button onClick={onFinish} className="w-full bg-neon-green text-black font-black h-16 rounded-[24px] uppercase italic text-lg shadow-2xl flex items-center justify-center gap-3 active:scale-95 transition-all"><Save className="w-6 h-6 stroke-[3]" /> 儲存紀錄</button></div>
+              <div className="pt-6"><button onClick={onFinish} className="w-full bg-neon-green text-black font-black h-16 rounded-[24px] uppercase italic text-lg active:scale-95 transition-all shadow-xl"><Save className="w-6 h-6 stroke-[3]" /> 儲存紀錄</button></div>
             </div>
           </motion.div>
         )}
