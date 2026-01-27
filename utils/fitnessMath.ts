@@ -60,6 +60,59 @@ export const getMuscleGroup = (name: string): MuscleGroup => {
   return 'core';
 };
 
+/**
+ * 智慧映射：將中文動作對應到開源資料庫的 ID
+ */
+const EXERCISE_MAP: Record<string, string> = {
+  "槓鈴平板臥推": "barbell_bench_press",
+  "槓鈴深蹲": "barbell_full_squat",
+  "傳統硬舉": "barbell_deadlift",
+  "引體向上": "pull_up",
+  "槓鈴划船": "barbell_bent_over_row",
+  "啞鈴肩推": "dumbbell_shoulder_press",
+  "槓鈴彎舉": "barbell_curl",
+  "滑輪下拉": "lat_pulldown",
+  "標準俯地挺身": "push_up",
+  "雙槓撐體": "triceps_dip",
+  "啞鈴平板臥推": "dumbbell_bench_press",
+  "蝴蝶機夾胸": "lever_pec_deck_fly",
+  "啞鈴側平舉": "dumbbell_lateral_raise",
+  "保加利亞分腿蹲": "dumbbell_bulgarian_split_squat",
+  "器械腿部推蹬": "sled_45_degree_leg_press",
+  "器械腿伸展": "lever_leg_extension",
+  "坐姿腿屈伸": "lever_seated_leg_curl",
+  "滑輪繩索下壓": "cable_triceps_pushdown",
+  "棒式": "front_plank"
+};
+
+/**
+ * 根據動作名稱從開源資料庫獲取示範 GIF 連結
+ */
+export const fetchExerciseGif = async (exerciseName: string): Promise<string> => {
+  const name = exerciseName.trim();
+  const exerciseKey = EXERCISE_MAP[name];
+  
+  // 延遲模擬
+  await new Promise(resolve => setTimeout(resolve, 500));
+
+  if (exerciseKey) {
+    // 使用 fitness-programer 開放資源，這是一個非常穩定的直連 GIF 資源庫
+    return `https://fitnessprogramer.com/wp-content/uploads/2021/02/${exerciseKey}.gif`;
+  }
+
+  // 如果找不到精確匹配，根據肌群回傳一個通用的高品質示範圖
+  const group = getMuscleGroup(exerciseName);
+  const fallbackMap: Record<string, string> = {
+    "chest": "https://fitnessprogramer.com/wp-content/uploads/2021/02/barbell_bench_press.gif",
+    "back": "https://fitnessprogramer.com/wp-content/uploads/2021/02/lat_pulldown.gif",
+    "quads": "https://fitnessprogramer.com/wp-content/uploads/2021/02/barbell_full_squat.gif",
+    "arms": "https://fitnessprogramer.com/wp-content/uploads/2021/02/barbell_curl.gif",
+    "shoulders": "https://fitnessprogramer.com/wp-content/uploads/2021/02/dumbbell_shoulder_press.gif"
+  };
+
+  return fallbackMap[group] || "https://fitnessprogramer.com/wp-content/uploads/2021/02/barbell_bench_press.gif";
+};
+
 export const calculateMuscleActivation = (history: WorkoutSession[]): Record<MuscleGroup, number> => {
   const last7Days = Date.now() - (7 * 24 * 60 * 60 * 1000);
   const recentSessions = history.filter(s => s.startTime > last7Days);

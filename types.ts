@@ -13,6 +13,7 @@ export interface ExerciseEntry {
   name: string;
   muscleGroup: MuscleGroup;
   sets: SetEntry[];
+  gifUrl?: string; // 新增：示範動畫連結
 }
 
 export interface Exercise {

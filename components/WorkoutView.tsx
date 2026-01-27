@@ -1,12 +1,12 @@
 
-import React, { useState, useMemo, useContext } from 'react';
+import React, { useState, useMemo, useContext, useEffect } from 'react';
 import { WorkoutSession, ExerciseEntry, SetEntry, MuscleGroup } from '../types';
 import { 
   Plus, Trash2, Search, Save, PlusCircle, 
-  Check, MinusCircle, Target, Sparkles, ChevronRight, ChevronLeft
+  Check, MinusCircle, Target, Sparkles, ChevronRight, ChevronLeft, Loader2, AlertCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getMuscleGroup, getMuscleGroupDisplay } from '../utils/fitnessMath';
+import { getMuscleGroup, getMuscleGroupDisplay, fetchExerciseGif } from '../utils/fitnessMath';
 import { AppContext } from '../App';
 import * as Silhouettes from './WorkoutIcons';
 
@@ -51,6 +51,11 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
   const [activeCategory, setActiveCategory] = useState<string>('chest');
   const [searchTerm, setSearchTerm] = useState('');
   const [quickConfig, setQuickConfig] = useState({ weight: '', sets: '4', reps: '10' });
+  
+  // 動態動畫相關狀態
+  const [currentGif, setCurrentGif] = useState<string | null>(null);
+  const [isGifLoading, setIsGifLoading] = useState(false);
+  const [hasGifError, setHasGifError] = useState(false);
 
   const filteredExercises = useMemo(() => {
     if (!searchTerm.trim()) return ORGANIZED_EXERCISES[activeCategory] || [];
@@ -61,9 +66,31 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
     return EXERCISE_DATABASE.some(ex => ex === searchTerm.trim());
   }, [searchTerm]);
 
-  if (!session) return null;
+  const currentDetailEx = useMemo(() => 
+    session?.exercises.find(e => e.id === activeExerciseId),
+  [session, activeExerciseId]);
 
-  const currentDetailEx = session.exercises.find(e => e.id === activeExerciseId);
+  // 當使用者進入動作詳情時，自動抓取動畫
+  useEffect(() => {
+    if (activeExerciseId && currentDetailEx) {
+      setIsGifLoading(true);
+      setHasGifError(false);
+      fetchExerciseGif(currentDetailEx.name)
+        .then(url => {
+          setCurrentGif(url);
+          setIsGifLoading(false);
+        })
+        .catch(() => {
+          setHasGifError(true);
+          setIsGifLoading(false);
+        });
+    } else {
+      setCurrentGif(null);
+      setHasGifError(false);
+    }
+  }, [activeExerciseId, currentDetailEx?.name]);
+
+  if (!session) return null;
 
   const handleAddExercise = (exName: string) => {
     const setsCount = Math.max(1, Number(quickConfig.sets) || 1);
@@ -253,7 +280,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 20 }}
-            className="space-y-8 pb-40"
+            className="space-y-6 pb-40"
           >
             <div className="flex items-center justify-between mb-4">
               <button 
@@ -268,15 +295,60 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
               </button>
             </div>
 
-            <div className="glass rounded-[40px] p-8 border-white/5 shadow-2xl relative overflow-hidden flex flex-col items-center">
+            <div className="glass rounded-[40px] p-6 border-white/5 shadow-2xl relative overflow-hidden flex flex-col items-center">
               <div className="absolute top-0 right-0 p-8 opacity-5">
                  {getExerciseIcon(currentDetailEx!.name, true)}
               </div>
-              <div className="w-32 h-32 mb-6">
-                {getExerciseIcon(currentDetailEx!.name, true)}
+              
+              <div className="w-full flex flex-col items-center">
+                <h2 className="text-2xl font-black italic uppercase text-white text-center leading-tight mb-2">{currentDetailEx!.name}</h2>
+                <span className="text-[9px] font-black bg-neon-green/10 text-neon-green px-4 py-1 rounded-full uppercase tracking-[0.3em] mb-6">{getMuscleGroupDisplay(currentDetailEx!.muscleGroup).cn}</span>
+                
+                {/* 示範動畫播放區塊 */}
+                <div className="w-full aspect-square max-w-[280px] glass rounded-[32px] overflow-hidden border border-white/10 relative bg-black/40 mb-2 group">
+                  <AnimatePresence mode="wait">
+                    {isGifLoading ? (
+                      <motion.div 
+                        key="loader"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="absolute inset-0 flex flex-col items-center justify-center text-slate-600 gap-3"
+                      >
+                        <Loader2 className="w-8 h-8 animate-spin" />
+                        <span className="text-[8px] font-black uppercase tracking-widest">正在載入示範圖...</span>
+                      </motion.div>
+                    ) : hasGifError ? (
+                      <motion.div 
+                        key="error"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="absolute inset-0 flex flex-col items-center justify-center text-slate-700 gap-3 p-8 text-center"
+                      >
+                        <AlertCircle className="w-8 h-8 opacity-40" />
+                        <span className="text-[8px] font-black uppercase tracking-widest leading-relaxed">示範圖載入失敗，請檢查網路連線或嘗試其他動作</span>
+                      </motion.div>
+                    ) : (
+                      <motion.div 
+                        key="gif-container" 
+                        initial={{ opacity: 0 }} 
+                        animate={{ opacity: 1 }} 
+                        className="w-full h-full relative"
+                      >
+                        <img 
+                          src={currentGif || ''} 
+                          onError={() => setHasGifError(true)}
+                          className="w-full h-full object-cover mix-blend-screen"
+                          alt="exercise demonstration"
+                        />
+                        {/* 科技感掃描線特效 */}
+                        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-neon-green/5 to-transparent h-20 w-full animate-[scan_2s_linear_infinite] pointer-events-none" />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+                <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest text-center mt-2 opacity-40 italic">Open-Source Fitness DB</p>
               </div>
-              <h2 className="text-3xl font-black italic uppercase text-white text-center leading-tight mb-2">{currentDetailEx!.name}</h2>
-              <span className="text-[10px] font-black bg-neon-green/10 text-neon-green px-4 py-1 rounded-full uppercase tracking-[0.3em]">{getMuscleGroupDisplay(currentDetailEx!.muscleGroup).cn}</span>
             </div>
 
             <div className="space-y-3">

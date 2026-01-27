@@ -40,6 +40,11 @@
             box-shadow: 0 0 35px rgba(173, 255, 47, 0.3);
         }
         
+        @keyframes scan {
+            from { transform: translateY(-100%); }
+            to { transform: translateY(400%); }
+        }
+        
         ::-webkit-scrollbar { display: none; }
         .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
         
