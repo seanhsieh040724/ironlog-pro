@@ -101,7 +101,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
               <div className="relative overflow-hidden rounded-[20px] shadow-2xl border border-white/5 bg-slate-900 min-h-[200px] flex items-center justify-center">
                 {currentDetailEx?.name === '啞鈴上斜臥推' ? (
                   <img 
-                    src="https://raw.githubusercontent.com/seanhsieh040724/ironlog-pro/main/incline-press.gif" 
+                    src="https://www.docteur-fitness.com/wp-content/uploads/2000/06/developpe-incline-halteres-exercice-musculation.gif" 
                     alt="啞鈴上斜臥推" 
                     style={{ width: '100%', borderRadius: '15px', display: 'block' }} 
                   />
