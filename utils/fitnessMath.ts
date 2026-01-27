@@ -64,7 +64,9 @@ export const getMuscleGroup = (name: string): MuscleGroup => {
  * 智慧映射：將動作對應到資源 ID 或 GitHub 外部網址
  */
 const EXERCISE_MAP: Record<string, string> = {
-  "啞鈴上斜臥推": "https://raw.githubusercontent.com/seanhsieh040724/ironlog-pro/refs/heads/main/incline-press.gif",
+  "啞鈴上斜臥推": "https://raw.githubusercontent.com/seanhsieh040724/ironlog-pro/main/incline-press.gif",
+  "槓鈴上斜臥推": "https://raw.githubusercontent.com/seanhsieh040724/ironlog-pro/main/incline-press.gif",
+  "史密斯上斜臥推": "https://raw.githubusercontent.com/seanhsieh040724/ironlog-pro/main/incline-press.gif",
   "槓鈴平板臥推": "barbell_bench_press",
   "槓鈴深蹲": "barbell_full_squat",
   "傳統硬舉": "barbell_deadlift",
