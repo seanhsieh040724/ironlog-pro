@@ -1,10 +1,8 @@
-
 import React, { useContext, useMemo, useState } from 'react';
 import { AppContext } from '../App';
 import { BodyMetric, UserGoal } from '../types';
-import { MuscleHeatmap } from './MuscleHeatmap';
-import { calculateMuscleActivation, getBMIAnalysis, calculateSuggestedCalories, getMuscleGroupDisplay } from '../utils/fitnessMath';
-import { Target, Activity, Scale, Ruler, Zap, Heart, User, Trash2, ArrowUpRight, Flame, Share2, X, Smartphone, Copy, CheckCircle2, Apple, Chrome, ArrowRight, Trophy, Calendar } from 'lucide-react';
+import { getBMIAnalysis, calculateSuggestedCalories, getMuscleGroupDisplay } from '../utils/fitnessMath';
+import { Target, Activity, Scale, Ruler, Zap, Heart, User, Trash2, ArrowUpRight, Flame, Share2, X, Smartphone, Copy, CheckCircle2, Apple, Chrome, ArrowRight, Trophy, Calendar, Droplets, Utensils, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const ProfileView: React.FC = () => {
@@ -31,8 +29,6 @@ export const ProfileView: React.FC = () => {
     };
   }, [bodyMetrics]);
 
-  const muscleScores = useMemo(() => calculateMuscleActivation(history), [history]);
-
   const bmi: number = useMemo(() => {
     if (latest.height === 0 || latest.weight === 0) return 0;
     const h = latest.height / 100;
@@ -45,6 +41,21 @@ export const ProfileView: React.FC = () => {
     if (latest.weight === 0 || latest.height === 0 || latest.age === 0) return 0;
     return calculateSuggestedCalories(latest.weight, latest.height, latest.age, latest.gender as any || 'male', goal.type);
   }, [latest.weight, latest.height, latest.age, latest.gender, goal.type]);
+
+  const analysisMetrics = useMemo(() => {
+    if (latest.weight === 0) return null;
+    return {
+      protein: {
+        min: Math.round(latest.weight * 1.6),
+        max: Math.round(latest.weight * 2.2)
+      },
+      water: Math.round(latest.weight * 35),
+      idealWeight: {
+        min: Math.round(18.5 * Math.pow(latest.height / 100, 2)),
+        max: Math.round(24 * Math.pow(latest.height / 100, 2))
+      }
+    };
+  }, [latest]);
 
   if (!context) return null;
 
@@ -69,7 +80,7 @@ export const ProfileView: React.FC = () => {
                 <Smartphone className="w-6 h-6" />
               </div>
               <div className="space-y-0.5">
-                <h3 className="text-sm font-black italic uppercase tracking-tighter">安裝為桌面 App</h3>
+                <h3 className="text-sm font-black italic uppercase tracking-tighter text-white">安裝為桌面 App</h3>
                 <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest leading-none">全螢幕體驗與專業追蹤</p>
               </div>
             </div>
@@ -79,15 +90,15 @@ export const ProfileView: React.FC = () => {
          </div>
       </div>
 
-      {/* 生理數據與肌肉熱力圖區塊 */}
+      {/* 生理數據區塊 */}
       <div className="glass rounded-[44px] p-8 border-white/5 relative overflow-hidden shadow-2xl">
         <div className="flex justify-between items-start mb-8">
            <div className="space-y-2">
              <div className="flex items-center gap-2 text-neon-green">
                 <Activity className="w-3.5 h-3.5" />
-                <h3 className="text-[10px] font-black italic uppercase tracking-[0.3em]">ANATOMICAL MUSCLE SCAN</h3>
+                <h3 className="text-[10px] font-black italic uppercase tracking-[0.3em]">PHYSIOLOGICAL PARAMETERS</h3>
              </div>
-             <h2 className="text-2xl font-black italic uppercase tracking-tighter text-white leading-none">肌群熱力圖</h2>
+             <h2 className="text-2xl font-black italic uppercase tracking-tighter text-white leading-none">生理數據設定</h2>
            </div>
            
            <div className="flex bg-slate-800/80 p-1.5 rounded-2xl border border-white/5">
@@ -100,8 +111,8 @@ export const ProfileView: React.FC = () => {
            </div>
         </div>
         
-        <div className="flex flex-col md:flex-row gap-8 items-center md:items-start">
-           <div className="w-full flex-1 space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+           <div className="space-y-4">
               <InputBox icon={<Ruler className="text-sky-400" />} label="身高" val={latest.height} unit="CM" onChange={(v: string) => updateLatest({ height: Number(v) })} />
               <InputBox icon={<Scale className="text-orange-400" />} label="體重" val={latest.weight} unit="KG" onChange={(v: string) => updateLatest({ weight: Number(v) })} />
               <InputBox icon={<User className="text-purple-400" />} label="年齡" val={latest.age} unit="歲" onChange={(v: string) => updateLatest({ age: Number(v) })} />
@@ -116,16 +127,36 @@ export const ProfileView: React.FC = () => {
                 </div>
               </div>
            </div>
-           
-           <div className="w-full flex-1 flex flex-col items-center">
-              <MuscleHeatmap scores={muscleScores} gender={latest.gender} />
-              <div className="mt-6 grid grid-cols-2 gap-x-6 gap-y-2 w-full px-2">
-                {Object.entries(muscleScores).map(([mg, s]) => (
-                  <div key={mg} className={`flex items-center justify-between p-2 rounded-xl border ${(s as number) > 0 ? 'border-neon-green/20 bg-neon-green/5' : 'border-white/5 bg-white/5 opacity-40'}`}>
-                    <span className="text-[8px] font-black text-slate-400 uppercase truncate mr-2">{getMuscleGroupDisplay(mg as any).cn}</span>
-                    <span className={`text-[9px] font-black ${(s as number) > 0 ? 'text-neon-green' : 'text-slate-600'}`}>{(s as number)}%</span>
-                  </div>
-                ))}
+
+           {/* 身體指標分析區塊 */}
+           <div className="space-y-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Zap className="w-4 h-4 text-neon-green" />
+                <h3 className="text-[11px] font-black italic uppercase tracking-widest text-white">身體指標分析</h3>
+              </div>
+              
+              <div className="grid grid-cols-1 gap-3">
+                 <AnalysisCard 
+                   icon={<Utensils className="w-4 h-4 text-emerald-400" />}
+                   label="蛋白質建議攝取"
+                   value={analysisMetrics ? `${analysisMetrics.protein.min}-${analysisMetrics.protein.max}` : '--'}
+                   unit="G / DAY"
+                   desc="依據健身族群 1.6-2.2g/kg 計算"
+                 />
+                 <AnalysisCard 
+                   icon={<Droplets className="w-4 h-4 text-sky-400" />}
+                   label="每日飲水建議"
+                   value={analysisMetrics ? `${analysisMetrics.water}` : '--'}
+                   unit="ML / DAY"
+                   desc="依據 35ml/kg 基礎代謝水分計算"
+                 />
+                 <AnalysisCard 
+                   icon={<Info className="w-4 h-4 text-purple-400" />}
+                   label="理想體重範圍"
+                   value={analysisMetrics ? `${analysisMetrics.idealWeight.min}-${analysisMetrics.idealWeight.max}` : '--'}
+                   unit="KG"
+                   desc="依據標準 BMI 18.5-24 區間換算"
+                 />
               </div>
            </div>
         </div>
@@ -248,5 +279,21 @@ const InputBox = ({ icon, label, val, unit, onChange }: any) => (
       />
       <span className="text-[9px] font-bold opacity-30 uppercase">{unit}</span>
     </div>
+  </div>
+);
+
+const AnalysisCard = ({ icon, label, value, unit, desc }: any) => (
+  <div className="p-4 rounded-2xl bg-black/40 border border-white/5 space-y-2">
+    <div className="flex items-center justify-between">
+      <div className="flex items-center gap-2">
+        {icon}
+        <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">{label}</span>
+      </div>
+    </div>
+    <div className="flex items-baseline gap-1">
+      <span className="text-xl font-black italic text-white">{value}</span>
+      <span className="text-[8px] font-bold text-slate-600 uppercase">{unit}</span>
+    </div>
+    <p className="text-[8px] font-medium text-slate-500 italic leading-none">{desc}</p>
   </div>
 );

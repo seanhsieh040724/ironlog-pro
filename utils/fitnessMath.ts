@@ -1,4 +1,3 @@
-
 import { WorkoutSession, MuscleGroup } from '../types';
 
 export const calculate1RM = (weight: number, reps: number): number => {
@@ -60,13 +59,8 @@ export const getMuscleGroup = (name: string): MuscleGroup => {
   return 'core';
 };
 
-/**
- * 智慧映射：將動作對應到資源 ID 或 GitHub 外部網址
- */
 const EXERCISE_MAP: Record<string, string> = {
-  "啞鈴上斜臥推": "https://raw.githubusercontent.com/seanhsieh040724/ironlog-pro/main/incline-press.gif",
-  "槓鈴上斜臥推": "https://raw.githubusercontent.com/seanhsieh040724/ironlog-pro/main/incline-press.gif",
-  "史密斯上斜臥推": "https://raw.githubusercontent.com/seanhsieh040724/ironlog-pro/main/incline-press.gif",
+  "啞鈴上斜臥推": "https://www.docteur-fitness.com/wp-content/uploads/2000/06/developpe-incline-halteres-exercice-musculation.gif",
   "槓鈴平板臥推": "barbell_bench_press",
   "槓鈴深蹲": "barbell_full_squat",
   "傳統硬舉": "barbell_deadlift",
@@ -76,32 +70,34 @@ const EXERCISE_MAP: Record<string, string> = {
   "槓鈴彎舉": "barbell_curl",
   "滑輪下拉": "lat_pulldown",
   "標準俯地挺身": "push_up",
-  "雙槓撐體": "triceps_dip",
-  "啞鈴平板臥推": "dumbbell_bench_press",
-  "蝴蝶機夾胸": "lever_pec_deck_fly",
-  "啞鈴側平舉": "dumbbell_lateral_raise",
-  "保加利亞分腿蹲": "dumbbell_bulgarian_split_squat",
-  "器械腿部推蹬": "sled_45_degree_leg_press",
-  "器械腿伸展": "lever_leg_extension",
-  "坐姿腿屈伸": "lever_seated_leg_curl",
-  "滑輪繩索下壓": "cable_triceps_pushdown",
   "棒式": "front_plank"
 };
 
-/**
- * 根據動作名稱獲取示範 GIF 連結
- */
+const EXERCISE_METHODS: Record<string, string> = {
+  "啞鈴上斜臥推": "01 調整長凳 30-45 度並背部貼緊。\n02 雙手垂直推起啞鈴至頂端。\n03 緩慢下降至胸部兩側感受拉伸。",
+  "槓鈴平板臥推": "01 仰臥平躺並雙腳踩實。\n02 將槓鈴降至胸骨中段位置。\n03 發力推回起始點，肘部不鎖死。",
+  "槓鈴上斜臥推": "01 調整長凳角度並握穩槓鈴。\n02 將槓鈴降至上胸鎖骨處。\n03 穩定推起，感受上胸發力。",
+  "槓鈴深蹲": "01 槓鈴架於後肩斜方肌。\n02 下蹲至大腿與地面平行。\n03 重心置於足中後方發力站起。",
+  "傳統硬舉": "01 槓鈴貼近脛骨並髖部後移。\n02 挺直背部抓握槓鈴。\n03 以髖部驅動發力站起。",
+  "引體向上": "01 雙手寬握橫桿懸垂。\n02 背部發力帶動身體向上。\n03 下巴超過橫桿後控制下降。",
+  "滑輪下拉": "01 坐穩並雙手寬握橫桿。\n02 垂直下拉至鎖骨上方。\n03 頂峰收縮後緩慢放回。",
+  "啞鈴肩推": "01 坐姿手持啞鈴置於肩側。\n02 垂直向上推至手臂伸直。\n03 控制速度放回至起始高度。",
+  "槓鈴划船": "01 俯身 45 度並保持背部平直。\n02 將槓鈴拉向腹部肚臍處。\n03 肩胛骨夾緊後緩慢放下。",
+  "標準俯地挺身": "01 雙手略寬於肩，核心緊繃。\n02 胸部下降至接近地面。\n03 全身維持直線發力推起。",
+  "棒式": "01 前臂與腳尖撐地，肘肩垂直。\n02 核心、臀部、大腿同時發力。\n03 身體呈直線，避免腰部塌陷。",
+  "啞鈴側平舉": "01 雙手持啞鈴自然下垂。\n02 向兩側抬起至與肩同高。\n03 感受肩中束發力，控制下降。",
+  "跪姿繩索夾胸": "01 跪姿雙膝著地，核心保持中立緊繃。\n02 雙手持把手從斜上方拉至胸前下方。\n03 動作全程維持肘部微彎，底端擠壓胸部。",
+  "器械上斜推胸": "01 調整座椅高度使握把與上胸對齊。\n02 背部緊貼靠墊，挺胸收腹。\n03 沿器械軌道向前上方推起，感受上胸部強烈收縮。",
+  "雙槓撐體": "01 雙手支撐於雙槓上，雙臂伸直。\n02 身體微前傾以集中胸部發力。\n03 緩慢下降至肘部約 90 度，隨後發力推回起始位。"
+};
+
 export const fetchExerciseGif = async (exerciseName: string): Promise<string> => {
   const name = exerciseName.trim();
   const exerciseKey = EXERCISE_MAP[name];
-  
   if (exerciseKey) {
-    if (exerciseKey.startsWith('http') || exerciseKey.startsWith('/')) {
-      return exerciseKey;
-    }
+    if (exerciseKey.startsWith('http')) return exerciseKey;
     return `https://fitnessprogramer.com/wp-content/uploads/2021/02/${exerciseKey}.gif`;
   }
-
   const group = getMuscleGroup(exerciseName);
   const fallbackMap: Record<string, string> = {
     "chest": "https://fitnessprogramer.com/wp-content/uploads/2021/02/barbell_bench_press.gif",
@@ -110,18 +106,19 @@ export const fetchExerciseGif = async (exerciseName: string): Promise<string> =>
     "arms": "https://fitnessprogramer.com/wp-content/uploads/2021/02/barbell_curl.gif",
     "shoulders": "https://fitnessprogramer.com/wp-content/uploads/2021/02/dumbbell_shoulder_press.gif"
   };
-
   return fallbackMap[group] || "https://fitnessprogramer.com/wp-content/uploads/2021/02/barbell_bench_press.gif";
+};
+
+export const getExerciseMethod = (name: string): string => {
+  return EXERCISE_METHODS[name] || "01 準備起始姿勢並穩定核心。\n02 按照標準路徑執行動作。\n03 控制離心速度回到原位. ";
 };
 
 export const calculateMuscleActivation = (history: WorkoutSession[]): Record<MuscleGroup, number> => {
   const last7Days = Date.now() - (7 * 24 * 60 * 60 * 1000);
   const recentSessions = history.filter(s => s.startTime > last7Days);
-  
   const scores: Record<MuscleGroup, number> = {
     chest: 0, back: 0, quads: 0, hamstrings: 0, shoulders: 0, arms: 0, core: 0, glutes: 0
   };
-  
   recentSessions.forEach(session => {
     session.exercises.forEach(ex => {
       const setWeight = ex.sets.length; 
@@ -130,12 +127,10 @@ export const calculateMuscleActivation = (history: WorkoutSession[]): Record<Mus
       }
     });
   });
-  
   const maxFreq = Math.max(...Object.values(scores), 1);
   Object.keys(scores).forEach(key => {
     const k = key as MuscleGroup;
     scores[k] = Math.min(100, Math.round((scores[k] / maxFreq) * 100));
   });
-  
   return scores;
 };

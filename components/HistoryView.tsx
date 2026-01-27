@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { WorkoutSession, MuscleGroup, ExerciseEntry } from '../types';
 import { getMuscleGroupDisplay } from '../utils/fitnessMath';
@@ -87,6 +86,20 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
 
     return results;
   }, [history, analysisPeriod]);
+
+  /**
+   * 依照訓練百分比決定顏色：
+   * 0% (無數據)：深藍灰 #1e293b
+   * 1-35%：淡藍 #93c5fd
+   * 36-75%：亮藍 #3b82f6
+   * 76-100%：深藍 #2563eb
+   */
+  const getHeatColor = (percentage: number) => {
+    if (percentage === 0) return '#1e293b'; 
+    if (percentage < 35) return '#93c5fd';  
+    if (percentage < 75) return '#3b82f6';  
+    return '#2563eb';                  
+  };
 
   return (
     <div className="space-y-10">
@@ -195,15 +208,15 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
         </AnimatePresence>
       </div>
 
-      {/* 容量分布圖表區塊保持不變 */}
-      <div className="glass rounded-[44px] p-8 border-white/5 space-y-8 bg-gradient-to-b from-transparent to-slate-900/20">
+      {/* 容量分布圖表區塊 */}
+      <div className="glass rounded-[44px] p-8 border-white/5 space-y-8 bg-gradient-to-b from-transparent to-slate-900/20 shadow-2xl">
         <div className="flex justify-between items-center">
            <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-neon-green/10 rounded-xl flex items-center justify-center">
                 <BarChart3 className="w-5 h-5 text-neon-green" />
               </div>
               <div>
-                <h3 className="text-sm font-black italic uppercase tracking-tighter text-white">訓練容量分佈</h3>
+                <h3 className="text-sm font-black italic uppercase tracking-tighter text-white">訓練容量分布</h3>
                 <p className="text-[8px] font-black text-slate-600 uppercase tracking-widest mt-1">Muscle stimulation breakdown</p>
               </div>
            </div>
@@ -221,6 +234,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
              const setTotal = analysisData[muscle] || 0;
              const max = Math.max(...(Object.values(analysisData) as number[]), 1);
              const percentage = (setTotal / max) * 100;
+             const barColor = getHeatColor(percentage);
              
              return (
                <div key={muscle} className="space-y-2">
@@ -228,17 +242,32 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
                      <span className="text-slate-500">{getMuscleGroupDisplay(muscle).cn}</span>
                      <span className={setTotal > 0 ? "text-neon-green italic" : "text-slate-800"}>{setTotal} SETS</span>
                   </div>
-                  <div className="h-2 w-full bg-slate-900 rounded-full overflow-hidden border border-white/5">
+                  <div className="h-3 w-full bg-slate-900/60 rounded-full overflow-hidden border border-white/5">
                      <motion.div 
                        initial={{ width: 0 }} 
-                       animate={{ width: `${percentage}%` }} 
+                       animate={{ width: `${percentage}%`, backgroundColor: barColor }} 
                        transition={{ duration: 1.5, ease: "circOut" }}
-                       className={`h-full ${setTotal > 0 ? "bg-neon-green shadow-[0_0_10px_rgba(173,255,47,0.2)]" : "bg-slate-800"}`} 
+                       className="h-full shadow-[0_0_10px_rgba(37,99,235,0.2)]" 
                      />
                   </div>
                </div>
              );
            })}
+        </div>
+
+        {/* 圖例說明：從 ProfileView 移動過來 */}
+        <div className="pt-4 border-t border-white/5">
+          <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-4">訓練負荷程度說明</p>
+          <div className="flex justify-between">
+            {[0, 35, 75, 100].map((s, i) => (
+              <div key={i} className="flex flex-col items-center gap-2">
+                <div className="w-6 h-2 rounded-full shadow-sm" style={{ backgroundColor: getHeatColor(s) }} />
+                <span className="text-[8px] font-black text-slate-600 uppercase tracking-widest">
+                  {s === 0 ? '休息中' : s === 35 ? '輕量' : s === 75 ? '強化' : '極限'}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>
