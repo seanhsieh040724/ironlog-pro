@@ -45,15 +45,8 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
   const [activeExerciseId, setActiveExerciseId] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<string>('chest');
   const [searchTerm, setSearchTerm] = useState('');
-  const [gifUrl, setGifUrl] = useState<string | null>(null);
 
   const currentDetailEx = useMemo(() => session?.exercises.find(e => e.id === activeExerciseId), [session, activeExerciseId]);
-
-  useEffect(() => {
-    if (currentDetailEx) {
-      fetchExerciseGif(currentDetailEx.name).then(setGifUrl);
-    }
-  }, [currentDetailEx?.name]);
 
   if (!session) return null;
 
@@ -98,17 +91,8 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
             </div>
 
             <div className="w-full relative px-1">
-              <div className="relative overflow-hidden rounded-[20px] shadow-2xl border border-white/5 bg-slate-900 min-h-[200px] flex items-center justify-center">
-                {gifUrl ? (
-                  <img 
-                    src={gifUrl} 
-                    alt={currentDetailEx?.name} 
-                    referrerPolicy="no-referrer"
-                    style={{ width: '100%', borderRadius: '15px', display: 'block' }} 
-                  />
-                ) : (
-                  <Loader2 className="w-8 h-8 text-neon-green animate-spin" />
-                )}
+              <div className="relative overflow-hidden rounded-[20px] shadow-2xl border border-white/5 bg-slate-900">
+                <img src="https://raw.githubusercontent.com/seanhsieh040724/ironlog-pro/refs/heads/main/incline-press.gif" alt="啞鈴上斜臥推" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
                 <div className="absolute inset-0 bg-gradient-to-b from-transparent via-neon-green/5 to-transparent h-24 w-full animate-[scan_3s_linear_infinite] pointer-events-none" />
               </div>
             </div>
