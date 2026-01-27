@@ -61,9 +61,10 @@ export const getMuscleGroup = (name: string): MuscleGroup => {
 };
 
 /**
- * 智慧映射：將中文動作對應到開源資料庫的 ID
+ * 智慧映射：將動作對應到資源 ID 或本地路徑
  */
 const EXERCISE_MAP: Record<string, string> = {
+  "啞鈴上斜臥推": "./啞鈴上斜臥推.gif",
   "槓鈴平板臥推": "barbell_bench_press",
   "槓鈴深蹲": "barbell_full_squat",
   "傳統硬舉": "barbell_deadlift",
@@ -86,17 +87,20 @@ const EXERCISE_MAP: Record<string, string> = {
 };
 
 /**
- * 根據動作名稱從開源資料庫獲取示範 GIF 連結
+ * 根據動作名稱從獲取示範 GIF 連結
  */
 export const fetchExerciseGif = async (exerciseName: string): Promise<string> => {
   const name = exerciseName.trim();
   const exerciseKey = EXERCISE_MAP[name];
   
   // 延遲模擬
-  await new Promise(resolve => setTimeout(resolve, 500));
+  await new Promise(resolve => setTimeout(resolve, 300));
 
   if (exerciseKey) {
-    // 使用 fitness-programer 開放資源，這是一個非常穩定的直連 GIF 資源庫
+    // 檢查是否為本地路徑
+    if (exerciseKey.startsWith('./')) {
+      return exerciseKey;
+    }
     return `https://fitnessprogramer.com/wp-content/uploads/2021/02/${exerciseKey}.gif`;
   }
 
