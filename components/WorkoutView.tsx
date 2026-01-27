@@ -8,12 +8,20 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { getMuscleGroup, getMuscleGroupDisplay, fetchExerciseGif, getExerciseMethod } from '../utils/fitnessMath';
 import { AppContext } from '../App';
+// Import custom workout icons from the icons file
 import { ChestIcon, BackIcon, ShoulderIcon, LegIcon, DeadliftIcon, ArmIcon, CoreIcon, GenericIcon } from './WorkoutIcons';
 
+/**
+ * Returns a React element for the icon corresponding to an exercise name.
+ * Maps exercise names or muscle groups to specific SVG components.
+ */
 export const getExerciseIcon = (name: string) => {
   const muscle = getMuscleGroup(name);
   const n = name.toLowerCase();
+  
+  // Specific check for deadlift-like exercises
   if (n.includes('硬舉') || n.includes('deadlift')) return <DeadliftIcon className="w-full h-full" />;
+  
   switch (muscle) {
     case 'chest': return <ChestIcon className="w-full h-full" />;
     case 'back': return <BackIcon className="w-full h-full" />;
@@ -38,7 +46,13 @@ export const ORGANIZED_EXERCISES: Record<string, string[]> = {
 
 export const EXERCISE_DATABASE = Object.values(ORGANIZED_EXERCISES).flat();
 
-export const WorkoutView: React.FC<{ session: WorkoutSession | null, onUpdate: (s: WorkoutSession) => void, onFinish: () => void }> = ({ session, onUpdate, onFinish }) => {
+interface WorkoutViewProps {
+  session: WorkoutSession | null;
+  onUpdate: (session: WorkoutSession) => void;
+  onFinish: () => void;
+}
+
+export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onFinish }) => {
   const context = useContext(AppContext);
   const [activeExerciseId, setActiveExerciseId] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<string>('chest');
@@ -55,21 +69,38 @@ export const WorkoutView: React.FC<{ session: WorkoutSession | null, onUpdate: (
 
   const addExercise = (name: string) => {
     const newExId = crypto.randomUUID();
+    const muscle = getMuscleGroup(name);
     onUpdate({ 
       ...session!, 
-      exercises: [...session!.exercises, { 
-        id: newExId, name, muscleGroup: getMuscleGroup(name), 
-        sets: Array.from({ length: 4 }).map(() => ({ id: crypto.randomUUID(), weight: 0, reps: 10, completed: false })) 
-      }] 
+      exercises: [
+        ...session!.exercises, 
+        { 
+          id: newExId, 
+          name: name, 
+          muscleGroup: muscle, 
+          sets: Array.from({ length: 4 }).map(() => ({ 
+            id: crypto.randomUUID(), 
+            weight: 0, 
+            reps: 10, 
+            completed: false 
+          })) 
+        }
+      ] 
     });
     setActiveExerciseId(newExId);
     setSearchTerm('');
   };
 
   const filteredExercises = useMemo(() => {
-    if (searchTerm) return EXERCISE_DATABASE.filter(ex => ex.toLowerCase().includes(searchTerm.toLowerCase()));
+    if (searchTerm) {
+      return EXERCISE_DATABASE.filter(ex => ex.toLowerCase().includes(searchTerm.toLowerCase()));
+    }
     return ORGANIZED_EXERCISES[activeCategory] || [];
   }, [searchTerm, activeCategory]);
+
+  const isExactMatch = useMemo(() => {
+    return EXERCISE_DATABASE.some(ex => ex.toLowerCase() === searchTerm.trim().toLowerCase());
+  }, [searchTerm]);
 
   if (!session) return null;
 
@@ -77,96 +108,152 @@ export const WorkoutView: React.FC<{ session: WorkoutSession | null, onUpdate: (
     <div className="relative min-h-screen">
       <AnimatePresence mode="wait">
         {!activeExerciseId ? (
-          <motion.div key="overview" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-7 pb-44">
-            <div className="flex items-center gap-5 bg-slate-900/80 border border-white/5 rounded-[24px] px-7 py-5 shadow-2xl">
-              <Search className="w-6 h-6 text-slate-600" />
-              <input placeholder="搜尋動作庫..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="bg-transparent w-full text-lg font-black italic outline-none text-white placeholder:text-slate-800" />
-            </div>
+          <motion.div key="overview" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6 pb-40">
+            <div className="space-y-5 pt-2">
+              <div className="flex items-center gap-4 bg-slate-900/80 border border-white/5 rounded-2xl px-6 py-4 shadow-inner">
+                <Search className="w-5 h-5 text-slate-600" />
+                <input 
+                  placeholder="搜尋動作庫..." 
+                  value={searchTerm} 
+                  onChange={e => setSearchTerm(e.target.value)} 
+                  className="bg-transparent w-full text-base font-black italic outline-none text-white placeholder:text-slate-800" 
+                />
+              </div>
 
-            {!searchTerm && (
-              <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1 px-1">
-                {Object.keys(ORGANIZED_EXERCISES).map(cat => (
-                  <button key={cat} onClick={() => setActiveCategory(cat)} className={`shrink-0 px-6 py-3 rounded-2xl text-[12px] font-black uppercase tracking-widest transition-all border ${activeCategory === cat ? 'bg-neon-green text-black border-neon-green' : 'bg-slate-900/40 text-slate-500 border-white/5'}`}>
-                    {getMuscleGroupDisplay(cat as MuscleGroup).cn}
-                  </button>
+              {!searchTerm && (
+                <div className="flex gap-2.5 overflow-x-auto no-scrollbar pb-1">
+                  {Object.keys(ORGANIZED_EXERCISES).map(cat => (
+                    <button 
+                      key={cat} 
+                      onClick={() => setActiveCategory(cat)} 
+                      className={`shrink-0 px-5 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all border ${activeCategory === cat ? 'bg-neon-green text-black border-neon-green' : 'bg-slate-900/40 text-slate-500 border-white/5'}`}
+                    >
+                      {getMuscleGroupDisplay(cat as MuscleGroup).cn}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-3">
+                {/* 搜尋自訂動作入口 */}
+                {searchTerm.trim() && !isExactMatch && (
+                  <motion.button 
+                    whileTap={{ scale: 0.95 }} 
+                    onClick={() => addExercise(searchTerm.trim())} 
+                    className="col-span-2 p-5 rounded-[20px] bg-neon-green/10 border border-neon-green/30 flex items-center justify-between group"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 bg-neon-green rounded-xl flex items-center justify-center text-black">
+                        <PlusSquare className="w-6 h-6" />
+                      </div>
+                      <div className="text-left overflow-hidden">
+                        <div className="text-[11px] font-black text-neon-green uppercase tracking-widest leading-none">建立自訂動作</div>
+                        <div className="text-base font-black italic text-white uppercase truncate max-w-[200px] mt-1.5">{searchTerm}</div>
+                      </div>
+                    </div>
+                    <ChevronRight className="w-5 h-5 text-neon-green opacity-50" />
+                  </motion.button>
+                )}
+
+                {filteredExercises.map(exName => (
+                  <motion.button 
+                    key={exName} 
+                    whileTap={{ scale: 0.95 }} 
+                    onClick={() => addExercise(exName)} 
+                    className="p-4 rounded-[20px] text-left bg-slate-900/40 border border-white/5 flex flex-col justify-center min-h-[76px] group active:border-neon-green/30"
+                  >
+                    <div className="text-[13px] font-black italic uppercase text-slate-200 group-active:text-neon-green leading-tight truncate">
+                      {exName}
+                    </div>
+                    <div className="text-[10px] font-bold text-slate-700 uppercase tracking-widest mt-2 flex items-center justify-between">
+                      {getMuscleGroupDisplay(getMuscleGroup(exName)).cn}
+                      <Plus className="w-3.5 h-3.5 text-slate-800 opacity-0 group-active:opacity-100 transition-opacity" />
+                    </div>
+                  </motion.button>
                 ))}
               </div>
-            )}
-
-            <div className="grid grid-cols-2 gap-4">
-              {filteredExercises.map(exName => (
-                <motion.button key={exName} whileTap={{ scale: 0.95 }} onClick={() => addExercise(exName)} className="p-5 rounded-[28px] text-left bg-slate-900/40 border border-white/5 flex flex-col justify-center min-h-[90px] group active:border-neon-green/30 shadow-lg">
-                  <div className="text-[15px] font-black italic uppercase text-slate-200 group-active:text-neon-green leading-tight truncate">{exName}</div>
-                  <div className="text-[11px] font-bold text-slate-700 uppercase tracking-[0.2em] mt-2.5 flex items-center justify-between">
-                    {getMuscleGroupDisplay(getMuscleGroup(exName)).cn}
-                    <Plus className="w-4 h-4 text-slate-800 opacity-0 group-active:opacity-100 transition-opacity" />
-                  </div>
-                </motion.button>
-              ))}
             </div>
           </motion.div>
         ) : (
-          <motion.div key="detail" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="space-y-8 pb-44">
-            <div className="flex items-center justify-between px-2">
-              <button onClick={() => setActiveExerciseId(null)} className="flex items-center gap-3 text-slate-400 py-3">
-                <ChevronLeft className="w-8 h-8" />
-                <span className="text-sm font-black uppercase tracking-widest">返回</span>
+          <motion.div key="detail" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="space-y-6 pb-40">
+            <div className="flex items-center justify-between">
+              <button onClick={() => setActiveExerciseId(null)} className="flex items-center gap-2 text-slate-400 py-2">
+                <ChevronLeft className="w-7 h-7" />
+                <span className="text-xs font-black uppercase tracking-widest">返回</span>
               </button>
-              <h2 className="text-3xl font-black italic uppercase text-white truncate max-w-[220px] leading-tight">{currentDetailEx?.name}</h2>
-              <button onClick={() => { if(confirm('移除動作？')) { onUpdate({ ...session, exercises: session.exercises.filter(e => e.id !== currentDetailEx!.id) }); setActiveExerciseId(null); } }} className="w-13 h-13 bg-red-500/10 rounded-2xl flex items-center justify-center text-red-500/40"><Trash2 className="w-6 h-6" /></button>
+              <h2 className="text-2xl font-black italic uppercase text-white truncate max-w-[200px]">{currentDetailEx?.name}</h2>
+              <button onClick={() => { if(confirm('移除？')) { onUpdate({ ...session, exercises: session.exercises.filter(e => e.id !== currentDetailEx!.id) }); setActiveExerciseId(null); } }} className="w-11 h-11 bg-red-500/10 rounded-xl flex items-center justify-center text-red-500/40"><Trash2 className="w-5 h-5" /></button>
             </div>
 
-            <div className="w-full relative px-2">
-              <div className="relative overflow-hidden rounded-[32px] shadow-[0_20px_60px_rgba(0,0,0,0.4)] border border-white/5 bg-slate-900 min-h-[260px] flex items-center justify-center">
-                {currentDetailEx?.name === '標準俯地挺身' ? (
+            <div className="w-full relative px-1">
+              <div className="relative overflow-hidden rounded-[24px] shadow-2xl border border-white/5 bg-slate-900 min-h-[240px] flex items-center justify-center">
+                {currentDetailEx?.name === '啞鈴上斜臥推' ? (
+                  <img src="https://www.docteur-fitness.com/wp-content/uploads/2000/06/developpe-incline-halteres-exercice-musculation.gif" alt="啞鈴上斜臥推" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
+                ) : currentDetailEx?.name === '槓鈴平板臥推' ? (
+                  <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/01/developpe-couche-prise-inversee.gif" alt="槓鈴平板臥推" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
+                ) : currentDetailEx?.name === '槓鈴上斜臥推' ? (
+                  <img src="https://www.docteur-fitness.com/wp-content/uploads/2021/10/developpe-incline-barre.gif" alt="槓鈴上斜臥推" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
+                ) : currentDetailEx?.name === '啞鈴平板臥推' ? (
+                  <img src="https://www.docteur-fitness.com/wp-content/uploads/2000/05/developpe-couche-halteres-exercice-musculation.gif" alt="啞鈴平板臥推" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
+                ) : currentDetailEx?.name === '史密斯平板臥推' ? (
+                  <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/08/developpe-couche-smith-machine.gif" alt="史密斯平板臥推" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
+                ) : currentDetailEx?.name === '坐姿器械推胸' ? (
+                  <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/11/developpe-machine-assis-pectoraux.gif" alt="坐姿器械推胸" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
+                ) : currentDetailEx?.name === '蝴蝶機夾胸' ? (
+                  <img src="https://www.docteur-fitness.com/wp-content/uploads/2000/06/pec-deck-butterfly-exercice-musculation.gif" alt="蝴蝶機夾胸" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
+                ) : currentDetailEx?.name === '跪姿繩索夾胸' ? (
+                  <img src="https://www.docteur-fitness.com/wp-content/uploads/2023/07/ecarte-a-la-poulie-vis-a-vis-haute-a-genoux.gif" alt="跪姿繩索夾胸" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
+                ) : currentDetailEx?.name === '器械上斜推胸' ? (
+                  <img src="https://www.docteur-fitness.com/wp-content/uploads/2000/06/developpe-incline-machine-convergente-exercice-musculation.gif" alt="器械上斜推胸" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
+                ) : currentDetailEx?.name === '史密斯上斜臥推' ? (
+                  <img src="https://fitliferegime.com/wp-content/uploads/2024/04/Smith-Machine-Incline-Press.gif" alt="史密斯上斜臥推" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
+                ) : currentDetailEx?.name === '雙槓撐體' ? (
+                  <img src="https://i.pinimg.com/originals/e7/45/d6/e745d6fcd41963a8a6d36c4b66c009a9.gif" alt="雙槓撐體" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
+                ) : currentDetailEx?.name === '標準俯地挺身' ? (
                   <img src="https://www.docteur-fitness.com/wp-content/uploads/2020/10/pompe-musculation.gif" alt="標準俯地挺身" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-                ) : currentDetailEx?.name === '啞鈴側平舉' ? (
-                  <img src="https://www.docteur-fitness.com/wp-content/uploads/2000/06/elevations-laterales-halteres-exercice-musculation.gif" alt="啞鈴側平舉" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-                ) : currentDetailEx?.name === '啞鈴上斜臥推' ? (
-                  <img src="https://www.docteur-fitness.com/wp-content/uploads/2000/06/developpe-incline-halteres-exercice-musculation.gif" style={{ width: '100%', borderRadius: '15px' }} />
                 ) : gifUrl ? (
                   <img src={gifUrl} alt={currentDetailEx?.name} style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
                 ) : (
-                  <Loader2 className="w-10 h-10 text-neon-green animate-spin" />
+                  <Loader2 className="w-9 h-9 text-neon-green animate-spin" />
                 )}
                 <div className="absolute inset-0 bg-gradient-to-b from-transparent via-neon-green/5 to-transparent h-24 w-full animate-[scan_3s_linear_infinite] pointer-events-none" />
               </div>
             </div>
 
-            <div className="mx-2 p-8 rounded-[36px] bg-slate-900/40 border border-white/5 space-y-4 shadow-2xl">
-              <div className="flex items-center gap-3 text-neon-green">
-                <BookOpen className="w-6 h-6" />
-                <h3 className="text-[12px] font-black uppercase tracking-widest">運動方法</h3>
+            <div className="mx-1 p-6 rounded-[28px] bg-slate-900/40 border border-white/5 space-y-3.5 shadow-xl">
+              <div className="flex items-center gap-2.5 text-neon-green">
+                <BookOpen className="w-5 h-5" />
+                <h3 className="text-[11px] font-black uppercase tracking-widest">運動方法</h3>
               </div>
-              <p className="text-base font-medium text-slate-400 leading-relaxed italic whitespace-pre-line">
+              <p className="text-sm font-medium text-slate-400 leading-relaxed italic whitespace-pre-line">
                 {getExerciseMethod(currentDetailEx?.name || "")}
               </p>
             </div>
 
-            <div className="space-y-6 px-2">
-              <div className="flex items-center justify-between px-2">
-                <div className="flex items-center gap-3">
-                  <Target className="w-6 h-6 text-neon-green" />
-                  <h3 className="text-base font-black italic uppercase text-white">訓練錄入</h3>
+            <div className="space-y-5 px-1">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <Target className="w-5 h-5 text-neon-green" />
+                  <h3 className="text-sm font-black italic uppercase text-white">訓練錄入</h3>
                 </div>
-                <button onClick={() => onUpdate({ ...session, exercises: session.exercises.map(ex => ex.id === currentDetailEx!.id ? { ...ex, sets: [...ex.sets, { id: crypto.randomUUID(), weight: ex.sets[ex.sets.length-1]?.weight || 0, reps: ex.sets[ex.sets.length-1]?.reps || 10, completed: false }] } : ex) })} className="flex items-center gap-2 text-neon-green text-[12px] font-black uppercase">
-                  <PlusCircle className="w-5 h-5" /> 加一組
+                <button onClick={() => onUpdate({ ...session, exercises: session.exercises.map(ex => ex.id === currentDetailEx!.id ? { ...ex, sets: [...ex.sets, { id: crypto.randomUUID(), weight: ex.sets[ex.sets.length-1]?.weight || 0, reps: ex.sets[ex.sets.length-1]?.reps || 10, completed: false }] } : ex) })} className="flex items-center gap-1.5 text-neon-green text-[10px] font-black uppercase">
+                  <PlusCircle className="w-4 h-4" /> 加一組
                 </button>
               </div>
               <div className="space-y-4">
                 {currentDetailEx!.sets.map((set, index) => (
-                  <div key={set.id} className={`grid grid-cols-12 gap-4 items-center p-5 rounded-[32px] border transition-all ${set.completed ? 'bg-neon-green/5 border-neon-green/20 shadow-inner' : 'bg-slate-900/60 border-white/5 shadow-lg'}`}>
-                    <div className="col-span-1 flex justify-center"><button onClick={() => onUpdate({ ...session, exercises: session.exercises.map(e => e.id === currentDetailEx!.id ? { ...e, sets: e.sets.filter(s => s.id !== set.id) } : e) })} className="text-slate-800"><MinusCircle className="w-6 h-6" /></button></div>
-                    <div className="col-span-2 text-lg font-black italic text-slate-500 text-center">#{index + 1}</div>
-                    <div className="col-span-4"><input type="number" value={set.weight || ''} placeholder="KG" onChange={(e) => onUpdate({ ...session, exercises: session.exercises.map(ex => ex.id === currentDetailEx!.id ? { ...ex, sets: ex.sets.map(s => s.id === set.id ? { ...s, weight: Number(e.target.value) } : s) } : ex) })} className="w-full bg-black/50 rounded-2xl py-4.5 text-center text-2xl font-black text-white outline-none focus:bg-black transition-all" /></div>
-                    <div className="col-span-3"><input type="number" value={set.reps || ''} placeholder="REP" onChange={(e) => onUpdate({ ...session, exercises: session.exercises.map(ex => ex.id === currentDetailEx!.id ? { ...ex, sets: ex.sets.map(s => s.id === set.id ? { ...s, reps: Number(e.target.value) } : s) } : ex) })} className="w-full bg-black/50 rounded-2xl py-4.5 text-center text-2xl font-black text-white outline-none focus:bg-black transition-all" /></div>
-                    <div className="col-span-2 flex justify-center"><button onClick={() => { const newComp = !set.completed; if(newComp && context) context.triggerRestTimer(); onUpdate({ ...session, exercises: session.exercises.map(ex => ex.id === currentDetailEx!.id ? { ...ex, sets: ex.sets.map(s => s.id === set.id ? { ...s, completed: newComp } : s) } : ex) }); }} className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${set.completed ? 'bg-neon-green text-black shadow-lg shadow-neon-green/20 scale-105' : 'bg-slate-800 text-slate-600'}`}><Check className="w-8 h-8 stroke-[4]" /></button></div>
+                  <div key={set.id} className={`grid grid-cols-12 gap-3 items-center p-4 rounded-[28px] border transition-all ${set.completed ? 'bg-neon-green/5 border-neon-green/20' : 'bg-slate-900/60 border-white/5'}`}>
+                    <div className="col-span-1 flex justify-center"><button onClick={() => onUpdate({ ...session, exercises: session.exercises.map(e => e.id === currentDetailEx!.id ? { ...e, sets: e.sets.filter(s => s.id !== set.id) } : e) })} className="text-slate-800"><MinusCircle className="w-5 h-5" /></button></div>
+                    <div className="col-span-2 text-base font-black italic text-slate-500 text-center">#{index + 1}</div>
+                    <div className="col-span-4"><input type="number" value={set.weight || ''} placeholder="KG" onChange={(e) => onUpdate({ ...session, exercises: session.exercises.map(ex => ex.id === currentDetailEx!.id ? { ...ex, sets: ex.sets.map(s => s.id === set.id ? { ...s, weight: Number(e.target.value) } : s) } : ex) })} className="w-full bg-black/40 rounded-xl py-3.5 text-center text-xl font-black text-white outline-none" /></div>
+                    <div className="col-span-3"><input type="number" value={set.reps || ''} placeholder="REP" onChange={(e) => onUpdate({ ...session, exercises: session.exercises.map(ex => ex.id === currentDetailEx!.id ? { ...ex, sets: ex.sets.map(s => s.id === set.id ? { ...s, reps: Number(e.target.value) } : s) } : ex) })} className="w-full bg-black/40 rounded-xl py-3.5 text-center text-xl font-black text-white outline-none" /></div>
+                    <div className="col-span-2 flex justify-center"><button onClick={() => { const newComp = !set.completed; if(newComp && context) context.triggerRestTimer(); onUpdate({ ...session, exercises: session.exercises.map(ex => ex.id === currentDetailEx!.id ? { ...ex, sets: ex.sets.map(s => s.id === set.id ? { ...s, completed: newComp } : s) } : ex) }); }} className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all ${set.completed ? 'bg-neon-green text-black' : 'bg-slate-800 text-slate-600'}`}><Check className="w-6 h-6 stroke-[4]" /></button></div>
                   </div>
                 ))}
               </div>
-              <div className="pt-10">
-                <button onClick={onFinish} className="w-full bg-neon-green text-black font-black h-20 rounded-[32px] uppercase italic text-2xl active:scale-95 transition-all shadow-2xl flex items-center justify-center gap-4">
-                  <Save className="w-8 h-8 stroke-[3]" /> 儲存本次訓練
+              <div className="pt-8">
+                <button onClick={onFinish} className="w-full bg-neon-green text-black font-black h-18 rounded-[28px] uppercase italic text-xl active:scale-95 transition-all shadow-xl flex items-center justify-center gap-3">
+                  <Save className="w-7 h-7 stroke-[3]" /> 儲存紀錄
                 </button>
               </div>
             </div>
