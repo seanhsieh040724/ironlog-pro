@@ -61,10 +61,10 @@ export const getMuscleGroup = (name: string): MuscleGroup => {
 };
 
 /**
- * 智慧映射：將動作對應到資源 ID 或本地路徑
+ * 智慧映射：將動作對應到資源 ID 或根目錄絕對路徑
  */
 const EXERCISE_MAP: Record<string, string> = {
-  "啞鈴上斜臥推": "./啞鈴上斜臥推.gif",
+  "啞鈴上斜臥推": "/啞鈴上斜臥推.gif",
   "槓鈴平板臥推": "barbell_bench_press",
   "槓鈴深蹲": "barbell_full_squat",
   "傳統硬舉": "barbell_deadlift",
@@ -87,24 +87,24 @@ const EXERCISE_MAP: Record<string, string> = {
 };
 
 /**
- * 根據動作名稱從獲取示範 GIF 連結
+ * 根據動作名稱獲取示範 GIF 連結
  */
 export const fetchExerciseGif = async (exerciseName: string): Promise<string> => {
   const name = exerciseName.trim();
   const exerciseKey = EXERCISE_MAP[name];
   
-  // 延遲模擬
-  await new Promise(resolve => setTimeout(resolve, 300));
+  // 輕微延遲確保 UI 回應
+  await new Promise(resolve => setTimeout(resolve, 200));
 
   if (exerciseKey) {
-    // 檢查是否為本地路徑
-    if (exerciseKey.startsWith('./')) {
+    // 檢查是否為根目錄路徑 (以 / 開頭)
+    if (exerciseKey.startsWith('/')) {
       return exerciseKey;
     }
     return `https://fitnessprogramer.com/wp-content/uploads/2021/02/${exerciseKey}.gif`;
   }
 
-  // 如果找不到精確匹配，根據肌群回傳一個通用的高品質示範圖
+  // Fallback 邏輯
   const group = getMuscleGroup(exerciseName);
   const fallbackMap: Record<string, string> = {
     "chest": "https://fitnessprogramer.com/wp-content/uploads/2021/02/barbell_bench_press.gif",

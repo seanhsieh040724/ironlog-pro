@@ -50,7 +50,6 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
   const [activeExerciseId, setActiveExerciseId] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<string>('chest');
   const [searchTerm, setSearchTerm] = useState('');
-  const [quickConfig, setQuickConfig] = useState({ weight: '', sets: '4', reps: '10' });
   
   const [currentGif, setCurrentGif] = useState<string | null>(null);
   const [isGifLoading, setIsGifLoading] = useState(false);
@@ -60,10 +59,6 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
     if (!searchTerm.trim()) return ORGANIZED_EXERCISES[activeCategory] || [];
     return EXERCISE_DATABASE.filter(ex => ex.toLowerCase().includes(searchTerm.toLowerCase())).slice(0, 20);
   }, [searchTerm, activeCategory]);
-
-  const exactMatch = useMemo(() => {
-    return EXERCISE_DATABASE.some(ex => ex === searchTerm.trim());
-  }, [searchTerm]);
 
   const currentDetailEx = useMemo(() => 
     session?.exercises.find(e => e.id === activeExerciseId),
@@ -88,16 +83,15 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
   if (!session) return null;
 
   const handleAddExercise = (exName: string) => {
-    const setsCount = Math.max(1, Number(quickConfig.sets) || 1);
     const newExId = crypto.randomUUID();
     const entry: ExerciseEntry = {
       id: newExId,
       name: exName,
       muscleGroup: getMuscleGroup(exName),
-      sets: Array.from({ length: setsCount }).map((_, idx) => ({
+      sets: Array.from({ length: 4 }).map((_, idx) => ({
         id: crypto.randomUUID(),
-        weight: idx === 0 ? (Number(quickConfig.weight) || 0) : 0, 
-        reps: Number(quickConfig.reps) || 10,
+        weight: 0, 
+        reps: 10,
         completed: false
       }))
     };
@@ -220,7 +214,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
               <button onClick={() => removeExercise(currentDetailEx!.id)} className="w-10 h-10 bg-red-500/10 rounded-xl flex items-center justify-center text-red-500/40"><Trash2 className="w-4 h-4" /></button>
             </div>
 
-            {/* 核心示範圖更新：100% 寬度、自動高度、15px 圓角 */}
+            {/* 核心示範圖：100% 寬度、自動高度、15px 圓角 */}
             <div className="w-full relative px-1">
               {isGifLoading ? (
                 <div className="w-full aspect-video bg-slate-900/50 rounded-[15px] flex items-center justify-center border border-white/5"><Loader2 className="w-8 h-8 animate-spin text-neon-green" /></div>
@@ -228,8 +222,13 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                 <div className="w-full aspect-video bg-slate-900/50 rounded-[15px] flex flex-col items-center justify-center text-slate-700 border border-white/5 p-8 text-center"><AlertCircle className="w-8 h-8 mb-2" /><span className="text-[10px] font-black uppercase tracking-widest leading-relaxed">示範圖載入失敗</span></div>
               ) : (
                 <div className="relative overflow-hidden rounded-[15px] shadow-2xl border border-white/5 bg-slate-900">
-                  <img src={currentGif || ''} className="w-full h-auto block" alt="exercise demonstration" style={{ minHeight: '120px' }} />
-                  {/* 科技感掃描線 */}
+                  <img 
+                    src={currentGif || ''} 
+                    className="w-full h-auto block" 
+                    alt="exercise demonstration" 
+                    style={{ borderRadius: '15px' }}
+                  />
+                  {/* 掃描線動畫 */}
                   <div className="absolute inset-0 bg-gradient-to-b from-transparent via-neon-green/5 to-transparent h-24 w-full animate-[scan_3s_linear_infinite] pointer-events-none" />
                 </div>
               )}
