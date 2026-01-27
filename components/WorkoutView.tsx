@@ -103,14 +103,12 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                   <img 
                     src="https://raw.githubusercontent.com/seanhsieh040724/ironlog-pro/main/incline-press.gif" 
                     alt="啞鈴上斜臥推" 
-                    referrerPolicy="no-referrer"
                     style={{ width: '100%', borderRadius: '15px', display: 'block' }} 
                   />
                 ) : gifUrl ? (
                   <img 
                     src={gifUrl} 
                     alt={currentDetailEx?.name} 
-                    referrerPolicy="no-referrer"
                     style={{ width: '100%', borderRadius: '15px', display: 'block' }} 
                   />
                 ) : (
