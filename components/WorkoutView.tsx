@@ -45,38 +45,10 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
   const [activeExerciseId, setActiveExerciseId] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<string>('chest');
   const [searchTerm, setSearchTerm] = useState('');
-  const [currentGif, setCurrentGif] = useState<string | null>(null);
-  const [isGifLoading, setIsGifLoading] = useState(false);
-  const [hasGifError, setHasGifError] = useState(false);
 
   const currentDetailEx = useMemo(() => session?.exercises.find(e => e.id === activeExerciseId), [session, activeExerciseId]);
 
-  // 物理級硬編碼 GIF 網址
-  const DUMBBELL_INCLINE_GIF = "https://raw.githubusercontent.com/seanhsieh040724/ironlog-pro/refs/heads/main/incline-press.gif";
-
-  useEffect(() => {
-    if (activeExerciseId && currentDetailEx) {
-      const name = currentDetailEx.name.trim();
-      
-      // 如果是目標動作，直接設置並跳過後續請求
-      if (name.includes('啞鈴') && name.includes('上斜')) {
-        setCurrentGif(DUMBBELL_INCLINE_GIF);
-        setIsGifLoading(false);
-        setHasGifError(false);
-        return;
-      }
-
-      setIsGifLoading(true);
-      setHasGifError(false);
-      fetchExerciseGif(name)
-        .then(url => { setCurrentGif(url); setIsGifLoading(false); })
-        .catch(() => { setHasGifError(true); setIsGifLoading(false); });
-    }
-  }, [activeExerciseId, currentDetailEx?.name]);
-
   if (!session) return null;
-
-  const isSpecialGif = currentDetailEx?.name.includes('啞鈴') && currentDetailEx?.name.includes('上斜');
 
   return (
     <div className="relative min-h-screen">
@@ -118,34 +90,9 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
               <button onClick={() => { if(confirm('移除？')) { onUpdate({ ...session, exercises: session.exercises.filter(e => e.id !== currentDetailEx!.id) }); setActiveExerciseId(null); } }} className="w-10 h-10 bg-red-500/10 rounded-xl flex items-center justify-center text-red-500/40"><Trash2 className="w-4 h-4" /></button>
             </div>
 
-            {/* 核心示範區塊：針對 GIF 進行物理級優化 */}
             <div className="w-full relative px-1">
-              {/* 如果不是特殊 GIF 且正在加載，顯示 Loading */}
-              {isGifLoading && !isSpecialGif && (
-                <div className="w-full aspect-video bg-slate-900/50 rounded-[20px] flex items-center justify-center border border-white/5"><Loader2 className="w-8 h-8 animate-spin text-neon-green" /></div>
-              )}
-              
-              {/* 如果不是特殊 GIF 且發生錯誤，顯示錯誤 */}
-              {hasGifError && !isSpecialGif && (
-                <div className="w-full aspect-video bg-slate-900/50 rounded-[20px] flex flex-col items-center justify-center text-slate-700 border border-white/5 p-8 text-center"><AlertCircle className="w-8 h-8 mb-2" /><span className="text-[10px] font-black">載入失敗</span></div>
-              )}
-
-              {/* 只要是特殊 GIF (或是普通 GIF 載入成功)，直接強制渲染 <img> */}
-              <div className={`relative overflow-hidden rounded-[20px] shadow-2xl border border-white/5 bg-slate-900 ${(!isSpecialGif && isGifLoading) ? 'hidden' : 'block'}`}>
-                <img 
-                  key={currentDetailEx?.id}
-                  src={isSpecialGif ? DUMBBELL_INCLINE_GIF : (currentGif || '')} 
-                  className="w-full h-auto block" 
-                  alt="Workout Animation GIF" 
-                  loading="eager"
-                  style={{ borderRadius: '20px', width: '100%', height: 'auto', minHeight: '150px' }}
-                />
-                {isSpecialGif && (
-                  <div className="absolute top-3 right-3 px-3 py-1 bg-neon-green/90 text-black text-[9px] font-black rounded-full uppercase tracking-tighter animate-pulse shadow-lg">
-                    LIVE GIF
-                  </div>
-                )}
-                {/* 裝飾性掃描線 */}
+              <div className="relative overflow-hidden rounded-[20px] shadow-2xl border border-white/5 bg-slate-900">
+                <img src="https://raw.githubusercontent.com/seanhsieh040724/ironlog-pro/refs/heads/main/incline-press.gif" alt="啞鈴上斜臥推" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
                 <div className="absolute inset-0 bg-gradient-to-b from-transparent via-neon-green/5 to-transparent h-24 w-full animate-[scan_3s_linear_infinite] pointer-events-none" />
               </div>
             </div>
