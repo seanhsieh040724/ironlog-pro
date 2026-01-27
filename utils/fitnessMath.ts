@@ -65,6 +65,8 @@ export const getMuscleGroup = (name: string): MuscleGroup => {
  */
 const EXERCISE_MAP: Record<string, string> = {
   "啞鈴上斜臥推": "https://raw.githubusercontent.com/seanhsieh040724/ironlog-pro/refs/heads/main/incline-press.gif",
+  "槓鈴上斜臥推": "https://raw.githubusercontent.com/seanhsieh040724/ironlog-pro/refs/heads/main/incline-press.gif",
+  "史密斯上斜臥推": "https://raw.githubusercontent.com/seanhsieh040724/ironlog-pro/refs/heads/main/incline-press.gif",
   "槓鈴平板臥推": "barbell_bench_press",
   "槓鈴深蹲": "barbell_full_squat",
   "傳統硬舉": "barbell_deadlift",
@@ -94,12 +96,13 @@ export const fetchExerciseGif = async (exerciseName: string): Promise<string> =>
   const exerciseKey = EXERCISE_MAP[name];
   
   if (exerciseKey) {
-    if (exerciseKey.startsWith('http') || exerciseKey.startsWith('/')) {
+    if (exerciseKey.startsWith('http')) {
       return exerciseKey;
     }
     return `https://fitnessprogramer.com/wp-content/uploads/2021/02/${exerciseKey}.gif`;
   }
 
+  // 自動化推論：如果名稱包含關鍵字則嘗試匹配常用動作庫
   const group = getMuscleGroup(exerciseName);
   const fallbackMap: Record<string, string> = {
     "chest": "https://fitnessprogramer.com/wp-content/uploads/2021/02/barbell_bench_press.gif",
