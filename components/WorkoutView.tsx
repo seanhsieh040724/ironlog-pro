@@ -226,7 +226,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                     src={currentGif || ''} 
                     className="w-full h-auto block" 
                     alt="exercise demonstration" 
-                    style={{ borderRadius: '15px', width: '100%', display: 'block' }}
+                    style={{ borderRadius: '15px', width: '100%', display: 'block', height: 'auto' }}
                   />
                   {/* 掃描線動畫 */}
                   <div className="absolute inset-0 bg-gradient-to-b from-transparent via-neon-green/5 to-transparent h-24 w-full animate-[scan_3s_linear_infinite] pointer-events-none" />
