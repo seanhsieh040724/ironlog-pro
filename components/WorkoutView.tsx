@@ -10,13 +10,9 @@ import { getMuscleGroup, getMuscleGroupDisplay, fetchExerciseGif } from '../util
 import { AppContext } from '../App';
 import * as Silhouettes from './WorkoutIcons';
 
-// 智慧圖示映射函數
 export const getExerciseIcon = (name: string, isActive: boolean = false) => {
   const n = name.toLowerCase();
-  const props = { 
-    className: `w-full h-full transition-all duration-500 ${isActive ? 'text-neon-green' : 'text-slate-500'}` 
-  };
-  
+  const props = { className: `w-full h-full transition-all duration-500 ${isActive ? 'text-neon-green' : 'text-slate-500'}` };
   if (n.includes('臥推') || n.includes('推胸') || n.includes('夾胸') || n.includes('bench')) return <Silhouettes.ChestIcon {...props} />;
   if (n.includes('深蹲') || n.includes('腿') || n.includes('蹲') || n.includes('squat') || n.includes('leg')) return <Silhouettes.LegIcon {...props} />;
   if (n.includes('引體向上') || n.includes('下拉') || n.includes('划船') || n.includes('row') || n.includes('pull')) return <Silhouettes.BackIcon {...props} />;
@@ -24,7 +20,6 @@ export const getExerciseIcon = (name: string, isActive: boolean = false) => {
   if (n.includes('肩推') || n.includes('平舉') || n.includes('shoulder') || n.includes('press')) return <Silhouettes.ShoulderIcon {...props} />;
   if (n.includes('彎舉') || n.includes('下壓') || n.includes('二頭') || n.includes('三頭') || n.includes('arm')) return <Silhouettes.ArmIcon {...props} />;
   if (n.includes('捲腹') || n.includes('棒式') || n.includes('核心') || n.includes('abs') || n.includes('core')) return <Silhouettes.CoreIcon {...props} />;
-  
   return <Silhouettes.GenericIcon {...props} />;
 };
 
@@ -50,7 +45,6 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
   const [activeExerciseId, setActiveExerciseId] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<string>('chest');
   const [searchTerm, setSearchTerm] = useState('');
-  
   const [currentGif, setCurrentGif] = useState<string | null>(null);
   const [isGifLoading, setIsGifLoading] = useState(false);
   const [hasGifError, setHasGifError] = useState(false);
@@ -60,17 +54,17 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
     return EXERCISE_DATABASE.filter(ex => ex.toLowerCase().includes(searchTerm.toLowerCase())).slice(0, 20);
   }, [searchTerm, activeCategory]);
 
-  const currentDetailEx = useMemo(() => 
-    session?.exercises.find(e => e.id === activeExerciseId),
-  [session, activeExerciseId]);
+  const currentDetailEx = useMemo(() => session?.exercises.find(e => e.id === activeExerciseId), [session, activeExerciseId]);
+
+  // 物理級硬編碼網址
+  const DUMBBELL_INCLINE_URL = "https://raw.githubusercontent.com/seanhsieh040724/ironlog-pro/refs/heads/main/incline-press.gif";
 
   useEffect(() => {
     if (activeExerciseId && currentDetailEx) {
       const name = currentDetailEx.name.trim();
-      
-      // 如果是「啞鈴上斜臥推」，直接設定網址並結束
-      if (name === '啞鈴上斜臥推') {
-        setCurrentGif('https://raw.githubusercontent.com/seanhsieh040724/ironlog-pro/refs/heads/main/incline-press.gif');
+      // 模糊比對：只要包含關鍵字就強制使用
+      if (name.includes('啞鈴') && name.includes('上斜')) {
+        setCurrentGif(DUMBBELL_INCLINE_URL);
         setIsGifLoading(false);
         setHasGifError(false);
         return;
@@ -79,109 +73,14 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
       setIsGifLoading(true);
       setHasGifError(false);
       fetchExerciseGif(name)
-        .then(url => {
-          setCurrentGif(url);
-          setIsGifLoading(false);
-        })
-        .catch(() => {
-          setHasGifError(true);
-          setIsGifLoading(false);
-        });
+        .then(url => { setCurrentGif(url); setIsGifLoading(false); })
+        .catch(() => { setHasGifError(true); setIsGifLoading(false); });
     }
   }, [activeExerciseId, currentDetailEx?.name]);
 
   if (!session) return null;
 
-  const handleAddExercise = (exName: string) => {
-    const newExId = crypto.randomUUID();
-    const entry: ExerciseEntry = {
-      id: newExId,
-      name: exName,
-      muscleGroup: getMuscleGroup(exName),
-      sets: Array.from({ length: 4 }).map((_, idx) => ({
-        id: crypto.randomUUID(),
-        weight: 0, 
-        reps: 10,
-        completed: false
-      }))
-    };
-    onUpdate({ ...session, exercises: [...session.exercises, entry] });
-    setActiveExerciseId(newExId); 
-    setSearchTerm('');
-    if ('vibrate' in navigator) navigator.vibrate(10);
-  };
-
-  const toggleSetCompletion = (exerciseId: string, setId: string) => {
-    onUpdate({
-      ...session,
-      exercises: session.exercises.map(ex => {
-        if (ex.id === exerciseId) {
-          return {
-            ...ex,
-            sets: ex.sets.map(s => {
-              if (s.id === setId) {
-                const newCompleted = !s.completed;
-                if (newCompleted && context) context.triggerRestTimer();
-                return { ...s, completed: newCompleted };
-              }
-              return s;
-            })
-          };
-        }
-        return ex;
-      })
-    });
-  };
-
-  const updateSetData = (exerciseId: string, setId: string, updates: Partial<SetEntry>) => {
-    onUpdate({
-      ...session,
-      exercises: session.exercises.map(ex => {
-        if (ex.id === exerciseId) {
-          return { ...ex, sets: ex.sets.map(s => s.id === setId ? { ...s, ...updates } : s) };
-        }
-        return ex;
-      })
-    });
-  };
-
-  const addSetToExercise = (exerciseId: string) => {
-    onUpdate({
-      ...session,
-      exercises: session.exercises.map(ex => {
-        if (ex.id === exerciseId) {
-          const lastSet = ex.sets[ex.sets.length - 1];
-          return { 
-            ...ex, 
-            sets: [...ex.sets, {
-              id: crypto.randomUUID(),
-              weight: lastSet?.weight || 0,
-              reps: lastSet?.reps || 10,
-              completed: false
-            }] 
-          };
-        }
-        return ex;
-      })
-    });
-  };
-
-  const removeSetFromExercise = (exerciseId: string, setId: string) => {
-    onUpdate({ 
-      ...session, 
-      exercises: session.exercises.map(e => e.id === exerciseId ? { ...e, sets: e.sets.filter(s => s.id !== setId) } : e) 
-    });
-  };
-
-  const removeExercise = (id: string) => {
-    if(confirm(`確定要移除此動作紀錄嗎？`)) {
-      onUpdate({ ...session, exercises: session.exercises.filter(e => e.id !== id) });
-      if (activeExerciseId === id) setActiveExerciseId(null);
-    }
-  };
-
-  // 判定是否為目標動作
-  const isTargetAction = currentDetailEx?.name.trim() === '啞鈴上斜臥推';
+  const isHardcodedAction = currentDetailEx?.name.includes('啞鈴') && currentDetailEx?.name.includes('上斜');
 
   return (
     <div className="relative min-h-screen">
@@ -189,33 +88,30 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
         {!activeExerciseId ? (
           <motion.div key="overview" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-8 pb-40">
             <div className="space-y-6 pt-2">
-              <div className="px-1 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-neon-green" />
-                  <h3 className="text-xs font-black italic uppercase tracking-[0.2em] text-white">點擊動作開始訓練</h3>
-                </div>
+              <div className="flex items-center gap-4 bg-slate-900/80 border border-white/5 rounded-2xl px-5 py-3.5 shadow-inner">
+                <Search className="w-4 h-4 text-slate-600" />
+                <input placeholder="搜尋動作..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="bg-transparent w-full text-sm font-black italic outline-none text-white placeholder:text-slate-800" />
               </div>
-              <div className="space-y-4">
-                <div className="flex items-center gap-4 bg-slate-900/80 border border-white/5 rounded-2xl px-5 py-3.5 shadow-inner">
-                  <Search className="w-4 h-4 text-slate-600" />
-                  <input placeholder="搜尋動作..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="bg-transparent w-full text-sm font-black italic outline-none text-white placeholder:text-slate-800" />
-                </div>
-                <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-                  {Object.keys(ORGANIZED_EXERCISES).map(cat => (
-                    <button key={cat} onClick={() => { setActiveCategory(cat); setSearchTerm(''); }} className={`shrink-0 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${!searchTerm && activeCategory === cat ? 'bg-neon-green text-black border-neon-green' : 'bg-slate-900/40 text-slate-500 border-white/5'}`}>{getMuscleGroupDisplay(cat as MuscleGroup).cn}</button>
-                  ))}
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  {filteredExercises.map(exName => (
-                    <motion.button key={exName} whileTap={{ scale: 0.95 }} onClick={() => handleAddExercise(exName)} className="p-4 rounded-2xl text-left bg-slate-900/40 border border-white/5 hover:border-neon-green/30 transition-all flex items-start gap-3">
-                      <div className="w-9 h-9 shrink-0 bg-slate-800 rounded-lg flex items-center justify-center p-1">{getExerciseIcon(exName)}</div>
-                      <div className="overflow-hidden">
-                        <div className="text-[11px] font-black italic uppercase text-slate-200 truncate">{exName}</div>
-                        <div className="text-[7px] font-bold text-slate-700 uppercase tracking-widest mt-1">{getMuscleGroupDisplay(getMuscleGroup(exName)).cn}</div>
-                      </div>
-                    </motion.button>
-                  ))}
-                </div>
+              <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+                {Object.keys(ORGANIZED_EXERCISES).map(cat => (
+                  <button key={cat} onClick={() => { setActiveCategory(cat); setSearchTerm(''); }} className={`shrink-0 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${!searchTerm && activeCategory === cat ? 'bg-neon-green text-black border-neon-green' : 'bg-slate-900/40 text-slate-500 border-white/5'}`}>{getMuscleGroupDisplay(cat as MuscleGroup).cn}</button>
+                ))}
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                {filteredExercises.map(exName => (
+                  <motion.button key={exName} whileTap={{ scale: 0.95 }} onClick={() => {
+                    const newExId = crypto.randomUUID();
+                    onUpdate({ ...session, exercises: [...session.exercises, { id: newExId, name: exName, muscleGroup: getMuscleGroup(exName), sets: Array.from({ length: 4 }).map(() => ({ id: crypto.randomUUID(), weight: 0, reps: 10, completed: false })) }] });
+                    setActiveExerciseId(newExId);
+                    setSearchTerm('');
+                  }} className="p-4 rounded-2xl text-left bg-slate-900/40 border border-white/5 hover:border-neon-green/30 transition-all flex items-start gap-3">
+                    <div className="w-9 h-9 shrink-0 bg-slate-800 rounded-lg flex items-center justify-center p-1">{getExerciseIcon(exName)}</div>
+                    <div className="overflow-hidden">
+                      <div className="text-[11px] font-black italic uppercase text-slate-200 truncate">{exName}</div>
+                      <div className="text-[7px] font-bold text-slate-700 uppercase tracking-widest mt-1">{getMuscleGroupDisplay(getMuscleGroup(exName)).cn}</div>
+                    </div>
+                  </motion.button>
+                ))}
               </div>
             </div>
           </motion.div>
@@ -224,32 +120,24 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
             <div className="flex items-center justify-between">
               <button onClick={() => setActiveExerciseId(null)} className="flex items-center gap-2 text-slate-400 active:text-neon-green transition-colors py-2"><ChevronLeft className="w-6 h-6" /><span className="text-[10px] font-black uppercase tracking-widest">返回</span></button>
               <h2 className="text-xl font-black italic uppercase text-white truncate max-w-[200px]">{currentDetailEx?.name}</h2>
-              <button onClick={() => removeExercise(currentDetailEx!.id)} className="w-10 h-10 bg-red-500/10 rounded-xl flex items-center justify-center text-red-500/40"><Trash2 className="w-4 h-4" /></button>
+              <button onClick={() => { if(confirm(`確定要移除此動作紀錄嗎？`)) { onUpdate({ ...session, exercises: session.exercises.filter(e => e.id !== currentDetailEx!.id) }); setActiveExerciseId(null); } }} className="w-10 h-10 bg-red-500/10 rounded-xl flex items-center justify-center text-red-500/40"><Trash2 className="w-4 h-4" /></button>
             </div>
 
-            {/* 核心示範圖區塊：強制硬編碼特定動作 */}
             <div className="w-full relative px-1">
-              {(isGifLoading && !isTargetAction) ? (
-                <div className="w-full aspect-video bg-slate-900/50 rounded-[15px] flex items-center justify-center border border-white/5">
-                  <Loader2 className="w-8 h-8 animate-spin text-neon-green" />
-                </div>
-              ) : (hasGifError && !isTargetAction) ? (
-                <div className="w-full aspect-video bg-slate-900/50 rounded-[15px] flex flex-col items-center justify-center text-slate-700 border border-white/5 p-8 text-center">
-                  <AlertCircle className="w-8 h-8 mb-2" />
-                  <span className="text-[10px] font-black uppercase tracking-widest leading-relaxed">示範圖載入失敗</span>
-                </div>
+              {(isGifLoading && !isHardcodedAction) ? (
+                <div className="w-full aspect-video bg-slate-900/50 rounded-[15px] flex items-center justify-center border border-white/5"><Loader2 className="w-8 h-8 animate-spin text-neon-green" /></div>
+              ) : (hasGifError && !isHardcodedAction) ? (
+                <div className="w-full aspect-video bg-slate-900/50 rounded-[15px] flex flex-col items-center justify-center text-slate-700 border border-white/5 p-8 text-center"><AlertCircle className="w-8 h-8 mb-2" /><span className="text-[10px] font-black uppercase tracking-widest">示範圖載入失敗</span></div>
               ) : (
                 <div className="relative overflow-hidden rounded-[15px] shadow-2xl border border-white/5 bg-slate-900">
                   <img 
-                    src={isTargetAction 
-                      ? 'https://raw.githubusercontent.com/seanhsieh040724/ironlog-pro/refs/heads/main/incline-press.gif' 
-                      : (currentGif || '')
-                    } 
+                    key={currentDetailEx?.id}
+                    src={isHardcodedAction ? DUMBBELL_INCLINE_URL : (currentGif || '')} 
                     className="w-full h-auto block" 
                     alt="exercise demonstration" 
                     style={{ borderRadius: '15px', width: '100%', display: 'block', height: 'auto' }}
                   />
-                  {/* 掃描線動畫 */}
+                  {isHardcodedAction && <div className="absolute top-2 right-2 px-2 py-1 bg-neon-green/80 text-black text-[8px] font-black rounded uppercase">專屬圖源</div>}
                   <div className="absolute inset-0 bg-gradient-to-b from-transparent via-neon-green/5 to-transparent h-24 w-full animate-[scan_3s_linear_infinite] pointer-events-none" />
                 </div>
               )}
@@ -257,38 +145,24 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
 
             <div className="space-y-4 px-1">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Target className="w-4 h-4 text-neon-green" />
-                  <h3 className="text-xs font-black italic uppercase tracking-widest text-white">訓練數據錄入</h3>
-                </div>
-                <button onClick={() => addSetToExercise(currentDetailEx!.id)} className="flex items-center gap-1 text-neon-green text-[9px] font-black uppercase"><PlusCircle className="w-3.5 h-3.5" /> 新增下一組</button>
+                <div className="flex items-center gap-2"><Target className="w-4 h-4 text-neon-green" /><h3 className="text-xs font-black italic uppercase tracking-widest text-white">訓練數據錄入</h3></div>
+                <button onClick={() => onUpdate({ ...session, exercises: session.exercises.map(ex => ex.id === currentDetailEx!.id ? { ...ex, sets: [...ex.sets, { id: crypto.randomUUID(), weight: ex.sets[ex.sets.length-1]?.weight || 0, reps: ex.sets[ex.sets.length-1]?.reps || 10, completed: false }] } : ex) })} className="flex items-center gap-1 text-neon-green text-[9px] font-black uppercase"><PlusCircle className="w-3.5 h-3.5" /> 新增下一組</button>
               </div>
-
               <div className="space-y-3">
                 <div className="grid grid-cols-12 gap-2 text-[8px] font-black text-slate-600 uppercase tracking-widest px-4">
-                  <div className="col-span-1"></div>
-                  <div className="col-span-2 text-center">組數</div>
-                  <div className="col-span-4 text-center">重量 (KG)</div>
-                  <div className="col-span-3 text-center">次數</div>
-                  <div className="col-span-2"></div>
+                  <div className="col-span-1"></div><div className="col-span-2 text-center">組數</div><div className="col-span-4 text-center">重量 (KG)</div><div className="col-span-3 text-center">次數</div><div className="col-span-2"></div>
                 </div>
-
-                <AnimatePresence mode="popLayout">
-                  {currentDetailEx!.sets.map((set, index) => (
-                    <motion.div key={set.id} layout initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }} className={`grid grid-cols-12 gap-2 items-center p-3 rounded-[24px] border transition-all ${set.completed ? 'bg-neon-green/5 border-neon-green/20' : 'bg-slate-900/60 border-white/5'}`}>
-                      <div className="col-span-1 flex justify-center"><button onClick={() => removeSetFromExercise(currentDetailEx!.id, set.id)} className="text-slate-800 active:text-red-500"><MinusCircle className="w-4 h-4" /></button></div>
-                      <div className="col-span-2 text-sm font-black italic text-slate-500 text-center">#{index + 1}</div>
-                      <div className="col-span-4"><input type="number" inputMode="decimal" value={set.weight || ''} placeholder="0" onChange={(e) => updateSetData(currentDetailEx!.id, set.id, { weight: Number(e.target.value) })} className="w-full bg-black/40 rounded-xl py-3 text-center text-lg font-black text-white outline-none focus:ring-1 ring-neon-green/30" /></div>
-                      <div className="col-span-3"><input type="number" inputMode="numeric" value={set.reps || ''} placeholder="0" onChange={(e) => updateSetData(currentDetailEx!.id, set.id, { reps: Number(e.target.value) })} className="w-full bg-black/40 rounded-xl py-3 text-center text-lg font-black text-white outline-none focus:ring-1 ring-neon-green/30" /></div>
-                      <div className="col-span-2 flex justify-center"><button onClick={() => toggleSetCompletion(currentDetailEx!.id, set.id)} className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${set.completed ? 'bg-neon-green text-black' : 'bg-slate-800 text-slate-600'}`}><Check className="w-5 h-5 stroke-[4]" /></button></div>
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
+                {currentDetailEx!.sets.map((set, index) => (
+                  <div key={set.id} className={`grid grid-cols-12 gap-2 items-center p-3 rounded-[24px] border transition-all ${set.completed ? 'bg-neon-green/5 border-neon-green/20' : 'bg-slate-900/60 border-white/5'}`}>
+                    <div className="col-span-1 flex justify-center"><button onClick={() => onUpdate({ ...session, exercises: session.exercises.map(e => e.id === currentDetailEx!.id ? { ...e, sets: e.sets.filter(s => s.id !== set.id) } : e) })} className="text-slate-800 active:text-red-500"><MinusCircle className="w-4 h-4" /></button></div>
+                    <div className="col-span-2 text-sm font-black italic text-slate-500 text-center">#{index + 1}</div>
+                    <div className="col-span-4"><input type="number" value={set.weight || ''} placeholder="0" onChange={(e) => onUpdate({ ...session, exercises: session.exercises.map(ex => ex.id === currentDetailEx!.id ? { ...ex, sets: ex.sets.map(s => s.id === set.id ? { ...s, weight: Number(e.target.value) } : s) } : ex) })} className="w-full bg-black/40 rounded-xl py-3 text-center text-lg font-black text-white outline-none focus:ring-1 ring-neon-green/30" /></div>
+                    <div className="col-span-3"><input type="number" value={set.reps || ''} placeholder="0" onChange={(e) => onUpdate({ ...session, exercises: session.exercises.map(ex => ex.id === currentDetailEx!.id ? { ...ex, sets: ex.sets.map(s => s.id === set.id ? { ...s, reps: Number(e.target.value) } : s) } : ex) })} className="w-full bg-black/40 rounded-xl py-3 text-center text-lg font-black text-white outline-none focus:ring-1 ring-neon-green/30" /></div>
+                    <div className="col-span-2 flex justify-center"><button onClick={() => { const newComp = !set.completed; if(newComp && context) context.triggerRestTimer(); onUpdate({ ...session, exercises: session.exercises.map(ex => ex.id === currentDetailEx!.id ? { ...ex, sets: ex.sets.map(s => s.id === set.id ? { ...s, completed: newComp } : s) } : ex) }); }} className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${set.completed ? 'bg-neon-green text-black' : 'bg-slate-800 text-slate-600'}`}><Check className="w-5 h-5 stroke-[4]" /></button></div>
+                  </div>
+                ))}
               </div>
-
-              <div className="pt-6">
-                <button onClick={onFinish} className="w-full bg-neon-green text-black font-black h-16 rounded-[24px] uppercase italic text-lg shadow-2xl flex items-center justify-center gap-3 active:scale-95 transition-all"><Save className="w-6 h-6 stroke-[3]" /> 儲存紀錄</button>
-              </div>
+              <div className="pt-6"><button onClick={onFinish} className="w-full bg-neon-green text-black font-black h-16 rounded-[24px] uppercase italic text-lg shadow-2xl flex items-center justify-center gap-3 active:scale-95 transition-all"><Save className="w-6 h-6 stroke-[3]" /> 儲存紀錄</button></div>
             </div>
           </motion.div>
         )}
