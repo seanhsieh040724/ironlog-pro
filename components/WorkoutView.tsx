@@ -66,9 +66,19 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
 
   useEffect(() => {
     if (activeExerciseId && currentDetailEx) {
+      const name = currentDetailEx.name.trim();
+      
+      // 完全寫死「啞鈴上斜臥推」的處理
+      if (name === '啞鈴上斜臥推') {
+        setCurrentGif('https://raw.githubusercontent.com/seanhsieh040724/ironlog-pro/refs/heads/main/incline-press.gif');
+        setIsGifLoading(false);
+        setHasGifError(false);
+        return;
+      }
+
       setIsGifLoading(true);
       setHasGifError(false);
-      fetchExerciseGif(currentDetailEx.name)
+      fetchExerciseGif(name)
         .then(url => {
           setCurrentGif(url);
           setIsGifLoading(false);
@@ -214,19 +224,20 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
               <button onClick={() => removeExercise(currentDetailEx!.id)} className="w-10 h-10 bg-red-500/10 rounded-xl flex items-center justify-center text-red-500/40"><Trash2 className="w-4 h-4" /></button>
             </div>
 
-            {/* 核心示範圖：100% 寬度、自動高度、15px 圓角 */}
+            {/* 核心示範圖：強制置頂，寫死樣式 */}
             <div className="w-full relative px-1">
-              {isGifLoading ? (
+              {isGifLoading && currentDetailEx?.name !== '啞鈴上斜臥推' ? (
                 <div className="w-full aspect-video bg-slate-900/50 rounded-[15px] flex items-center justify-center border border-white/5"><Loader2 className="w-8 h-8 animate-spin text-neon-green" /></div>
-              ) : hasGifError ? (
+              ) : hasGifError && currentDetailEx?.name !== '啞鈴上斜臥推' ? (
                 <div className="w-full aspect-video bg-slate-900/50 rounded-[15px] flex flex-col items-center justify-center text-slate-700 border border-white/5 p-8 text-center"><AlertCircle className="w-8 h-8 mb-2" /><span className="text-[10px] font-black uppercase tracking-widest leading-relaxed">示範圖載入失敗</span></div>
               ) : (
                 <div className="relative overflow-hidden rounded-[15px] shadow-2xl border border-white/5 bg-slate-900">
                   <img 
-                    src={currentGif || ''} 
+                    src={currentDetailEx?.name === '啞鈴上斜臥推' ? 'https://raw.githubusercontent.com/seanhsieh040724/ironlog-pro/refs/heads/main/incline-press.gif' : (currentGif || '')} 
                     className="w-full h-auto block" 
                     alt="exercise demonstration" 
                     style={{ borderRadius: '15px', width: '100%', display: 'block', height: 'auto' }}
+                    referrerPolicy="no-referrer"
                   />
                   {/* 掃描線動畫 */}
                   <div className="absolute inset-0 bg-gradient-to-b from-transparent via-neon-green/5 to-transparent h-24 w-full animate-[scan_3s_linear_infinite] pointer-events-none" />

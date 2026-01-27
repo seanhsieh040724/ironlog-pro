@@ -93,18 +93,13 @@ export const fetchExerciseGif = async (exerciseName: string): Promise<string> =>
   const name = exerciseName.trim();
   const exerciseKey = EXERCISE_MAP[name];
   
-  // 輕微延遲確保 UI 回應
-  await new Promise(resolve => setTimeout(resolve, 200));
-
   if (exerciseKey) {
-    // 檢查是否為外部網址或根目錄路徑
     if (exerciseKey.startsWith('http') || exerciseKey.startsWith('/')) {
       return exerciseKey;
     }
     return `https://fitnessprogramer.com/wp-content/uploads/2021/02/${exerciseKey}.gif`;
   }
 
-  // Fallback 邏輯
   const group = getMuscleGroup(exerciseName);
   const fallbackMap: Record<string, string> = {
     "chest": "https://fitnessprogramer.com/wp-content/uploads/2021/02/barbell_bench_press.gif",
