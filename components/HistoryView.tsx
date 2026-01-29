@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { WorkoutSession, MuscleGroup, ExerciseEntry } from '../types';
 import { getMuscleGroupDisplay } from '../utils/fitnessMath';
@@ -88,16 +87,16 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
   }, [history, analysisPeriod]);
 
   /**
-   * 依照要求更新顏色邏輯：
-   * 0% (無數據): 深藍灰 #1e293b
-   * 1-35% (輕量): 綠色 #22c55e
-   * 36-75% (適中): 黃色 #eab308
-   * 76-100% (極限): 紅色 #ef4444
+   * 依照要求更新顏色邏輯 (絕對組數判定)：
+   * 0 組 (休息): 深藍灰 #1e293b
+   * 1-10 組 (輕量): 綠色 #22c55e
+   * 11-15 組 (適中): 黃色 #eab308
+   * 16+ 組 (極限): 紅色 #ef4444
    */
-  const getHeatColor = (percentage: number) => {
-    if (percentage === 0) return '#1e293b'; 
-    if (percentage <= 35) return '#22c55e';  
-    if (percentage <= 75) return '#eab308';  
+  const getHeatColor = (setCount: number) => {
+    if (setCount === 0) return '#1e293b'; 
+    if (setCount <= 10) return '#22c55e';  
+    if (setCount <= 15) return '#eab308';  
     return '#ef4444';                  
   };
 
@@ -228,9 +227,9 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
         <div className="grid grid-cols-1 gap-6">
            {allMuscleGroups.map(muscle => {
              const setTotal = analysisData[muscle] || 0;
-             const max = Math.max(...(Object.values(analysisData) as number[]), 1);
-             const percentage = (setTotal / max) * 100;
-             const barColor = getHeatColor(percentage);
+             // 為了顯示比例，我們可以用 20 組作為進度條 100% 的參考（但顏色還是看絕對組數）
+             const progressPercentage = Math.min(100, (setTotal / 20) * 100);
+             const barColor = getHeatColor(setTotal);
              
              return (
                <div key={muscle} className="space-y-2.5">
@@ -241,7 +240,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
                   <div className="h-3.5 w-full bg-slate-900/60 rounded-full overflow-hidden border border-white/5">
                      <motion.div 
                        initial={{ width: 0 }} 
-                       animate={{ width: `${percentage}%`, backgroundColor: barColor }} 
+                       animate={{ width: `${progressPercentage}%`, backgroundColor: barColor }} 
                        transition={{ duration: 1.5, ease: "circOut" }}
                        className="h-full shadow-[0_0_10px_rgba(37,99,235,0.2)]" 
                      />
@@ -252,13 +251,13 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
         </div>
 
         <div className="pt-5 border-t border-white/5">
-          <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-5">訓練負荷程度說明</p>
+          <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-5">訓練負荷程度說明 (組數 / {analysisPeriod === 'week' ? '週' : '月'})</p>
           <div className="flex justify-between">
-            {[0, 35, 75, 100].map((s, i) => (
+            {[0, 5, 13, 20].map((s, i) => (
               <div key={i} className="flex flex-col items-center gap-2.5">
                 <div className="w-8 h-2.5 rounded-full shadow-sm" style={{ backgroundColor: getHeatColor(s) }} />
                 <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest">
-                  {s === 0 ? '休息中' : s === 35 ? '輕量' : s === 75 ? '適中' : '極限'}
+                  {s === 0 ? '休息中' : s === 5 ? '輕量(1-10)' : s === 13 ? '適中(11-15)' : '極限(16+)'}
                 </span>
               </div>
             ))}

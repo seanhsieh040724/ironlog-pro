@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Timer, X, RotateCcw, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -12,38 +11,80 @@ interface RestTimerProps {
 export const RestTimer: React.FC<RestTimerProps> = ({ active, seconds: initialSeconds, onClose }) => {
   const [timeLeft, setTimeLeft] = useState(initialSeconds);
   const [configSeconds, setConfigSeconds] = useState(initialSeconds);
+  const targetTimeRef = useRef<number | null>(null);
+  const notificationSentRef = useRef<boolean>(false);
 
-  useEffect(() => {
-    if (!active) return;
-    setTimeLeft(configSeconds);
-    
-    const timer = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev <= 1) {
-          handleTimerEnd();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
+  const handleTimerEnd = useCallback(() => {
+    if (notificationSentRef.current) return;
+    notificationSentRef.current = true;
 
-    return () => clearInterval(timer);
-  }, [active, configSeconds]);
-
-  const handleTimerEnd = () => {
     // 震動提醒
     if ('vibrate' in navigator) {
-      navigator.vibrate([300, 100, 300, 100, 400]);
+      navigator.vibrate([500, 110, 500, 110, 450, 110, 200, 110, 200]);
     }
 
     // 發送系統通知
     if ("Notification" in window && Notification.permission === "granted") {
-      new Notification("IronLog: 休息時間結束！", {
+      const n = new Notification("IronLog: 休息結束！", {
         body: "該開始下一組訓練了，鋼鐵般的意志不能停下！",
-        icon: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2NCIgaGVpZ2h0PSI2NCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiNBREZGMkYiIHN0cm9rZS13aWR0aD0iMiI+PHBhdGggZD0ibTYuNSA2LjUgMTEgMTEiLz48cGF0aCBkPSJtMjEgMjEtMS0xIi8+PHBhdGggZD0ibTMgMyAxIDEiLz48cGF0aCBkPSJtMTggMjIgNC00Ii8+PHBhdGggZD0ibTIgNiA0LTQiLz48cGF0aCBkPSJtMyAxMCA3LTciLz48cGF0aCBkPSJtMTQgMjEgNy03Ii8+PC9zdmc+"
+        icon: "https://cdn-icons-png.flaticon.com/512/3043/3043888.png", // 使用具象圖標增加辨識度
+        badge: "https://cdn-icons-png.flaticon.com/512/3043/3043888.png",
+        tag: 'rest-timer-end',
+        requireInteraction: true // 保持通知直到使用者點擊
       });
+      
+      n.onclick = () => {
+        window.focus();
+        onClose();
+      };
     }
-  };
+  }, [onClose]);
+
+  // 核心倒數邏輯：基於時間戳記
+  useEffect(() => {
+    if (!active) {
+      targetTimeRef.current = null;
+      notificationSentRef.current = false;
+      return;
+    }
+
+    // 設定目標結束時間
+    if (targetTimeRef.current === null) {
+      targetTimeRef.current = Date.now() + (configSeconds * 1000);
+    }
+
+    const updateTimer = () => {
+      if (!targetTimeRef.current) return;
+      
+      const now = Date.now();
+      const diff = Math.max(0, Math.ceil((targetTimeRef.current - now) / 1000));
+      
+      setTimeLeft(diff);
+
+      if (diff <= 0) {
+        handleTimerEnd();
+        clearInterval(interval);
+      }
+    };
+
+    // 每秒更新一次
+    const interval = setInterval(updateTimer, 1000);
+    updateTimer(); // 立即執行一次
+
+    // 監聽 App 回到前台的事件（Visibility API）
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        updateTimer(); // 回到 App 立即同步時間
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [active, configSeconds, handleTimerEnd]);
 
   if (!active) return null;
 
@@ -55,7 +96,15 @@ export const RestTimer: React.FC<RestTimerProps> = ({ active, seconds: initialSe
 
   const handleQuickSelect = (s: number) => {
     setConfigSeconds(s);
+    targetTimeRef.current = Date.now() + (s * 1000);
+    notificationSentRef.current = false;
     setTimeLeft(s);
+  };
+
+  const resetTimer = () => {
+    targetTimeRef.current = Date.now() + (configSeconds * 1000);
+    notificationSentRef.current = false;
+    setTimeLeft(configSeconds);
   };
 
   return (
@@ -84,7 +133,7 @@ export const RestTimer: React.FC<RestTimerProps> = ({ active, seconds: initialSe
           </div>
           
           <div className="flex space-x-3 w-full">
-             <button onClick={() => setTimeLeft(configSeconds)} className="flex-1 bg-slate-800 py-4 rounded-2xl flex items-center justify-center text-slate-400 active:scale-95 transition-all">
+             <button onClick={resetTimer} className="flex-1 bg-slate-800 py-4 rounded-2xl flex items-center justify-center text-slate-400 active:scale-95 transition-all">
                <RotateCcw className="w-5 h-5" />
              </button>
              <button onClick={onClose} className="flex-[2] bg-neon-green text-black font-black py-4 rounded-2xl active:scale-95 transition-all uppercase tracking-tighter flex items-center justify-center gap-2">

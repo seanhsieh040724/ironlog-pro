@@ -1,11 +1,9 @@
-
 import React, { useState, useEffect, createContext, useMemo } from 'react';
 import { WorkoutView } from './components/WorkoutView';
 import { RoutineView } from './components/RoutineView';
 import { HistoryView } from './components/HistoryView';
 import { ProfileView } from './components/ProfileView';
 import { RestTimer } from './components/RestTimer';
-// Fix: Import the missing CalendarStrip component
 import { CalendarStrip } from './components/CalendarStrip';
 import { AppTab, WorkoutSession, BodyMetric, UserGoal, RoutineTemplate } from './types';
 import { Dumbbell, History, User, Calendar as CalendarIcon, LayoutGrid } from 'lucide-react';
@@ -66,8 +64,11 @@ const App: React.FC = () => {
     });
     
     // 請求通知權限
-    if ("Notification" in window && Notification.permission === "default") {
-      Notification.requestPermission();
+    if ("Notification" in window) {
+      if (Notification.permission === "default") {
+        // 使用者第一次進入時請求
+        Notification.requestPermission();
+      }
     }
 
     setIsLoaded(true);
@@ -199,7 +200,7 @@ const App: React.FC = () => {
                     muscleGroup: te.muscleGroup,
                     sets: Array.from({ length: te.defaultSets || 4 }).map((_, idx) => ({
                       id: crypto.randomUUID(),
-                      weight: idx === 0 ? te.defaultWeight : 0, // 僅第一組有重量
+                      weight: idx === 0 ? te.defaultWeight : 0, 
                       reps: te.defaultReps,
                       completed: false
                     }))
@@ -220,7 +221,6 @@ const App: React.FC = () => {
           <TabButton active={activeTab === 'profile'} onClick={() => setActiveTab('profile')} icon={<User />} label="個人" />
         </nav>
 
-        {/* 全局休息計時器 */}
         <RestTimer 
           active={restTimer.active} 
           seconds={restTimer.seconds} 
