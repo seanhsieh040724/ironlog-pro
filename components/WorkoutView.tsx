@@ -8,20 +8,12 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { getMuscleGroup, getMuscleGroupDisplay, fetchExerciseGif, getExerciseMethod } from '../utils/fitnessMath';
 import { AppContext } from '../App';
-// Import custom workout icons from the icons file
 import { ChestIcon, BackIcon, ShoulderIcon, LegIcon, DeadliftIcon, ArmIcon, CoreIcon, GenericIcon } from './WorkoutIcons';
 
-/**
- * Returns a React element for the icon corresponding to an exercise name.
- * Maps exercise names or muscle groups to specific SVG components.
- */
 export const getExerciseIcon = (name: string) => {
   const muscle = getMuscleGroup(name);
   const n = name.toLowerCase();
-  
-  // Specific check for deadlift-like exercises
   if (n.includes('硬舉') || n.includes('deadlift')) return <DeadliftIcon className="w-full h-full" />;
-  
   switch (muscle) {
     case 'chest': return <ChestIcon className="w-full h-full" />;
     case 'back': return <BackIcon className="w-full h-full" />;
@@ -38,9 +30,9 @@ export const getExerciseIcon = (name: string) => {
 export const ORGANIZED_EXERCISES: Record<string, string[]> = {
   'chest': ['槓鈴平板臥推', '槓鈴上斜臥推', '啞鈴平板臥推', '啞鈴上斜臥推', '史密斯平板臥推', '坐姿器械推胸', '蝴蝶機夾胸', '跪姿繩索夾胸', '雙槓撐體', '標準俯地挺身', '器械上斜推胸', '史密斯上斜臥推'],
   'back': ['引體向上', '滑輪下拉', '槓鈴划船', '啞鈴單臂划船', '坐姿划船', 'T桿划船', '直臂滑輪下拉', '傳統硬舉', '羅馬尼亞硬舉', '山羊挺身', '單臂滑輪划船', '反握下拉'],
-  'shoulders': ['啞鈴肩推', '槓鈴肩推', '阿諾肩推', '器械肩推', '啞鈴側平舉', '滑輪側平舉', '啞鈴前平舉', '蝴蝶機後三角飛鳥', '滑輪面拉', '槓鈴聳肩', '啞鈴俯身飛鳥', '六角槓聳肩'],
+  'shoulders': ['啞鈴肩推', '槓鈴肩推', '阿諾肩推', '器械肩推', '史密斯機肩推', '啞鈴側平舉', '滑輪側平舉', '器械側平舉', '啞鈴前平舉', '蝴蝶機後三角飛鳥', '滑輪面拉', '俯身啞鈴反向飛鳥'],
   'legs': ['槓鈴深蹲', '啞鈴杯式深蹲', '器械腿部推蹬', '保加利亞分腿蹲', '哈克深蹲', '器械腿伸展', '坐姿腿屈伸', '槓鈴臀推', '負重箭步蹲', '站姿提踵', '相撲硬舉', '器械內收/外展'],
-  'arms': ['槓鈴彎舉', '啞鈴交替彎舉', '啞鈴錘式彎舉', '牧師椅彎舉', '滑輪繩索下壓', '窄握槓鈴臥推', '仰臥槓鈴臂屈伸', '啞鈴頸後臂屈伸', '雙槓臂屈伸', '反握彎舉', '二頭肌器械彎舉', '三頭肌繩索過頭伸展'],
+  'arms': ['槓鈴彎舉', '啞鈴交替彎舉', '啞鈴錘式彎舉', '牧師椅彎舉', '滑輪繩索下壓', '窄握槓鈴臥推', '仰臥槓鈴臂屈伸', '啞鈴頸後臂屈伸', '反握彎舉', '二頭肌器械彎舉', '三頭肌繩索過頭伸展'],
   'core': ['標準捲腹', '仰臥抬腿', '棒式', '俄羅斯轉體', '健腹輪', '腳踏車捲腹', '懸垂提膝', '登山者', '側棒式', '跪姿滑輪捲腹', '反向捲腹', '側向捲腹']
 };
 
@@ -135,7 +127,6 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
               )}
 
               <div className="grid grid-cols-2 gap-3">
-                {/* 搜尋自訂動作入口 */}
                 {searchTerm.trim() && !isExactMatch && (
                   <motion.button 
                     whileTap={{ scale: 0.95 }} 
@@ -187,7 +178,35 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
 
             <div className="w-full relative px-1">
               <div className="relative overflow-hidden rounded-[24px] shadow-2xl border border-white/5 bg-slate-900 min-h-[240px] flex items-center justify-center">
-                {currentDetailEx?.name === '啞鈴上斜臥推' ? (
+                {currentDetailEx?.name === '啞鈴肩推' ? (
+                  <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/02/developpe-epaule-halteres.gif" alt="啞鈴肩推" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
+                ) : currentDetailEx?.name === '槓鈴肩推' ? (
+                  <img src="https://www.docteur-fitness.com/wp-content/uploads/2000/08/developpe-militaire-exercice-musculation.gif" alt="槓鈴肩推" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
+                ) : currentDetailEx?.name === '阿諾肩推' ? (
+                  <img src="https://www.docteur-fitness.com/wp-content/uploads/2000/08/developpe-arnold-exercice-musculation.gif" alt="阿諾肩推" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
+                ) : currentDetailEx?.name === '器械肩推' ? (
+                  <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/11/developpe-epaules-a-la-machine-shoulder-press.gif" alt="器械肩推" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
+                ) : currentDetailEx?.name === '史密斯機肩推' ? (
+                  <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/08/developpe-epaules-smith-machine.gif" alt="史密斯機肩推" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
+                ) : currentDetailEx?.name === '啞鈴側平舉' ? (
+                  <img src="https://www.docteur-fitness.com/wp-content/uploads/2000/08/elevations-laterales-exercice-musculation.gif" alt="啞鈴側平舉" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
+                ) : currentDetailEx?.name === '滑輪側平舉' ? (
+                  <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/11/elevations-laterales-unilaterale-poulie.gif" alt="滑輪側平舉" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
+                ) : currentDetailEx?.name === '器械側平舉' ? (
+                  <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/02/elevation-laterale-machine.gif" alt="器械側平舉" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
+                ) : currentDetailEx?.name === '啞鈴前平舉' ? (
+                  <img src="https://www.docteur-fitness.com/wp-content/uploads/2000/08/elevations-frontales-exercice-musculation.gif" alt="啞鈴前平舉" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
+                ) : currentDetailEx?.name === '蝴蝶機後三角飛鳥' ? (
+                  <img 
+                    src="https://www.docteur-fitness.com/wp-content/uploads/2021/12/pec-deck-inverse.gif" 
+                    alt="蝴蝶機後三角飛鳥" 
+                    style={{ width: '100%', borderRadius: '15px', display: 'block' }} 
+                  />
+                ) : currentDetailEx?.name === '滑輪面拉' ? (
+                  <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/01/face-pull.gif" alt="滑輪面拉" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
+                ) : currentDetailEx?.name === '俯身啞鈴反向飛鳥' ? (
+                  <img src="https://www.docteur-fitness.com/wp-content/uploads/2021/12/oiseau-assis-sur-banc.gif" alt="俯身啞鈴反向飛鳥" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
+                ) : currentDetailEx?.name === '啞鈴上斜臥推' ? (
                   <img src="https://www.docteur-fitness.com/wp-content/uploads/2000/06/developpe-incline-halteres-exercice-musculation.gif" alt="啞鈴上斜臥推" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
                 ) : currentDetailEx?.name === '槓鈴平板臥推' ? (
                   <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/01/developpe-couche-prise-inversee.gif" alt="槓鈴平板臥推" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
@@ -222,7 +241,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
 
             <div className="mx-1 p-6 rounded-[28px] bg-slate-900/40 border border-white/5 space-y-3.5 shadow-xl">
               <div className="flex items-center gap-2.5 text-neon-green">
-                <BookOpen className="w-5 h-5" />
+                < BookOpen className="w-5 h-5" />
                 <h3 className="text-[11px] font-black uppercase tracking-widest">運動方法</h3>
               </div>
               <p className="text-sm font-medium text-slate-400 leading-relaxed italic whitespace-pre-line">
@@ -243,7 +262,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
               <div className="space-y-4">
                 {currentDetailEx!.sets.map((set, index) => (
                   <div key={set.id} className={`grid grid-cols-12 gap-3 items-center p-4 rounded-[28px] border transition-all ${set.completed ? 'bg-neon-green/5 border-neon-green/20' : 'bg-slate-900/60 border-white/5'}`}>
-                    <div className="col-span-1 flex justify-center"><button onClick={() => onUpdate({ ...session, exercises: session.exercises.map(e => e.id === currentDetailEx!.id ? { ...e, sets: e.sets.filter(s => s.id !== set.id) } : e) })} className="text-slate-800"><MinusCircle className="w-5 h-5" /></button></div>
+                    <div className="col-span-1 flex justify-center"><button onClick={() => onUpdate({ ...session, exercises: session.exercises.map(e => e.id !== currentDetailEx!.id ? e : { ...e, sets: e.sets.filter(s => s.id !== set.id) }) })} className="text-slate-800"><MinusCircle className="w-5 h-5" /></button></div>
                     <div className="col-span-2 text-base font-black italic text-slate-500 text-center">#{index + 1}</div>
                     <div className="col-span-4"><input type="number" value={set.weight || ''} placeholder="KG" onChange={(e) => onUpdate({ ...session, exercises: session.exercises.map(ex => ex.id === currentDetailEx!.id ? { ...ex, sets: ex.sets.map(s => s.id === set.id ? { ...s, weight: Number(e.target.value) } : s) } : ex) })} className="w-full bg-black/40 rounded-xl py-3.5 text-center text-xl font-black text-white outline-none" /></div>
                     <div className="col-span-3"><input type="number" value={set.reps || ''} placeholder="REP" onChange={(e) => onUpdate({ ...session, exercises: session.exercises.map(ex => ex.id === currentDetailEx!.id ? { ...ex, sets: ex.sets.map(s => s.id === set.id ? { ...s, reps: Number(e.target.value) } : s) } : ex) })} className="w-full bg-black/40 rounded-xl py-3.5 text-center text-xl font-black text-white outline-none" /></div>

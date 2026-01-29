@@ -52,7 +52,6 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
   const handleSaveDayAsRoutine = () => {
     if (!dailyStats) return;
     
-    // 建立一個包含當日所有動作的虛擬 Session
     const combinedSession: WorkoutSession = {
       id: 'combined-' + selectedDate.getTime(),
       title: `${format(selectedDate, 'MM/dd')} 訓練課表`,
@@ -89,13 +88,17 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
   }, [history, analysisPeriod]);
 
   /**
-   * 依照訓練百分比決定顏色
+   * 依照要求更新顏色邏輯：
+   * 0% (無數據): 深藍灰 #1e293b
+   * 1-35% (輕量): 綠色 #22c55e
+   * 36-75% (適中): 黃色 #eab308
+   * 76-100% (極限): 紅色 #ef4444
    */
   const getHeatColor = (percentage: number) => {
     if (percentage === 0) return '#1e293b'; 
-    if (percentage < 35) return '#93c5fd';  
-    if (percentage < 75) return '#3b82f6';  
-    return '#2563eb';                  
+    if (percentage <= 35) return '#22c55e';  
+    if (percentage <= 75) return '#eab308';  
+    return '#ef4444';                  
   };
 
   return (
@@ -134,7 +137,6 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
               animate={{ opacity: 1, scale: 1 }}
               className="glass rounded-[44px] p-8 border-white/5 space-y-7 shadow-2xl relative overflow-hidden group"
             >
-              {/* 日報頂部總覽 */}
               <div className="flex justify-between items-start">
                 <div className="space-y-2">
                   <h4 className="text-3xl font-black italic uppercase text-white leading-tight">當日總訓練</h4>
@@ -152,7 +154,6 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
                 </div>
               </div>
 
-              {/* 依時段列出所有動作 */}
               <div className="space-y-7">
                 {filteredHistory.map((session, sIdx) => (
                   <div key={session.id} className="space-y-4">
@@ -193,7 +194,6 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
                 ))}
               </div>
 
-              {/* 統一的儲存按鈕 */}
               <button 
                 onClick={handleSaveDayAsRoutine}
                 className="w-full py-6 bg-neon-green text-black font-black rounded-3xl text-xs uppercase tracking-tighter flex items-center justify-center gap-3.5 active:scale-[0.98] transition-all shadow-[0_10px_30px_rgba(173,255,47,0.1)]"
@@ -205,7 +205,6 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
         </AnimatePresence>
       </div>
 
-      {/* 容量分布圖表區塊 */}
       <div className="glass rounded-[44px] p-8 border-white/5 space-y-9 bg-gradient-to-b from-transparent to-slate-900/20 shadow-2xl">
         <div className="flex justify-between items-center">
            <div className="flex items-center gap-4">
@@ -259,7 +258,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
               <div key={i} className="flex flex-col items-center gap-2.5">
                 <div className="w-8 h-2.5 rounded-full shadow-sm" style={{ backgroundColor: getHeatColor(s) }} />
                 <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest">
-                  {s === 0 ? '休息中' : s === 35 ? '輕量' : s === 75 ? '強化' : '極限'}
+                  {s === 0 ? '休息中' : s === 35 ? '輕量' : s === 75 ? '適中' : '極限'}
                 </span>
               </div>
             ))}
