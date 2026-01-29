@@ -270,12 +270,12 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                   </div>
                 ))}
               </div>
-              <div className="pt-8">
+              <div className="pt-6 pb-12">
                 <button 
                   onClick={onFinish} 
-                  className="w-full bg-neon-green text-black font-black h-24 rounded-[36px] uppercase italic text-2xl active:scale-95 transition-all shadow-[0_20px_40px_rgba(173,255,47,0.25)] flex items-center justify-center gap-4 tracking-tighter"
+                  className="w-full bg-neon-green text-black font-black h-16 rounded-2xl uppercase italic text-lg active:scale-95 transition-all shadow-[0_12px_24px_rgba(173,255,47,0.15)] flex items-center justify-center gap-3 tracking-tighter"
                 >
-                  <Save className="w-8 h-8 stroke-[3.5]" /> 儲存訓練
+                  <Save className="w-6 h-6 stroke-[3]" /> 儲存訓練
                 </button>
               </div>
             </div>

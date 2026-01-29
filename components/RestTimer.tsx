@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Timer, X, RotateCcw, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -13,30 +14,45 @@ export const RestTimer: React.FC<RestTimerProps> = ({ active, seconds: initialSe
   const [configSeconds, setConfigSeconds] = useState(initialSeconds);
   const targetTimeRef = useRef<number | null>(null);
   const notificationSentRef = useRef<boolean>(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    // 預載入提示音 (Beep 音效)
+    audioRef.current = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+    audioRef.current.load();
+  }, []);
 
   const handleTimerEnd = useCallback(() => {
     if (notificationSentRef.current) return;
     notificationSentRef.current = true;
 
-    // 震動提醒
-    if ('vibrate' in navigator) {
-      navigator.vibrate([500, 110, 500, 110, 450, 110, 200, 110, 200]);
+    // 播放音效
+    if (audioRef.current) {
+      audioRef.current.play().catch(e => console.debug("Audio play blocked by browser policy", e));
     }
 
-    // 發送系統通知
+    // 震動提醒 (強烈雙重震動)
+    if ('vibrate' in navigator) {
+      navigator.vibrate([500, 150, 500, 150, 300]);
+    }
+
+    // 發送系統通知，確保在通知中心彈出並保持
     if ("Notification" in window && Notification.permission === "granted") {
       const n = new Notification("IronLog: 休息結束！", {
-        body: "該開始下一組訓練了，鋼鐵般的意志不能停下！",
-        icon: "https://cdn-icons-png.flaticon.com/512/3043/3043888.png", // 使用具象圖標增加辨識度
+        body: "該開始下一組訓練了。鋼鐵般的意志，不能停下！",
+        icon: "https://cdn-icons-png.flaticon.com/512/3043/3043888.png",
         badge: "https://cdn-icons-png.flaticon.com/512/3043/3043888.png",
         tag: 'rest-timer-end',
-        requireInteraction: true // 保持通知直到使用者點擊
+        requireInteraction: true, // 確保通知在中心停留，直到使用者處理
+        silent: false
       });
       
       n.onclick = () => {
         window.focus();
         onClose();
       };
+    } else {
+      console.warn("Notification permission not granted.");
     }
   }, [onClose]);
 
@@ -71,10 +87,10 @@ export const RestTimer: React.FC<RestTimerProps> = ({ active, seconds: initialSe
     const interval = setInterval(updateTimer, 1000);
     updateTimer(); // 立即執行一次
 
-    // 監聽 App 回到前台的事件（Visibility API）
+    // 監聽 App 回到前台的事件
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        updateTimer(); // 回到 App 立即同步時間
+        updateTimer();
       }
     };
 
