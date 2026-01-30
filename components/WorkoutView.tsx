@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useContext, useEffect } from 'react';
 import { WorkoutSession, ExerciseEntry, SetEntry, MuscleGroup } from '../types';
 import { 
@@ -32,8 +31,8 @@ export const ORGANIZED_EXERCISES: Record<string, string[]> = {
   'back': ['引體向上', '滑輪下拉', '槓鈴划船', '啞鈴單臂划船', '坐姿划船', 'T桿划船', '直臂滑輪下拉', '傳統硬舉', '羅馬尼亞硬舉', '山羊挺身', '單臂滑輪划船', '反握下拉'],
   'shoulders': ['啞鈴肩推', '槓鈴肩推', '阿諾肩推', '器械肩推', '史密斯機肩推', '啞鈴側平舉', '滑輪側平舉', '器械側平舉', '啞鈴前平舉', '蝴蝶機後三角飛鳥', '滑輪面拉', '俯身啞鈴反向飛鳥'],
   'legs': ['槓鈴深蹲', '啞鈴杯式深蹲', '器械腿部推蹬', '保加利亞分腿蹲', '哈克深蹲', '器械腿伸展', '坐姿腿屈伸', '槓鈴臀推', '負重箭步蹲', '站姿提踵', '相撲硬舉', '器械內收/外展'],
-  'arms': ['槓鈴彎舉', '啞鈴交替彎舉', '啞鈴錘式彎舉', '牧師椅彎舉', '滑輪繩索下壓', '窄握槓鈴臥推', '仰臥槓鈴臂屈伸', '啞鈴頸後臂屈伸', '反握彎舉', '二頭肌器械彎舉', '三頭肌繩索過頭伸展'],
-  'core': ['標準捲腹', '仰臥抬腿', '棒式', '俄羅斯轉體', '健腹輪', '腳踏車捲腹', '懸垂提膝', '登山者', '側棒式', '跪姿滑輪捲腹', '反向捲腹', '側向捲腹']
+  'arms': ['槓鈴彎舉', '反手槓鈴彎舉', '啞鈴交替彎舉', '啞鈴錘式彎舉', '牧師椅彎舉', '滑輪繩索下壓', '窄握槓鈴臥推', '仰臥槓鈴臂屈伸', '啞鈴頸後臂屈伸', '滑輪直桿彎舉', '二頭肌器械彎舉', '滑輪直桿過頭臂屈伸'],
+  'core': ['標準捲腹', '啞臥抬腿', '棒式', '俄羅斯轉體', '健腹輪', '腳踏車捲腹', '懸垂提膝', '登山者', '側棒式', '跪姿滑輪捲腹', '反向捲腹', '側向捲腹']
 };
 
 export const EXERCISE_DATABASE = Object.values(ORGANIZED_EXERCISES).flat();
@@ -230,6 +229,30 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                   <img src="https://i.pinimg.com/originals/e7/45/d6/e745d6fcd41963a8a6d36c4b66c009a9.gif" alt="雙槓撐體" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
                 ) : currentDetailEx?.name === '標準俯地挺身' ? (
                   <img src="https://www.docteur-fitness.com/wp-content/uploads/2020/10/pompe-musculation.gif" alt="標準俯地挺身" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
+                ) : currentDetailEx?.name === '槓鈴彎舉' ? (
+                  <img src="https://www.docteur-fitness.com/wp-content/uploads/2021/09/curl-barre.gif" alt="槓鈴彎舉" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
+                ) : currentDetailEx?.name === '啞鈴錘式彎舉' ? (
+                  <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/09/curl-haltere-prise-neutre.gif" alt="啞鈴錘式彎舉" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
+                ) : currentDetailEx?.name === '啞鈴交替彎舉' ? (
+                  <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/08/curl-biceps-avec-halteres-alterne.gif" alt="啞鈴交替彎舉" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
+                ) : currentDetailEx?.name === '牧師椅彎舉' ? (
+                  <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/01/curl-au-pupitre-barre-ez-larry-scott.gif" alt="牧師椅彎舉" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
+                ) : currentDetailEx?.name === '滑輪直桿彎舉' ? (
+                  <img src="https://www.docteur-fitness.com/wp-content/uploads/2021/10/curl-biceps-poulie-basse.gif" alt="滑輪直桿彎舉" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
+                ) : currentDetailEx?.name === '反手槓鈴彎舉' ? (
+                  <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/04/curl-inverse-barre.gif" alt="反手槓鈴彎舉" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
+                ) : currentDetailEx?.name === '二頭肌器械彎舉' ? (
+                  <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/01/curl-pupitre-machine-prechargee.gif" alt="二頭肌器械彎舉" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
+                ) : currentDetailEx?.name === '滑輪繩索下壓' ? (
+                  <img src="https://www.aesthetics-blog.com/wp-content/uploads/2023/04/12271301-Cable-Standing-One-Arm-Tricep-Pushdown-Overhand-Grip_Upper-Arms_720.gif" alt="滑輪繩索下壓" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
+                ) : currentDetailEx?.name === '窄握槓鈴臥推' ? (
+                  <img src="https://www.aesthetics-blog.com/wp-content/uploads/2021/10/00301301-Barbell-Close-Grip-Bench-Press_Upper-Arms_720.gif" alt="窄握槓鈴臥推" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
+                ) : currentDetailEx?.name === '仰臥槓鈴臂屈伸' ? (
+                  <img src="https://www.aesthetics-blog.com/wp-content/uploads/2019/08/00601301-Barbell-Lying-Triceps-Extension-Skull-Crusher_Triceps-SFIX_720.gif" alt="仰臥槓鈴臂屈伸" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
+                ) : currentDetailEx?.name === '啞鈴頸後臂屈伸' ? (
+                  <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/12/extensions-des-triceps-assis-avec-haltere.gif" alt="啞鈴頸後臂屈伸" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
+                ) : currentDetailEx?.name === '滑輪直桿過頭臂屈伸' ? (
+                  <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/01/extension-triceps-incline-poulie-basse.gif" alt="滑輪直桿過頭臂屈伸" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
                 ) : gifUrl ? (
                   <img src={gifUrl} alt={currentDetailEx?.name} style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
                 ) : (
@@ -273,9 +296,9 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
               <div className="pt-6 pb-12">
                 <button 
                   onClick={onFinish} 
-                  className="w-full bg-neon-green text-black font-black h-16 rounded-2xl uppercase italic text-lg active:scale-95 transition-all shadow-[0_12px_24px_rgba(173,255,47,0.15)] flex items-center justify-center gap-3 tracking-tighter"
+                  className="w-full bg-neon-green text-black font-black h-18 rounded-2xl uppercase italic text-xl active:scale-95 transition-all shadow-[0_12px_24px_rgba(173,255,47,0.15)] flex items-center justify-center gap-3 tracking-tighter"
                 >
-                  <Save className="w-6 h-6 stroke-[3]" /> 儲存訓練
+                  <Save className="w-7 h-7 stroke-[3]" /> 儲存訓練
                 </button>
               </div>
             </div>

@@ -1,4 +1,3 @@
-
 import { WorkoutSession, MuscleGroup } from '../types';
 
 export const calculate1RM = (weight: number, reps: number): number => {
@@ -51,16 +50,25 @@ export const getMuscleGroupDisplay = (mg: MuscleGroup): { cn: string, en: string
 export const getMuscleGroup = (name: string): MuscleGroup => {
   const n = name.toLowerCase();
   
+  // 手臂優先判定 (解決窄握臥推、臂屈伸歸類問題)
+  if (n.includes('彎舉') || n.includes('下壓') || n.includes('三頭') || n.includes('二頭') || n.includes('腕') || n.includes('臂屈伸') || n.includes('窄握') || n.includes('curl') || n.includes('tricep') || n.includes('bicep') || n.includes('arm')) return 'arms';
+
   // 肩部判定
   if (n.includes('肩') || n.includes('平舉') || n.includes('聳肩') || n.includes('shoulder') || n.includes('press') || n.includes('lateral') || n.includes('面拉') || n.includes('後三角') || n.includes('反向飛鳥')) return 'shoulders';
   
-  // 胸部判定：明確加入「撐體」與「俯地挺身」
+  // 胸部判定
   if (n.includes('臥推') || n.includes('胸') || n.includes('chest') || n.includes('夾胸') || n.includes('bench') || n.includes('fly') || n.includes('飛鳥') || n.includes('撐體') || n.includes('俯地挺身')) return 'chest';
   
+  // 背部判定
   if (n.includes('划船') || n.includes('下拉') || n.includes('引體') || n.includes('row') || n.includes('lat') || n.includes('硬舉') || n.includes('back') || n.includes('pull') || n.includes('deadlift')) return 'back';
+  
+  // 腿部判定
   if (n.includes('蹲') || n.includes('腿') || n.includes('squat') || n.includes('leg') || n.includes('踏車') || n.includes('quad') || n.includes('calve')) return 'quads';
-  if (n.includes('彎舉') || n.includes('下壓') || n.includes('三頭') || n.includes('二頭') || n.includes('腕') || n.includes('curl') || n.includes('tricep') || n.includes('bicep') || n.includes('arm')) return 'arms';
+  
+  // 核心判定
   if (n.includes('捲腹') || n.includes('核心') || n.includes('棒式') || n.includes('abs') || n.includes('core') || n.includes('crunch') || n.includes('plank')) return 'core';
+  
+  // 臀部判定
   if (n.includes('臀') || n.includes('glute') || n.includes('thrust') || n.includes('hip')) return 'glutes';
   
   return 'core';
@@ -115,7 +123,10 @@ const EXERCISE_METHODS: Record<string, string> = {
   "阿諾肩推": "01 坐姿持啞鈴，掌心面向自己，手肘位於前方。\n02 向上推起啞鈴時，手腕向外旋轉直至掌心向前。\n03 下盤按原路徑旋轉回起始位置，增加肩部全面刺激。",
   "器械肩推": "01 調整座椅高度使握把略低於肩部。\n02 背部貼緊靠墊，垂直向上推起握把。\n03 控制速度緩慢降回，感受肩部前束發力。",
   "滑輪側平舉": "01 單手持低位滑輪握把，側向機器站立。\n02 手臂微彎，向側上方拉動繩索至與肩同高。\n03 緩慢控制回放，保持肌肉張力，換邊重複。",
-  "啞鈴前平舉": "01 雙手持啞鈴自然下垂於大腿前方。\n02 核心收緊，手臂微彎將啞鈴向前抬起至肩部高度。\n03 控制速度緩慢降回起始位，避免身體過度晃動。"
+  "啞鈴前平舉": "01 雙手持啞鈴自然下垂於大腿前方。\n02 核心收緊，手臂微彎將啞鈴向前抬起至肩部高度。\n03 控制速度緩慢降回起始位，避免身體過度晃動。",
+  "滑輪直桿彎舉": "01 雙手與肩同寬握住滑輪直桿，掌心朝上。\n02 穩定核心，保持手肘貼近軀幹。\n03 向上彎舉至胸口高度，緩慢控制放回。",
+  "反手槓鈴彎舉": "01 雙手與肩同寬，掌心朝下（反握）握住槓鈴。\n02 保持大臂固定，主要以肘關節為軸心向上彎舉。\n03 感受前臂與二頭外側發力，控制速度降回。",
+  "滑輪直桿過頭臂屈伸": "01 背對滑輪機站立，雙手握住低位滑輪的直桿並舉過頭頂。\n02 保持大臂固定於耳側，僅以肘部為軸下放直桿。\n03 伸直手臂將重量推回原位，擠壓三頭肌長頭。"
 };
 
 export const fetchExerciseGif = async (exerciseName: string): Promise<string> => {
