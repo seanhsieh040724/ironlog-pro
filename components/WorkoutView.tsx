@@ -28,7 +28,7 @@ export const getExerciseIcon = (name: string) => {
 
 export const ORGANIZED_EXERCISES: Record<string, string[]> = {
   'chest': ['槓鈴平板臥推', '槓鈴上斜臥推', '啞鈴平板臥推', '啞鈴上斜臥推', '史密斯平板臥推', '坐姿器械推胸', '蝴蝶機夾胸', '跪姿繩索夾胸', '雙槓撐體', '標準俯地挺身', '器械上斜推胸', '史密斯上斜臥推'],
-  'back': ['引體向上', '滑輪下拉', '槓鈴划船', '啞鈴單臂划船', '坐姿划船', 'T桿划船', '直臂滑輪下拉', '傳統硬舉', '羅馬尼亞硬舉', '山羊挺身', '單臂滑輪划船', '反握下拉'],
+  'back': ['引體向上', '滑輪下拉', '槓鈴划船', '啞鈴單臂划船', '坐姿划船機', 'T桿划船機', '器械反握高位下拉', '傳統硬舉', '輔助引體向上機', 'V把坐姿划船', '寬握水平划船', '滑輪反握下拉'],
   'shoulders': ['啞鈴肩推', '槓鈴肩推', '阿諾肩推', '器械肩推', '史密斯機肩推', '啞鈴側平舉', '滑輪側平舉', '器械側平舉', '啞鈴前平舉', '蝴蝶機後三角飛鳥', '滑輪面拉', '俯身啞鈴反向飛鳥'],
   'legs': ['槓鈴深蹲', '啞鈴杯式深蹲', '器械腿部推蹬', '保加利亞分腿蹲', '哈克深蹲', '器械腿伸展', '坐姿腿屈伸', '槓鈴臀推', '負重箭步蹲', '站姿提踵', '相撲硬舉', '器械內收/外展'],
   'arms': ['槓鈴彎舉', '反手槓鈴彎舉', '啞鈴交替彎舉', '啞鈴錘式彎舉', '牧師椅彎舉', '滑輪繩索下壓', '窄握槓鈴臥推', '仰臥槓鈴臂屈伸', '啞鈴頸後臂屈伸', '滑輪直桿彎舉', '二頭肌器械彎舉', '滑輪直桿過頭臂屈伸'],
@@ -253,6 +253,30 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                   <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/12/extensions-des-triceps-assis-avec-haltere.gif" alt="啞鈴頸後臂屈伸" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
                 ) : currentDetailEx?.name === '滑輪直桿過頭臂屈伸' ? (
                   <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/01/extension-triceps-incline-poulie-basse.gif" alt="滑輪直桿過頭臂屈伸" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
+                ) : currentDetailEx?.name === '引體向上' ? (
+                  <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/02/traction-musculation-dos.gif" alt="引體向上" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
+                ) : currentDetailEx?.name === '滑輪下拉' ? (
+                  <img src="https://www.docteur-fitness.com/wp-content/uploads/2021/11/tirage-vertical-poitrine.gif" alt="滑輪下拉" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
+                ) : currentDetailEx?.name === '槓鈴划船' ? (
+                  <img src="https://www.docteur-fitness.com/wp-content/uploads/2021/09/rowing-barre.gif" alt="槓鈴划船" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
+                ) : currentDetailEx?.name === '啞鈴單臂划船' ? (
+                  <img src="https://www.docteur-fitness.com/wp-content/uploads/2021/08/rowing-haltere-un-bras.gif" alt="啞鈴單臂划船" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
+                ) : currentDetailEx?.name === '坐姿划船機' ? (
+                  <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/01/rowing-assis-machine-hammer-strenght.gif" alt="坐姿划船機" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
+                ) : currentDetailEx?.name === 'T桿划船機' ? (
+                  <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/01/rowing-t-bar-machine.gif" alt="T桿划船機" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
+                ) : currentDetailEx?.name === '器械反握高位下拉' ? (
+                  <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/01/tirage-avant-iso-laterale-hammer-strength.gif" alt="器械反握高位下拉" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
+                ) : currentDetailEx?.name === '傳統硬舉' ? (
+                  <img src="https://www.docteur-fitness.com/wp-content/uploads/2021/12/souleve-de-terre.gif" alt="傳統硬舉" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
+                ) : currentDetailEx?.name === '輔助引體向上機' ? (
+                  <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/02/traction-assistee-machine.gif" alt="輔助引體向上機" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
+                ) : currentDetailEx?.name === 'V把坐姿划船' ? (
+                  <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/02/tirage-horizontal-poulie.gif" alt="V把坐姿划船" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
+                ) : currentDetailEx?.name === '寬握水平划船' ? (
+                  <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/10/tirage-horizontal-prise-large.gif" alt="寬握水平划船" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
+                ) : currentDetailEx?.name === '滑輪反握下拉' ? (
+                  <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/01/tirage-vertical-prise-inversee.gif" alt="滑輪反握下拉" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
                 ) : gifUrl ? (
                   <img src={gifUrl} alt={currentDetailEx?.name} style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
                 ) : (
