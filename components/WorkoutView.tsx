@@ -256,7 +256,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                 ) : currentDetailEx?.name === '引體向上' ? (
                   <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/02/traction-musculation-dos.gif" alt="引體向上" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
                 ) : currentDetailEx?.name === '滑輪下拉' ? (
-                  <img src="https://www.docteur-fitness.com/wp-content/uploads/2021/11/tirage-vertical-poitrine.gif" alt="滑輪下拉" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
+                  <img src="https://www.docteur-fitness.com/wp-content/uploads/2021/11/血液-vertical-poitrine.gif" alt="滑輪下拉" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
                 ) : currentDetailEx?.name === '槓鈴划船' ? (
                   <img src="https://www.docteur-fitness.com/wp-content/uploads/2021/09/rowing-barre.gif" alt="槓鈴划船" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
                 ) : currentDetailEx?.name === '啞鈴單臂划船' ? (
@@ -360,9 +360,9 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
               <div className="pt-6 pb-12">
                 <button 
                   onClick={onFinish} 
-                  className="w-full bg-neon-green text-black font-black h-14 rounded-2xl uppercase italic text-xl active:scale-95 transition-all shadow-[0_10px_20px_rgba(173,255,47,0.2)] flex items-center justify-center gap-3 tracking-tighter"
+                  className="w-full bg-neon-green text-black font-black h-11 rounded-xl uppercase italic text-base active:scale-95 transition-all shadow-[0_10px_20px_rgba(173,255,47,0.2)] flex items-center justify-center gap-3 tracking-tighter"
                 >
-                  <Save className="w-6 h-6 stroke-[3]" /> 儲存訓練
+                  <Save className="w-5 h-5 stroke-[2.5]" /> 儲存訓練
                 </button>
               </div>
             </div>

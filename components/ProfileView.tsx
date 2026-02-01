@@ -29,13 +29,21 @@ export const ProfileView: React.FC = () => {
     };
   }, [bodyMetrics]);
 
-  // 本地暫存狀態
+  // 生理數據暫存狀態
   const [tempMetrics, setTempMetrics] = useState<BodyMetric>(latest);
   const [isSaved, setIsSaved] = useState(false);
+
+  // 目標管理暫存狀態
+  const [tempGoal, setTempGoal] = useState<UserGoal>(goal);
+  const [isGoalSaved, setIsGoalSaved] = useState(false);
 
   useEffect(() => {
     setTempMetrics(latest);
   }, [latest]);
+
+  useEffect(() => {
+    setTempGoal(goal);
+  }, [goal]);
 
   const bmi: number = useMemo(() => {
     if (tempMetrics.height === 0 || tempMetrics.weight === 0) return 0;
@@ -47,8 +55,8 @@ export const ProfileView: React.FC = () => {
   
   const suggestedCals: number = useMemo(() => {
     if (tempMetrics.weight === 0 || tempMetrics.height === 0 || tempMetrics.age === 0) return 0;
-    return calculateSuggestedCalories(tempMetrics.weight, tempMetrics.height, tempMetrics.age, tempMetrics.gender as any || 'male', goal.type);
-  }, [tempMetrics.weight, tempMetrics.height, tempMetrics.age, tempMetrics.gender, goal.type]);
+    return calculateSuggestedCalories(tempMetrics.weight, tempMetrics.height, tempMetrics.age, tempMetrics.gender as any || 'male', tempGoal.type);
+  }, [tempMetrics.weight, tempMetrics.height, tempMetrics.age, tempMetrics.gender, tempGoal.type]);
 
   const analysisMetrics = useMemo(() => {
     if (tempMetrics.weight === 0) return null;
@@ -72,6 +80,12 @@ export const ProfileView: React.FC = () => {
     setBodyMetrics([newMetric, ...bodyMetrics.slice(1)]);
     setIsSaved(true);
     setTimeout(() => setIsSaved(false), 2000);
+  };
+
+  const handleSaveGoal = () => {
+    setGoal(tempGoal);
+    setIsGoalSaved(true);
+    setTimeout(() => setIsGoalSaved(false), 2000);
   };
 
   const handleCopyLink = () => {
@@ -102,31 +116,53 @@ export const ProfileView: React.FC = () => {
 
       {/* 生理數據區塊 */}
       <div className="glass rounded-[44px] p-8 border-white/5 relative overflow-hidden shadow-2xl">
-        <div className="flex justify-between items-start mb-10">
-           <div className="space-y-2.5">
-             <div className="flex items-center gap-2.5 text-neon-green">
-                <Activity className="w-4 h-4" />
-                <h3 className="text-[11px] font-black italic uppercase tracking-[0.3em]">PHYSIOLOGICAL PARAMETERS</h3>
+        <div className="flex justify-between items-center mb-10">
+           <div className="flex items-center gap-4">
+             <div className="p-3.5 bg-neon-green/10 rounded-2xl">
+                <Activity className="w-6 h-6 text-neon-green" />
              </div>
-             <h2 className="text-3xl font-black italic uppercase tracking-tighter text-white leading-none">生理數據設定</h2>
+             <div>
+               <h3 className="text-base font-black italic uppercase tracking-tighter text-white leading-none">生理數據設定</h3>
+               <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap">PHYSIOLOGICAL PARAMETERS</p>
+             </div>
            </div>
            
-           <div className="flex bg-slate-800/80 p-2 rounded-2xl border border-white/5">
-              <button onClick={() => setTempMetrics({ ...tempMetrics, gender: 'male' })} className={`w-11 h-11 rounded-xl flex items-center justify-center transition-all ${tempMetrics.gender === 'male' ? 'bg-sky-500 text-white shadow-lg shadow-sky-500/20' : 'text-slate-600 opacity-40 hover:opacity-100'}`}>
-                <MaleIcon />
-              </button>
-              <button onClick={() => setTempMetrics({ ...tempMetrics, gender: 'female' })} className={`w-11 h-11 rounded-xl flex items-center justify-center transition-all ${tempMetrics.gender === 'female' ? 'bg-pink-500 text-white shadow-lg shadow-pink-500/20' : 'text-slate-600 opacity-40 hover:opacity-100'}`}>
-                <FemaleIcon />
-              </button>
-           </div>
+           <button 
+             onClick={handleSaveMetrics} 
+             className={`px-5 py-2.5 rounded-xl font-black uppercase italic transition-all flex items-center justify-center gap-2 text-[11px] ${isSaved ? 'bg-emerald-500 text-white' : 'bg-neon-green text-black active:scale-95 shadow-lg shadow-neon-green/10'}`}
+           >
+             {isSaved ? <CheckCircle2 className="w-4 h-4" /> : <Save className="w-4 h-4" />}
+             {isSaved ? '已儲存' : '儲存'}
+           </button>
         </div>
         
         <div className="grid grid-cols-1 gap-8">
            <div className="space-y-5">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <InputBox icon={<Ruler className="text-sky-400" />} label="身高" val={tempMetrics.height} unit="CM" onChange={(v: string) => setTempMetrics({ ...tempMetrics, height: Number(v) })} />
-                <InputBox icon={<Scale className="text-orange-400" />} label="體重" val={tempMetrics.weight} unit="KG" onChange={(v: string) => setTempMetrics({ ...tempMetrics, weight: Number(v) })} />
-                <InputBox icon={<User className="text-purple-400" />} label="年齡" val={tempMetrics.age} unit="歲" onChange={(v: string) => setTempMetrics({ ...tempMetrics, age: Number(v) })} />
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <InputBox icon={<Ruler className="text-sky-400 w-3 h-3" />} label="身高" val={tempMetrics.height} unit="CM" onChange={(v: string) => setTempMetrics({ ...tempMetrics, height: Number(v) })} />
+                <InputBox icon={<Scale className="text-orange-400 w-3 h-3" />} label="體重" val={tempMetrics.weight} unit="KG" onChange={(v: string) => setTempMetrics({ ...tempMetrics, weight: Number(v) })} />
+                <InputBox icon={<User className="text-purple-400 w-3 h-3" />} label="年齡" val={tempMetrics.age} unit="歲" onChange={(v: string) => setTempMetrics({ ...tempMetrics, age: Number(v) })} />
+                
+                <div className="glass bg-white/5 p-5 rounded-2xl border-white/5 flex flex-col justify-between">
+                  <div className="flex items-center gap-2.5 mb-2 opacity-50">
+                     <Heart className="text-pink-400 w-3 h-3" />
+                     <span className="text-[10px] font-black uppercase text-slate-300 tracking-widest">性別</span>
+                  </div>
+                  <div className="flex gap-1.5">
+                    <button 
+                      onClick={() => setTempMetrics({ ...tempMetrics, gender: 'male' })}
+                      className={`flex-1 py-2 rounded-lg text-[10px] font-black uppercase transition-all ${tempMetrics.gender === 'male' ? 'bg-sky-500 text-white' : 'bg-slate-800 text-slate-500'}`}
+                    >
+                      男
+                    </button>
+                    <button 
+                      onClick={() => setTempMetrics({ ...tempMetrics, gender: 'female' })}
+                      className={`flex-1 py-2 rounded-lg text-[10px] font-black uppercase transition-all ${tempMetrics.gender === 'female' ? 'bg-pink-500 text-white' : 'bg-slate-800 text-slate-500'}`}
+                    >
+                      女
+                    </button>
+                  </div>
+                </div>
               </div>
               
               <div className="pt-2">
@@ -138,17 +174,8 @@ export const ProfileView: React.FC = () => {
                   </div>
                 </div>
               </div>
-
-              <button 
-                onClick={handleSaveMetrics} 
-                className={`w-full py-4 rounded-2xl font-black uppercase italic transition-all flex items-center justify-center gap-3 ${isSaved ? 'bg-emerald-500 text-white' : 'bg-neon-green text-black active:scale-95'}`}
-              >
-                {isSaved ? <CheckCircle2 className="w-5 h-5" /> : <Save className="w-5 h-5" />}
-                {isSaved ? '已儲存' : '儲存數據'}
-              </button>
            </div>
 
-           {/* 身體指標分析區塊 */}
            <div className="space-y-5">
               <div className="flex items-center gap-2.5 mb-1">
                 <Zap className="w-5 h-5 text-neon-green" />
@@ -184,19 +211,29 @@ export const ProfileView: React.FC = () => {
 
       {/* 目標管理與熱量建議 */}
       <div className={`glass rounded-[44px] p-8 border-white/5 shadow-2xl relative overflow-hidden`}>
-        <div className="flex items-center gap-4 mb-10">
-          <div className="p-3.5 bg-neon-green/10 rounded-2xl">
-            <Target className="w-6 h-6 text-neon-green" />
+        <div className="flex justify-between items-center mb-10">
+          <div className="flex items-center gap-4">
+            <div className="p-3.5 bg-neon-green/10 rounded-2xl">
+              <Target className="w-6 h-6 text-neon-green" />
+            </div>
+            <div>
+              <h3 className="text-base font-black italic uppercase tracking-tighter text-white leading-none">體態管理目標</h3>
+              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1.5">Physics Management</p>
+            </div>
           </div>
-          <div>
-            <h3 className="text-base font-black italic uppercase tracking-tighter text-white">體態管理目標</h3>
-            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Physics Management</p>
-          </div>
+
+          <button 
+             onClick={handleSaveGoal} 
+             className={`px-5 py-2.5 rounded-xl font-black uppercase italic transition-all flex items-center justify-center gap-2 text-[11px] ${isGoalSaved ? 'bg-emerald-500 text-white' : 'bg-neon-green text-black active:scale-95 shadow-lg shadow-neon-green/10'}`}
+           >
+             {isGoalSaved ? <CheckCircle2 className="w-4 h-4" /> : <Save className="w-4 h-4" />}
+             {isGoalSaved ? '已儲存' : '儲存'}
+           </button>
         </div>
         
         <div className="grid grid-cols-3 gap-3.5 mb-10">
           {(['cut', 'maintain', 'bulk'] as const).map(t => (
-            <button key={t} onClick={() => setGoal({ ...goal, type: t })} className={`py-5 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all ${goal.type === t ? 'bg-neon-green text-black shadow-lg shadow-neon-green/10' : 'bg-slate-900/60 text-slate-600 border border-white/5'}`}>
+            <button key={t} onClick={() => setTempGoal({ ...tempGoal, type: t })} className={`py-5 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all ${tempGoal.type === t ? 'bg-neon-green text-black shadow-lg shadow-neon-green/10' : 'bg-slate-900/60 text-slate-600 border border-white/5'}`}>
               {t === 'cut' ? '減脂' : t === 'bulk' ? '增肌' : '維持'}
             </button>
           ))}
@@ -206,15 +243,15 @@ export const ProfileView: React.FC = () => {
            <div className="glass bg-white/5 p-7 rounded-[32px] border-white/5 flex flex-col gap-2.5">
               <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">目標體重</span>
               <div className="flex items-baseline gap-1.5">
-                <input type="number" value={goal.targetWeight === 0 ? '' : goal.targetWeight} placeholder="--" onChange={e => setGoal({ ...goal, targetWeight: Number(e.target.value) })} className="bg-transparent text-4xl font-black italic text-white outline-none w-full" />
+                <input type="number" value={tempGoal.targetWeight === 0 ? '' : tempGoal.targetWeight} placeholder="--" onChange={e => setTempGoal({ ...tempGoal, targetWeight: Number(e.target.value) })} className="bg-transparent text-4xl font-black italic text-white outline-none w-full" />
                 <span className="text-sm font-bold text-slate-600 uppercase">KG</span>
               </div>
            </div>
            <div className="glass bg-black/40 p-7 rounded-[32px] border-white/5 flex flex-col justify-center">
               <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">差距</span>
               <div className="flex items-baseline gap-1.5">
-                <span className={`text-4xl font-black italic ${(tempMetrics.weight as number) > (goal.targetWeight as number) ? 'text-red-400' : 'text-neon-green'}`}>
-                  {((tempMetrics.weight as number) > 0 && (goal.targetWeight as number) > 0) ? Math.abs((tempMetrics.weight as number) - (goal.targetWeight as number)).toFixed(1) : '--'}
+                <span className={`text-4xl font-black italic ${(tempMetrics.weight as number) > (tempGoal.targetWeight as number) ? 'text-red-400' : 'text-neon-green'}`}>
+                  {((tempMetrics.weight as number) > 0 && (tempGoal.targetWeight as number) > 0) ? Math.abs((tempMetrics.weight as number) - (tempGoal.targetWeight as number)).toFixed(1) : '--'}
                 </span>
                 <span className="text-sm font-bold text-slate-600 uppercase">KG</span>
               </div>
@@ -274,14 +311,6 @@ export const ProfileView: React.FC = () => {
     </div>
   );
 };
-
-const MaleIcon = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="5" r="1"/><path d="M10 22v-8L7 11V8a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v3l-3 3v8"/></svg>
-);
-
-const FemaleIcon = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="5" r="1"/><path d="m9 22 2-6H7l2-5V8a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v3l2 5h-4l2 6"/></svg>
-);
 
 const InputBox = ({ icon, label, val, unit, onChange }: any) => (
   <div className="glass bg-white/5 p-5 rounded-2xl border-white/5">
