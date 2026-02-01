@@ -1,4 +1,3 @@
-
 import React, { useState, useContext, useMemo } from 'react';
 import { AppContext } from '../App';
 import { RoutineTemplate, MuscleGroup } from '../types';
@@ -172,10 +171,7 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
         <div className="space-y-4">
           {previewRoutine.exercises.map((ex) => (
             <div key={ex.id} className="glass rounded-[28px] p-6 border-white/5 flex items-center justify-between">
-              <div className="flex items-center space-x-5">
-                <div className="w-12 h-12 rounded-xl bg-slate-800 flex items-center justify-center text-neon-green p-2 border border-white/5">
-                  {getExerciseIcon(ex.name)}
-                </div>
+              <div className="flex items-center">
                 <div>
                   <h4 className="font-black text-lg text-white italic uppercase tracking-tight">{ex.name}</h4>
                   <p className="text-[11px] font-bold text-slate-500 uppercase tracking-[0.2em] mt-1.5">{ex.defaultWeight}KG | {ex.defaultSets} 組 | {ex.defaultReps} 次</p>
@@ -304,7 +300,7 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
         {splitSystems.map(system => (
           <div key={system.id} className="glass rounded-[44px] p-9 border-white/5 space-y-7 relative overflow-hidden bg-gradient-to-br from-slate-900/40 to-transparent">
             <div className="space-y-2.5">
-               <h3 className="text-2xl font-black italic uppercase text-white tracking-tighter">{system.title}</h3>
+               <h3 className="text-lg font-black italic uppercase text-white tracking-tighter">{system.title}</h3>
                <p className="text-xs font-medium text-slate-500 leading-relaxed">{system.description}</p>
             </div>
             
