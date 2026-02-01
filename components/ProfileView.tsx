@@ -128,7 +128,7 @@ export const ProfileView: React.FC = () => {
            
            <button 
              onClick={handleSaveMetrics} 
-             className={`px-10 py-3 rounded-xl font-black uppercase italic transition-all flex items-center justify-center gap-2 text-[12px] min-w-[100px] ${isSaved ? 'bg-emerald-500 text-white' : 'bg-neon-green text-black active:scale-95 shadow-lg shadow-neon-green/10'}`}
+             className={`px-5 py-3 rounded-xl font-black uppercase italic transition-all flex items-center justify-center gap-2 text-[12px] min-w-[80px] ${isSaved ? 'bg-emerald-500 text-white' : 'bg-neon-green text-black active:scale-95 shadow-lg shadow-neon-green/10'}`}
            >
              {isSaved ? <CheckCircle2 className="w-4 h-4" /> : <Save className="w-4 h-4" />}
              {isSaved ? '已儲存' : '儲存'}
@@ -222,7 +222,7 @@ export const ProfileView: React.FC = () => {
 
           <button 
              onClick={handleSaveGoal} 
-             className={`px-10 py-3 rounded-xl font-black uppercase italic transition-all flex items-center justify-center gap-2 text-[12px] min-w-[100px] ${isGoalSaved ? 'bg-emerald-500 text-white' : 'bg-neon-green text-black active:scale-95 shadow-lg shadow-neon-green/10'}`}
+             className={`px-5 py-3 rounded-xl font-black uppercase italic transition-all flex items-center justify-center gap-2 text-[12px] min-w-[80px] ${isGoalSaved ? 'bg-emerald-500 text-white' : 'bg-neon-green text-black active:scale-95 shadow-lg shadow-neon-green/10'}`}
            >
              {isGoalSaved ? <CheckCircle2 className="w-4 h-4" /> : <Save className="w-4 h-4" />}
              {isGoalSaved ? '已儲存' : '儲存'}
