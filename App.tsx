@@ -40,7 +40,6 @@ const App: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // 全局計時器狀態
   const [restTimer, setRestTimer] = useState({ active: false, seconds: 90 });
 
   useEffect(() => {
@@ -63,10 +62,8 @@ const App: React.FC = () => {
       exercises: []
     });
     
-    // 請求通知權限
     if ("Notification" in window) {
       if (Notification.permission === "default") {
-        // 使用者第一次進入時請求
         Notification.requestPermission();
       }
     }
@@ -99,18 +96,34 @@ const App: React.FC = () => {
   }), [history, bodyMetrics, goal, customRoutines]);
 
   const handleSaveWorkout = () => {
-    if (!currentSession || currentSession.exercises.length === 0) {
-      alert('請先新增動作項目。');
+    if (!currentSession) return;
+
+    // 修復：過濾掉沒有任何已勾選完成(completed)組數的動作
+    const completedExercises = currentSession.exercises.filter(ex => 
+      ex.sets.some(set => set.completed)
+    );
+
+    if (completedExercises.length === 0) {
+      alert('請至少勾選一個完成的組數再儲存訓練紀錄。');
       return;
     }
-    const completedSession = { ...currentSession, endTime: Date.now() };
+
+    const completedSession: WorkoutSession = { 
+      ...currentSession, 
+      exercises: completedExercises,
+      endTime: Date.now() 
+    };
+
     setHistory([completedSession, ...history]);
+    
+    // 重設當前 Session
     setCurrentSession({
       id: crypto.randomUUID(),
       startTime: Date.now(),
       title: `${format(new Date(), 'MM/dd')} 訓練`,
       exercises: []
     });
+    
     setSelectedDate(new Date());
     setActiveTab('history');
   };
@@ -138,18 +151,18 @@ const App: React.FC = () => {
       <div className="min-h-screen bg-[#020617] text-slate-50 flex flex-col max-w-md mx-auto relative overflow-hidden font-['Outfit']">
         <header className="pt-12 pb-6 px-6 sticky top-0 z-40 bg-[#020617]/90 backdrop-blur-2xl border-b border-white/5">
           <div className="flex justify-between items-end">
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 overflow-hidden">
               <div className="flex items-center gap-2 text-neon-green">
                 <CalendarIcon className="w-4 h-4" />
                 <span className="text-[11px] font-black uppercase tracking-[0.2em]">今日訓練進度</span>
               </div>
-              <h1 className="text-4xl font-black italic tracking-tighter uppercase">
+              <h1 className="text-4xl font-black italic tracking-tighter uppercase pr-4">
                 {format(new Date(), 'MM.dd EEEE', { locale: zhTW })}
               </h1>
             </div>
             <button 
               onClick={() => setActiveTab('profile')} 
-              className={`w-14 h-14 rounded-2xl flex items-center justify-center border border-white/10 transition-all active:scale-90 ${activeTab === 'profile' ? 'bg-neon-green text-black' : 'bg-slate-800 text-slate-400'}`}
+              className={`w-14 h-14 rounded-2xl flex items-center justify-center border border-white/10 transition-all active:scale-90 shrink-0 ${activeTab === 'profile' ? 'bg-neon-green text-black' : 'bg-slate-800 text-slate-400'}`}
             >
               <User className="w-7 h-7" />
             </button>

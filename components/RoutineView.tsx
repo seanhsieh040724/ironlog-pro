@@ -2,7 +2,7 @@ import React, { useState, useContext, useMemo } from 'react';
 import { AppContext } from '../App';
 import { RoutineTemplate, MuscleGroup } from '../types';
 import { getMuscleGroup, getMuscleGroupDisplay } from '../utils/fitnessMath';
-import { getExerciseIcon, ORGANIZED_EXERCISES, EXERCISE_DATABASE } from './WorkoutView';
+import { ORGANIZED_EXERCISES, EXERCISE_DATABASE } from './WorkoutView';
 import { Eye, LayoutGrid, Trash2, ArrowLeft, Plus, ChevronRight, Save, X, Search, Edit2, Check, Sparkles, Layers, ListChecks } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -82,18 +82,6 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
           { id: '3s3e4', name: '站姿提踵', muscleGroup: 'quads', defaultSets: 3, defaultReps: 15, defaultWeight: 30 }
         ]}
       ]
-    },
-    {
-      id: '5-split',
-      title: '五分化專項系統 (Bro Split)',
-      description: '每天專攻一個肌群，給予肌肉最大的破壞與成長空間',
-      routines: [
-        { id: '5s-1', name: 'Day 1: 胸部專日 (Chest)', exercises: [{ id: '5s1e1', name: '槓鈴平板臥推', muscleGroup: 'chest', defaultSets: 5, defaultReps: 8, defaultWeight: 60 }, { id: '5s1e2', name: '啞鈴上斜臥推', muscleGroup: 'chest', defaultSets: 4, defaultReps: 10, defaultWeight: 24 }] },
-        { id: '5s-2', name: 'Day 2: 背部專日 (Back)', exercises: [{ id: '5s2e1', name: '滑輪下拉', muscleGroup: 'back', defaultSets: 5, defaultReps: 10, defaultWeight: 55 }, { id: '5s2e2', name: '坐姿划船', muscleGroup: 'back', defaultSets: 4, defaultReps: 12, defaultWeight: 45 }] },
-        { id: '5s-3', name: 'Day 3: 腿部專日 (Legs)', exercises: [{ id: '5s3e1', name: '槓鈴深蹲', muscleGroup: 'quads', defaultSets: 5, defaultReps: 8, defaultWeight: 80 }, { id: '5s3e2', name: '器械腿部推蹬', muscleGroup: 'quads', defaultSets: 4, defaultReps: 12, defaultWeight: 120 }] },
-        { id: '5s-4', name: 'Day 4: 肩部專日 (Shoulder)', exercises: [{ id: '5s4e1', name: '啞鈴肩推', muscleGroup: 'shoulders', defaultSets: 4, defaultReps: 10, defaultWeight: 20 }, { id: '5s4e2', name: '啞鈴側平舉', muscleGroup: 'shoulders', defaultSets: 5, defaultReps: 15, defaultWeight: 8 }] },
-        { id: '5s-5', name: 'Day 5: 手臂專日 (Arms)', exercises: [{ id: '5s5e1', name: '槓鈴彎舉', muscleGroup: 'arms', defaultSets: 4, defaultReps: 12, defaultWeight: 25 }, { id: '5s5e2', name: '滑輪繩索下壓', muscleGroup: 'arms', defaultSets: 4, defaultReps: 12, defaultWeight: 20 }] }
-      ]
     }
   ];
 
@@ -154,12 +142,12 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
           <div className="flex-1 overflow-hidden">
             {isEditingName ? (
               <div className="flex gap-2">
-                <input autoFocus value={tempName} onChange={e => setTempName(e.target.value)} onBlur={renameRoutine} className="bg-black/40 border-b border-neon-green text-xl font-black italic text-white outline-none w-full uppercase" />
+                <input autoFocus value={tempName} onChange={e => setTempName(e.target.value)} onBlur={renameRoutine} className="bg-black/40 border-b border-neon-green text-xl font-black italic text-white outline-none w-full uppercase pr-2" />
                 <button onClick={renameRoutine} className="p-2 text-neon-green"><Check className="w-6 h-6" /></button>
               </div>
             ) : (
               <div className="flex items-center gap-2.5">
-                <h2 className="text-xl font-black italic tracking-tighter uppercase truncate text-white">{previewRoutine.name}</h2>
+                <h2 className="text-xl font-black italic tracking-tighter uppercase truncate text-white pr-2">{previewRoutine.name}</h2>
                 {isCustom && <button onClick={() => { setTempName(previewRoutine.name); setIsEditingName(true); }} className="p-2 bg-slate-800/50 rounded-lg text-slate-500"><Edit2 className="w-4 h-4" /></button>}
               </div>
             )}
@@ -173,7 +161,7 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
             <div key={ex.id} className="glass rounded-[28px] p-6 border-white/5 flex items-center justify-between">
               <div className="flex items-center">
                 <div>
-                  <h4 className="font-black text-lg text-white italic uppercase tracking-tight">{ex.name}</h4>
+                  <h4 className="font-black text-lg text-white italic uppercase tracking-tight pr-2">{ex.name}</h4>
                   <p className="text-[11px] font-bold text-slate-500 uppercase tracking-[0.2em] mt-1.5">{ex.defaultWeight}KG | {ex.defaultSets} 組 | {ex.defaultReps} 次</p>
                 </div>
               </div>
@@ -203,20 +191,20 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
               <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} className="relative w-full max-w-md bg-slate-900 rounded-t-[44px] p-8 pb-14 border-t border-white/10 shadow-2xl safe-bottom max-h-[90vh] overflow-y-auto no-scrollbar">
                 <div className="w-14 h-1.5 bg-slate-800 rounded-full mx-auto mb-10" />
                 <div className="flex justify-between items-center mb-10">
-                  <h3 className="text-2xl font-black italic uppercase text-white">選取課表動作</h3>
+                  <h3 className="text-2xl font-black italic uppercase text-white pr-2">選取課表動作</h3>
                   <button onClick={() => setIsAddingExercise(false)} className="w-12 h-12 bg-slate-800 rounded-xl flex items-center justify-center text-slate-400"><X className="w-7 h-7" /></button>
                 </div>
                 <div className="space-y-7">
                   <div className="flex items-center gap-5 bg-black/40 border border-white/10 rounded-2xl px-6 py-5">
                     <Search className="w-6 h-6 text-slate-600" />
-                    <input placeholder="搜尋動作庫..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="bg-transparent w-full text-xl font-black italic outline-none text-white placeholder:text-slate-800" />
+                    <input placeholder="搜尋動作庫..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="bg-transparent w-full text-xl font-black italic outline-none text-white placeholder:text-slate-800 pr-2" />
                   </div>
                   <AnimatePresence>
                     {searchTerm.trim() && !exactMatch && (
                       <button onClick={() => addExerciseToTemplate(searchTerm.trim())} className="w-full p-5 rounded-2xl bg-neon-green/10 border border-neon-green/40 flex items-center justify-between mb-2">
                         <div className="flex items-center gap-4">
                           <div className="w-12 h-12 bg-neon-green text-black rounded-xl flex items-center justify-center"><Plus className="w-7 h-7 stroke-[4]" /></div>
-                          <div className="text-left"><div className="text-[11px] font-black text-neon-green uppercase">建立新動作</div><div className="text-base font-black italic text-white uppercase">{searchTerm}</div></div>
+                          <div className="text-left"><div className="text-[11px] font-black text-neon-green uppercase">建立新動作</div><div className="text-base font-black italic text-white uppercase pr-2">{searchTerm}</div></div>
                         </div>
                         <ChevronRight className="w-6 h-6 text-neon-green" />
                       </button>
@@ -230,7 +218,7 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
                   <div className="grid grid-cols-2 gap-4 max-h-[350px] overflow-y-auto pr-1 no-scrollbar">
                     {filteredExercises.map(exName => (
                       <button key={exName} onClick={() => addExerciseToTemplate(exName)} className="p-4 rounded-2xl text-left bg-slate-800/40 border border-white/5 active:bg-neon-green/5">
-                        <div className="flex items-center gap-4"><div className="w-9 h-9 shrink-0 bg-slate-700 rounded-lg flex items-center justify-center p-1">{getExerciseIcon(exName)}</div><div className="text-[11px] font-black italic uppercase text-slate-200 truncate">{exName}</div></div>
+                        <div className="flex items-center gap-4"><div className="text-[11px] font-black italic uppercase text-slate-200 truncate pr-1">{exName}</div></div>
                       </button>
                     ))}
                   </div>
@@ -251,7 +239,7 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
   return (
     <div className="space-y-12 pb-32">
       <div className="flex justify-between items-center px-1">
-        <h2 className="text-base font-black italic tracking-tighter uppercase flex items-center gap-3 text-slate-400">
+        <h2 className="text-base font-black italic tracking-tighter uppercase flex items-center gap-3 text-slate-400 pr-2">
           <LayoutGrid className="w-6 h-6 text-neon-green" /> 我的自訂課表
         </h2>
         <button onClick={() => setIsCreating(true)} className="px-5 py-2.5 bg-white/5 text-neon-green text-[11px] font-black rounded-xl uppercase border border-white/5 active:bg-neon-green active:text-black transition-all">
@@ -264,7 +252,7 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="glass rounded-[32px] p-9 border-neon-green/30 space-y-7 overflow-hidden">
             <div className="space-y-3">
               <label className="text-[11px] font-black text-neon-green uppercase tracking-[0.3em] ml-1.5">新課表範本名稱</label>
-              <input autoFocus placeholder="例如：胸背拉推日..." value={newRoutineName} onChange={e => setNewRoutineName(e.target.value)} className="w-full bg-transparent border-b-2 border-neon-green/30 py-4 text-3xl font-black italic uppercase outline-none text-white focus:border-neon-green" />
+              <input autoFocus placeholder="例如：胸背拉推日..." value={newRoutineName} onChange={e => setNewRoutineName(e.target.value)} className="w-full bg-transparent border-b-2 border-neon-green/30 py-4 text-3xl font-black italic uppercase outline-none text-white focus:border-neon-green pr-3" />
             </div>
             <div className="flex gap-5">
               <button onClick={createRoutine} className="flex-1 bg-neon-green text-black font-black py-5 rounded-2xl uppercase italic text-base">建立範本</button>
@@ -283,7 +271,7 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
           customRoutines.map(r => (
             <div key={r.id} onClick={() => setPreviewRoutine(r)} className="glass rounded-[32px] p-7 border-white/5 active:scale-[0.98] transition-all flex justify-between items-center">
               <div>
-                <h3 className="text-xl font-black text-white italic uppercase tracking-tight">{r.name}</h3>
+                <h3 className="text-xl font-black text-white italic uppercase tracking-tight pr-2">{r.name}</h3>
                 <p className="text-[11px] font-bold text-slate-500 uppercase mt-2.5 tracking-widest">{r.exercises.length} 項訓練項目</p>
               </div>
               <div className="w-13 h-13 bg-slate-800 text-slate-500 rounded-2xl flex items-center justify-center border border-white/5 shrink-0"><Eye className="w-6 h-6" /></div>
@@ -300,7 +288,7 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
         {splitSystems.map(system => (
           <div key={system.id} className="glass rounded-[44px] p-9 border-white/5 space-y-7 relative overflow-hidden bg-gradient-to-br from-slate-900/40 to-transparent">
             <div className="space-y-2.5">
-               <h3 className="text-lg font-black italic uppercase text-white tracking-tighter">{system.title}</h3>
+               <h3 className="text-lg font-black italic uppercase text-white tracking-tighter pr-2">{system.title}</h3>
                <p className="text-xs font-medium text-slate-500 leading-relaxed">{system.description}</p>
             </div>
             
@@ -316,7 +304,7 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
                          D{idx + 1}
                       </div>
                       <div className="text-left overflow-hidden">
-                        <div className="text-base font-black italic uppercase text-slate-200 truncate">{r.name.split(': ')[1] || r.name}</div>
+                        <div className="text-base font-black italic uppercase text-slate-200 truncate pr-2">{r.name.split(': ')[1] || r.name}</div>
                         <div className="text-[9px] font-bold text-slate-600 uppercase tracking-widest mt-1">{r.exercises.length} EXERCISES</div>
                       </div>
                    </div>

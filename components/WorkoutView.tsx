@@ -7,24 +7,6 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { getMuscleGroup, getMuscleGroupDisplay, fetchExerciseGif, getExerciseMethod } from '../utils/fitnessMath';
 import { AppContext } from '../App';
-import { ChestIcon, BackIcon, ShoulderIcon, LegIcon, DeadliftIcon, ArmIcon, CoreIcon, GenericIcon } from './WorkoutIcons';
-
-export const getExerciseIcon = (name: string) => {
-  const muscle = getMuscleGroup(name);
-  const n = name.toLowerCase();
-  if (n.includes('硬舉') || n.includes('deadlift')) return <DeadliftIcon className="w-full h-full" />;
-  switch (muscle) {
-    case 'chest': return <ChestIcon className="w-full h-full" />;
-    case 'back': return <BackIcon className="w-full h-full" />;
-    case 'shoulders': return <ShoulderIcon className="w-full h-full" />;
-    case 'quads':
-    case 'hamstrings':
-    case 'glutes': return <LegIcon className="w-full h-full" />;
-    case 'arms': return <ArmIcon className="w-full h-full" />;
-    case 'core': return <CoreIcon className="w-full h-full" />;
-    default: return <GenericIcon className="w-full h-full" />;
-  }
-};
 
 export const ORGANIZED_EXERCISES: Record<string, string[]> = {
   'chest': ['槓鈴平板臥推', '槓鈴上斜臥推', '啞鈴平板臥推', '啞鈴上斜臥推', '史密斯平板臥推', '坐姿器械推胸', '蝴蝶機夾胸', '跪姿繩索夾胸', '雙槓撐體', '標準俯地挺身', '器械上斜推胸', '史密斯上斜臥推'],
@@ -138,7 +120,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                       </div>
                       <div className="text-left overflow-hidden">
                         <div className="text-[11px] font-black text-neon-green uppercase tracking-widest leading-none">建立自訂動作</div>
-                        <div className="text-base font-black italic text-white uppercase truncate max-w-[200px] mt-1.5">{searchTerm}</div>
+                        <div className="text-base font-black italic text-white uppercase truncate max-w-[200px] mt-1.5 pr-2">{searchTerm}</div>
                       </div>
                     </div>
                     <ChevronRight className="w-5 h-5 text-neon-green opacity-50" />
@@ -152,7 +134,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                     onClick={() => addExercise(exName)} 
                     className="p-4 rounded-[20px] text-left bg-slate-900/40 border border-white/5 flex flex-col justify-center min-h-[76px] group active:border-neon-green/30"
                   >
-                    <div className="text-[13px] font-black italic uppercase text-slate-200 group-active:text-neon-green leading-tight truncate">
+                    <div className="text-[13px] font-black italic uppercase text-slate-200 group-active:text-neon-green leading-tight truncate pr-1">
                       {exName}
                     </div>
                     <div className="text-[10px] font-bold text-slate-700 uppercase tracking-widest mt-2 flex items-center justify-between">
@@ -171,7 +153,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                 <ChevronLeft className="w-7 h-7" />
                 <span className="text-xs font-black uppercase tracking-widest">返回</span>
               </button>
-              <h2 className="text-2xl font-black italic uppercase text-white truncate max-w-[200px]">{currentDetailEx?.name}</h2>
+              <h2 className="text-2xl font-black italic uppercase text-white truncate max-w-[240px] pr-3">{currentDetailEx?.name}</h2>
               <button onClick={() => { if(confirm('移除？')) { onUpdate({ ...session, exercises: session.exercises.filter(e => e.id !== currentDetailEx!.id) }); setActiveExerciseId(null); } }} className="w-11 h-11 bg-red-500/10 rounded-xl flex items-center justify-center text-red-500/40"><Trash2 className="w-5 h-5" /></button>
             </div>
 
@@ -196,11 +178,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                 ) : currentDetailEx?.name === '啞鈴前平舉' ? (
                   <img src="https://www.docteur-fitness.com/wp-content/uploads/2000/08/elevations-frontales-exercice-musculation.gif" alt="啞鈴前平舉" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
                 ) : currentDetailEx?.name === '蝴蝶機後三角飛鳥' ? (
-                  <img 
-                    src="https://www.docteur-fitness.com/wp-content/uploads/2021/12/pec-deck-inverse.gif" 
-                    alt="蝴蝶機後三角飛鳥" 
-                    style={{ width: '100%', borderRadius: '15px', display: 'block' }} 
-                  />
+                  <img src="https://www.docteur-fitness.com/wp-content/uploads/2021/12/pec-deck-inverse.gif" alt="蝴蝶機後三角飛鳥" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
                 ) : currentDetailEx?.name === '滑輪面拉' ? (
                   <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/01/face-pull.gif" alt="滑輪面拉" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
                 ) : currentDetailEx?.name === '俯身啞鈴反向飛鳥' ? (
@@ -358,35 +336,75 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
               </div>
               <div className="space-y-4">
                 {currentDetailEx!.sets.map((set, index) => (
-                  <div key={set.id} className={`grid grid-cols-12 gap-3 items-center p-4 rounded-[28px] border transition-all ${set.completed ? 'bg-neon-green/5 border-neon-green/20' : 'bg-slate-900/60 border-white/5'}`}>
-                    <div className="col-span-1 flex justify-center"><button onClick={() => onUpdate({ ...session, exercises: session.exercises.map(e => e.id !== currentDetailEx!.id ? e : { ...e, sets: e.sets.filter(s => s.id !== set.id) }) })} className="text-slate-800"><MinusCircle className="w-5 h-5" /></button></div>
-                    <div className="col-span-2 text-base font-black italic text-slate-500 text-center">#{index + 1}</div>
-                    <div className="col-span-4"><input type="number" value={set.weight || ''} placeholder="KG" onChange={(e) => {
-                      const newWeight = Number(e.target.value);
-                      onUpdate({ 
-                        ...session, 
-                        exercises: session.exercises.map(ex => {
-                          if (ex.id === currentDetailEx!.id) {
-                            const newSets = ex.sets.map((s, i) => {
-                              if (s.id === set.id) return { ...s, weight: newWeight };
-                              if (index === 0) return { ...s, weight: newWeight };
-                              return s;
-                            });
-                            return { ...ex, sets: newSets };
-                          }
-                          return ex;
-                        }) 
-                      });
-                    }} className="w-full bg-black/40 rounded-xl py-3.5 text-center text-xl font-black text-white outline-none" /></div>
-                    <div className="col-span-3"><input type="number" value={set.reps || ''} placeholder="REP" onChange={(e) => onUpdate({ ...session, exercises: session.exercises.map(ex => ex.id === currentDetailEx!.id ? { ...ex, sets: ex.sets.map(s => s.id === set.id ? { ...s, reps: Number(e.target.value) } : s) } : ex) })} className="w-full bg-black/40 rounded-xl py-3.5 text-center text-xl font-black text-white outline-none" /></div>
-                    <div className="col-span-2 flex justify-center"><button onClick={() => { const newComp = !set.completed; if(newComp && context) context.triggerRestTimer(); onUpdate({ ...session, exercises: session.exercises.map(ex => ex.id === currentDetailEx!.id ? { ...ex, sets: ex.sets.map(s => s.id === set.id ? { ...s, completed: newComp } : s) } : ex) }); }} className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all ${set.completed ? 'bg-neon-green text-black' : 'bg-slate-800 text-slate-600'}`}><Check className="w-6 h-6 stroke-[4]" /></button></div>
+                  <div key={set.id} className={`grid grid-cols-12 gap-2.5 items-center p-4 rounded-[28px] border transition-all ${set.completed ? 'bg-neon-green/5 border-neon-green/20' : 'bg-slate-900/60 border-white/5'}`}>
+                    <div className="col-span-1 flex justify-center">
+                      <button onClick={() => onUpdate({ ...session, exercises: session.exercises.map(e => e.id !== currentDetailEx!.id ? e : { ...e, sets: e.sets.filter(s => s.id !== set.id) }) })} className="text-slate-800 p-1 active:text-red-500">
+                        <MinusCircle className="w-5 h-5" />
+                      </button>
+                    </div>
+                    <div className="col-span-1 text-base font-black italic text-slate-500 text-center">
+                      {index + 1}
+                    </div>
+                    
+                    {/* 重量輸入區 */}
+                    <div className="col-span-4 flex items-center justify-center gap-2">
+                      <input 
+                        type="number" 
+                        value={set.weight || ''} 
+                        placeholder="0" 
+                        onChange={(e) => {
+                          const newWeight = Number(e.target.value);
+                          onUpdate({ 
+                            ...session, 
+                            exercises: session.exercises.map(ex => {
+                              if (ex.id === currentDetailEx!.id) {
+                                const newSets = ex.sets.map((s, i) => {
+                                  if (s.id === set.id) return { ...s, weight: newWeight };
+                                  if (index === 0) return { ...s, weight: newWeight };
+                                  return s;
+                                });
+                                return { ...ex, sets: newSets };
+                              }
+                              return ex;
+                            }) 
+                          });
+                        }} 
+                        className="w-16 bg-black/40 rounded-xl py-3 text-center text-xl font-black text-white outline-none border border-white/5 focus:border-neon-green/30 transition-all" 
+                      />
+                      <span className="text-[10px] font-black text-slate-600 italic uppercase shrink-0">kg</span>
+                    </div>
+
+                    {/* 次數輸入區 */}
+                    <div className="col-span-4 flex items-center justify-center gap-2">
+                      <input 
+                        type="number" 
+                        value={set.reps || ''} 
+                        placeholder="0" 
+                        onChange={(e) => onUpdate({ ...session, exercises: session.exercises.map(ex => ex.id === currentDetailEx!.id ? { ...ex, sets: ex.sets.map(s => s.id === set.id ? { ...s, reps: Number(e.target.value) } : s) } : ex) })} 
+                        className="w-16 bg-black/40 rounded-xl py-3 text-center text-xl font-black text-white outline-none border border-white/5 focus:border-neon-green/30 transition-all" 
+                      />
+                      <span className="text-[10px] font-black text-slate-600 italic uppercase shrink-0">rep</span>
+                    </div>
+
+                    <div className="col-span-2 flex justify-end">
+                      <button 
+                        onClick={() => { 
+                          const newComp = !set.completed; 
+                          if(newComp && context) context.triggerRestTimer(); 
+                          onUpdate({ ...session, exercises: session.exercises.map(ex => ex.id === currentDetailEx!.id ? { ...ex, sets: ex.sets.map(s => s.id === set.id ? { ...s, completed: newComp } : s) } : ex) }); 
+                        }} 
+                        className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all active:scale-90 ${set.completed ? 'bg-neon-green text-black' : 'bg-slate-800 text-slate-600 shadow-inner'}`}
+                      >
+                        <Check className="w-6 h-6 stroke-[4]" />
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
               <div className="pt-6 pb-12">
                 <button 
                   onClick={onFinish} 
-                  className="w-full bg-neon-green text-black font-black h-11 rounded-xl uppercase italic text-base active:scale-95 transition-all shadow-[0_10px_20px_rgba(173,255,47,0.2)] flex items-center justify-center gap-3 tracking-tighter"
+                  className="w-full bg-neon-green text-black font-black h-12 rounded-xl uppercase italic text-base active:scale-95 transition-all shadow-[0_10px_20px_rgba(173,255,47,0.2)] flex items-center justify-center gap-3 tracking-tighter"
                 >
                   <Save className="w-5 h-5 stroke-[2.5]" /> 儲存訓練
                 </button>

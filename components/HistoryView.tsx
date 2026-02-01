@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { WorkoutSession, MuscleGroup, ExerciseEntry } from '../types';
 import { getMuscleGroupDisplay } from '../utils/fitnessMath';
-import { getExerciseIcon } from './WorkoutView';
 import { Clock, Activity, BarChart3, Trash2, LayoutGrid, Save, CalendarDays, ChevronRight } from 'lucide-react';
 import { isSameDay, format } from 'date-fns';
 import startOfWeek from 'date-fns/startOfWeek';
@@ -23,7 +22,6 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
     history.filter(s => isSameDay(new Date(s.startTime), selectedDate)),
   [history, selectedDate]);
 
-  // 計算當日總計數據
   const dailyStats = useMemo(() => {
     if (filteredHistory.length === 0) return null;
     
@@ -61,7 +59,6 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
     onSaveAsRoutine(combinedSession);
   };
 
-  // 移除 hamstrings 和 glutes
   const allMuscleGroups: MuscleGroup[] = ['chest', 'back', 'quads', 'shoulders', 'arms', 'core'];
 
   const analysisData = useMemo(() => {
@@ -100,7 +97,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
         <div className="flex items-center justify-between px-2">
           <div className="flex items-center gap-3 text-slate-400">
              <CalendarDays className="w-5 h-5 text-neon-green" />
-             <h2 className="text-base font-black italic tracking-tighter uppercase">
+             <h2 className="text-base font-black italic tracking-tighter uppercase pr-2">
                訓練日報 <span className="text-white">/ {format(selectedDate, 'MM.dd')}</span>
              </h2>
           </div>
@@ -132,7 +129,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
             >
               <div className="flex justify-between items-start">
                 <div className="space-y-2">
-                  <h4 className="text-3xl font-black italic uppercase text-white leading-tight">當日總訓練</h4>
+                  <h4 className="text-3xl font-black italic uppercase text-white leading-tight pr-3">當日總訓練</h4>
                   <div className="flex items-center space-x-5 text-xs text-slate-500 font-bold uppercase tracking-widest">
                     <span className="flex items-center gap-2 bg-slate-800/50 px-2.5 py-1 rounded-md">
                       <Clock className="w-3.5 h-3.5 text-neon-green" /> {dailyStats.totalMinutes} MINS
@@ -167,16 +164,13 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
                       {session.exercises.map(ex => (
                         <div key={ex.id} className="flex justify-between items-center bg-black/40 p-5 rounded-3xl border border-white/5">
                           <div className="flex items-center gap-4 overflow-hidden">
-                            <div className="w-10 h-10 bg-white/5 rounded-xl p-2 text-neon-green shrink-0">
-                              {getExerciseIcon(ex.name)}
-                            </div>
                             <div className="overflow-hidden">
-                              <span className="text-base font-black text-white italic uppercase tracking-tight truncate block">{ex.name}</span>
+                              <span className="text-base font-black text-white italic uppercase tracking-tight truncate block pr-2">{ex.name}</span>
                               <div className="text-[9px] font-bold text-slate-600 uppercase tracking-widest mt-1">{ex.sets.length} SETS TOTAL</div>
                             </div>
                           </div>
                           <div className="text-right shrink-0 ml-4">
-                            <span className="text-lg font-black italic text-neon-green">{ex.sets[0]?.weight}kg</span>
+                            <span className="text-lg font-black italic text-neon-green pr-0.5">{ex.sets[0]?.weight}kg</span>
                             <span className="mx-1 text-slate-800 font-black italic">×</span>
                             <span className="text-lg font-black italic text-white">{ex.sets[0]?.reps}</span>
                           </div>
@@ -205,7 +199,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
                 <BarChart3 className="w-6 h-6 text-neon-green" />
               </div>
               <div>
-                <h3 className="text-base font-black italic uppercase tracking-tighter text-white">訓練容量分布</h3>
+                <h3 className="text-base font-black italic uppercase tracking-tighter text-white pr-2">訓練容量分布</h3>
                 <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest mt-1.5">Muscle stimulation breakdown</p>
               </div>
            </div>
