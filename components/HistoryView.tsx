@@ -61,7 +61,8 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
     onSaveAsRoutine(combinedSession);
   };
 
-  const allMuscleGroups: MuscleGroup[] = ['chest', 'back', 'quads', 'hamstrings', 'shoulders', 'arms', 'core', 'glutes'];
+  // 移除 hamstrings 和 glutes
+  const allMuscleGroups: MuscleGroup[] = ['chest', 'back', 'quads', 'shoulders', 'arms', 'core'];
 
   const analysisData = useMemo(() => {
     const now = new Date();
@@ -86,13 +87,6 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
     return results;
   }, [history, analysisPeriod]);
 
-  /**
-   * 依照要求更新顏色邏輯 (絕對組數判定)：
-   * 0 組 (休息): 深藍灰 #1e293b
-   * 1-10 組 (輕量): 綠色 #22c55e
-   * 11-15 組 (適中): 黃色 #eab308
-   * 16+ 組 (極限): 紅色 #ef4444
-   */
   const getHeatColor = (setCount: number) => {
     if (setCount === 0) return '#1e293b'; 
     if (setCount <= 10) return '#22c55e';  
@@ -227,7 +221,6 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
         <div className="grid grid-cols-1 gap-6">
            {allMuscleGroups.map(muscle => {
              const setTotal = analysisData[muscle] || 0;
-             // 為了顯示比例，我們可以用 20 組作為進度條 100% 的參考（但顏色還是看絕對組數）
              const progressPercentage = Math.min(100, (setTotal / 20) * 100);
              const barColor = getHeatColor(setTotal);
              

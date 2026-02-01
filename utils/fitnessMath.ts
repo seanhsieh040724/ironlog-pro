@@ -33,18 +33,19 @@ export const calculateSuggestedCalories = (
   return Math.round(tdee);
 };
 
-export const getMuscleGroupDisplay = (mg: MuscleGroup): { cn: string, en: string } => {
-  const map: Record<MuscleGroup, { cn: string, en: string }> = {
+export const getMuscleGroupDisplay = (mg: MuscleGroup | string): { cn: string, en: string } => {
+  const map: Record<string, { cn: string, en: string }> = {
     chest: { cn: '胸部', en: 'CHEST' },
     back: { cn: '背部', en: 'BACK' },
     quads: { cn: '腿部', en: 'LEGS' },
+    legs: { cn: '腿部', en: 'LEGS' },
     hamstrings: { cn: '膕繩', en: 'HAM' },
     shoulders: { cn: '肩部', en: 'SHOULDER' },
     arms: { cn: '手臂', en: 'ARMS' },
     core: { cn: '核心', en: 'CORE' },
     glutes: { cn: '臀部', en: 'GLUTES' }
   };
-  return map[mg] || { cn: '全身', en: 'TOTAL' };
+  return map[mg] || { cn: '腿部', en: 'LEGS' };
 };
 
 export const getMuscleGroup = (name: string): MuscleGroup => {
@@ -133,7 +134,16 @@ const EXERCISE_METHODS: Record<string, string> = {
   "輔助引體向上機": "01 雙膝跪在輔助墊上，雙手寬握把手。\n02 背部發力將身體向上帶動。\n03 下降時保持控制，感受拉伸。",
   "V把坐姿划船": "01 雙手持 V 把，腳踩踏板並膝蓋微彎。\n02 吐氣將把手拉向腹部，肩胛骨向後夾。\n03 緩慢伸直手臂回到起始位。",
   "寬握水平划船": "01 使用長桿寬握把手，坐穩姿勢。\n02 水平方向拉動把手至上腹部。\n03 保持背部平直，控制離心過程。",
-  "滑輪反握下拉": "01 反手握住橫桿（與肩同寬）。\n02 向下拉至上胸部，手肘貼近身體。\n03 緩慢放回頂部，持續感受肌肉張力。"
+  "滑輪反握下拉": "01 反手握住橫桿（與肩同寬）。\n02 向下拉至上胸部，手肘貼近身體。\n03 緩慢放回頂部，持續感受肌肉張力。",
+  "上斜腿推機": "01 仰臥於機器斜板，雙腳踩實踏板。\n02 釋放安全鎖，控制重量緩慢下放至膝蓋呈 90 度。\n03 吐氣發力推回起始位，膝蓋不鎖死。",
+  "啞鈴高腳杯蹲": "01 雙手捧住啞鈴置於胸前，雙腳略寬於肩。\n02 下蹲時手肘應碰到大腿內側。\n03 腳跟踩實發力，挺胸收腹站起。",
+  "保加利亞啞鈴分腿蹲": "01 一腳尖架在後方長凳，另一腳跨前。\n02 雙手持啞鈴自然下垂。\n03 垂直下蹲至後膝接近地面，前腳發力站起。",
+  "仰臥腿後勾": "01 俯臥於器材，擋板置於腳踝上方。\n02 雙手握住把手固定軀幹。\n03 吐氣將小腿向後彎曲，擠壓腿後腱，控制回放。",
+  "坐姿腿後勾": "01 坐穩並固定大腿擋板。\n02 雙腳踩在勾桿上。\n03 吐氣向下彎曲小腿，感受腿後側強力收縮。",
+  "器械站姿提踵": "01 腳尖站於踏板邊緣，肩膀負重墊。\n02 垂直向上推起腳尖至最高點。\n03 緩慢下放到足弓感受拉伸，隨即再次提踵。",
+  "器械腿外展": "01 坐姿並將擋板置於膝蓋外側。\n02 吐氣將雙腿向兩側推開，感受臀中肌發力。\n03 緩慢合攏，保持肌肉張力。",
+  "器械腿內收": "01 坐姿並將擋板置於膝蓋內側。\n02 吐氣將雙腿向內合攏，感受大腿內側發力。\n03 緩慢張開，控制離心速度。",
+  "六角槓硬舉": "01 站在六角槓中央，雙腳與肩同寬。\n02 髖部後移抓握兩側握把，背部平直。\n03 腳跟發力垂直站起，全程保持背部中立。"
 };
 
 export const fetchExerciseGif = async (exerciseName: string): Promise<string> => {

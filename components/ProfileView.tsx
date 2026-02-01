@@ -1,9 +1,8 @@
-
-import React, { useContext, useMemo, useState } from 'react';
+import React, { useContext, useMemo, useState, useEffect } from 'react';
 import { AppContext } from '../App';
 import { BodyMetric, UserGoal } from '../types';
 import { getBMIAnalysis, calculateSuggestedCalories, getMuscleGroupDisplay } from '../utils/fitnessMath';
-import { Target, Activity, Scale, Ruler, Zap, Heart, User, Trash2, ArrowUpRight, Flame, Share2, X, Smartphone, Copy, CheckCircle2, Apple, Chrome, ArrowRight, Trophy, Calendar, Droplets, Utensils, Info } from 'lucide-react';
+import { Target, Activity, Scale, Ruler, Zap, Heart, User, Trash2, ArrowUpRight, Flame, Share2, X, Smartphone, Copy, CheckCircle2, Apple, Chrome, ArrowRight, Trophy, Calendar, Droplets, Utensils, Info, Save } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const ProfileView: React.FC = () => {
@@ -30,39 +29,49 @@ export const ProfileView: React.FC = () => {
     };
   }, [bodyMetrics]);
 
+  // 本地暫存狀態
+  const [tempMetrics, setTempMetrics] = useState<BodyMetric>(latest);
+  const [isSaved, setIsSaved] = useState(false);
+
+  useEffect(() => {
+    setTempMetrics(latest);
+  }, [latest]);
+
   const bmi: number = useMemo(() => {
-    if (latest.height === 0 || latest.weight === 0) return 0;
-    const h = latest.height / 100;
-    return Number((latest.weight / (h * h)).toFixed(1));
-  }, [latest.weight, latest.height]);
+    if (tempMetrics.height === 0 || tempMetrics.weight === 0) return 0;
+    const h = tempMetrics.height / 100;
+    return Number((tempMetrics.weight / (h * h)).toFixed(1));
+  }, [tempMetrics.weight, tempMetrics.height]);
 
   const bmiAnalysis = useMemo(() => getBMIAnalysis(bmi), [bmi]);
   
   const suggestedCals: number = useMemo(() => {
-    if (latest.weight === 0 || latest.height === 0 || latest.age === 0) return 0;
-    return calculateSuggestedCalories(latest.weight, latest.height, latest.age, latest.gender as any || 'male', goal.type);
-  }, [latest.weight, latest.height, latest.age, latest.gender, goal.type]);
+    if (tempMetrics.weight === 0 || tempMetrics.height === 0 || tempMetrics.age === 0) return 0;
+    return calculateSuggestedCalories(tempMetrics.weight, tempMetrics.height, tempMetrics.age, tempMetrics.gender as any || 'male', goal.type);
+  }, [tempMetrics.weight, tempMetrics.height, tempMetrics.age, tempMetrics.gender, goal.type]);
 
   const analysisMetrics = useMemo(() => {
-    if (latest.weight === 0) return null;
+    if (tempMetrics.weight === 0) return null;
     return {
       protein: {
-        min: Math.round(latest.weight * 1.6),
-        max: Math.round(latest.weight * 2.2)
+        min: Math.round(tempMetrics.weight * 1.6),
+        max: Math.round(tempMetrics.weight * 2.2)
       },
-      water: Math.round(latest.weight * 35),
+      water: Math.round(tempMetrics.weight * 35),
       idealWeight: {
-        min: Math.round(18.5 * Math.pow(latest.height / 100, 2)),
-        max: Math.round(24 * Math.pow(latest.height / 100, 2))
+        min: Math.round(18.5 * Math.pow(tempMetrics.height / 100, 2)),
+        max: Math.round(24 * Math.pow(tempMetrics.height / 100, 2))
       }
     };
-  }, [latest]);
+  }, [tempMetrics]);
 
   if (!context) return null;
 
-  const updateLatest = (updates: Partial<BodyMetric>) => {
-    const newMetric = { ...latest, id: crypto.randomUUID(), date: Date.now(), ...updates };
+  const handleSaveMetrics = () => {
+    const newMetric = { ...tempMetrics, id: crypto.randomUUID(), date: Date.now() };
     setBodyMetrics([newMetric, ...bodyMetrics.slice(1)]);
+    setIsSaved(true);
+    setTimeout(() => setIsSaved(false), 2000);
   };
 
   const handleCopyLink = () => {
@@ -103,20 +112,22 @@ export const ProfileView: React.FC = () => {
            </div>
            
            <div className="flex bg-slate-800/80 p-2 rounded-2xl border border-white/5">
-              <button onClick={() => updateLatest({ gender: 'male' })} className={`w-11 h-11 rounded-xl flex items-center justify-center transition-all ${latest.gender === 'male' ? 'bg-sky-500 text-white shadow-lg shadow-sky-500/20' : 'text-slate-600 opacity-40 hover:opacity-100'}`}>
+              <button onClick={() => setTempMetrics({ ...tempMetrics, gender: 'male' })} className={`w-11 h-11 rounded-xl flex items-center justify-center transition-all ${tempMetrics.gender === 'male' ? 'bg-sky-500 text-white shadow-lg shadow-sky-500/20' : 'text-slate-600 opacity-40 hover:opacity-100'}`}>
                 <MaleIcon />
               </button>
-              <button onClick={() => updateLatest({ gender: 'female' })} className={`w-11 h-11 rounded-xl flex items-center justify-center transition-all ${latest.gender === 'female' ? 'bg-pink-500 text-white shadow-lg shadow-pink-500/20' : 'text-slate-600 opacity-40 hover:opacity-100'}`}>
+              <button onClick={() => setTempMetrics({ ...tempMetrics, gender: 'female' })} className={`w-11 h-11 rounded-xl flex items-center justify-center transition-all ${tempMetrics.gender === 'female' ? 'bg-pink-500 text-white shadow-lg shadow-pink-500/20' : 'text-slate-600 opacity-40 hover:opacity-100'}`}>
                 <FemaleIcon />
               </button>
            </div>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 gap-8">
            <div className="space-y-5">
-              <InputBox icon={<Ruler className="text-sky-400" />} label="身高" val={latest.height} unit="CM" onChange={(v: string) => updateLatest({ height: Number(v) })} />
-              <InputBox icon={<Scale className="text-orange-400" />} label="體重" val={latest.weight} unit="KG" onChange={(v: string) => updateLatest({ weight: Number(v) })} />
-              <InputBox icon={<User className="text-purple-400" />} label="年齡" val={latest.age} unit="歲" onChange={(v: string) => updateLatest({ age: Number(v) })} />
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <InputBox icon={<Ruler className="text-sky-400" />} label="身高" val={tempMetrics.height} unit="CM" onChange={(v: string) => setTempMetrics({ ...tempMetrics, height: Number(v) })} />
+                <InputBox icon={<Scale className="text-orange-400" />} label="體重" val={tempMetrics.weight} unit="KG" onChange={(v: string) => setTempMetrics({ ...tempMetrics, weight: Number(v) })} />
+                <InputBox icon={<User className="text-purple-400" />} label="年齡" val={tempMetrics.age} unit="歲" onChange={(v: string) => setTempMetrics({ ...tempMetrics, age: Number(v) })} />
+              </div>
               
               <div className="pt-2">
                 <div className={`px-6 py-5 rounded-[28px] border border-white/5 flex flex-col gap-1.5 bg-black/40`}>
@@ -127,6 +138,14 @@ export const ProfileView: React.FC = () => {
                   </div>
                 </div>
               </div>
+
+              <button 
+                onClick={handleSaveMetrics} 
+                className={`w-full py-4 rounded-2xl font-black uppercase italic transition-all flex items-center justify-center gap-3 ${isSaved ? 'bg-emerald-500 text-white' : 'bg-neon-green text-black active:scale-95'}`}
+              >
+                {isSaved ? <CheckCircle2 className="w-5 h-5" /> : <Save className="w-5 h-5" />}
+                {isSaved ? '已儲存' : '儲存數據'}
+              </button>
            </div>
 
            {/* 身體指標分析區塊 */}
@@ -194,8 +213,8 @@ export const ProfileView: React.FC = () => {
            <div className="glass bg-black/40 p-7 rounded-[32px] border-white/5 flex flex-col justify-center">
               <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">差距</span>
               <div className="flex items-baseline gap-1.5">
-                <span className={`text-4xl font-black italic ${(latest.weight as number) > (goal.targetWeight as number) ? 'text-red-400' : 'text-neon-green'}`}>
-                  {((latest.weight as number) > 0 && (goal.targetWeight as number) > 0) ? Math.abs((latest.weight as number) - (goal.targetWeight as number)).toFixed(1) : '--'}
+                <span className={`text-4xl font-black italic ${(tempMetrics.weight as number) > (goal.targetWeight as number) ? 'text-red-400' : 'text-neon-green'}`}>
+                  {((tempMetrics.weight as number) > 0 && (goal.targetWeight as number) > 0) ? Math.abs((tempMetrics.weight as number) - (goal.targetWeight as number)).toFixed(1) : '--'}
                 </span>
                 <span className="text-sm font-bold text-slate-600 uppercase">KG</span>
               </div>
