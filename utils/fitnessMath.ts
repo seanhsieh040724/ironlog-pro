@@ -51,8 +51,21 @@ export const getMuscleGroupDisplay = (mg: MuscleGroup | string): { cn: string, e
 export const getMuscleGroup = (name: string): MuscleGroup => {
   const n = name.toLowerCase();
   
-  // 手臂優先判定 (解決窄握臥推、臂屈伸歸類問題)
+  // 手臂優先判定
   if (n.includes('彎舉') || n.includes('下壓') || n.includes('三頭') || n.includes('二頭') || n.includes('腕') || n.includes('臂屈伸') || n.includes('窄握') || n.includes('curl') || n.includes('tricep') || n.includes('bicep') || n.includes('arm')) return 'arms';
+
+  // 核心判定 (包含新命名：仰臥起坐、抬腿)
+  if (n.includes('捲腹') || n.includes('起坐') || n.includes('抬腿') || n.includes('核心') || n.includes('棒式') || n.includes('abs') || n.includes('core') || n.includes('crunch') || n.includes('plank')) return 'core';
+
+  // 腿部判定 (包含臀推、提踵、相撲硬舉、六角槓硬舉優先於一般硬舉判定)
+  if (
+    n.includes('蹲') || n.includes('腿') || n.includes('squat') || n.includes('leg') || 
+    n.includes('踏車') || n.includes('quad') || n.includes('calve') || 
+    n.includes('臀推') || n.includes('thrust') || n.includes('hip') ||
+    n.includes('提踵') || n.includes('calf') || 
+    n.includes('相撲') || n.includes('sumo') || 
+    n.includes('六角槓') || n.includes('trap bar')
+  ) return 'quads';
 
   // 肩部判定
   if (n.includes('肩') || n.includes('平舉') || n.includes('聳肩') || n.includes('shoulder') || n.includes('press') || n.includes('lateral') || n.includes('面拉') || n.includes('後三角') || n.includes('反向飛鳥')) return 'shoulders';
@@ -60,17 +73,11 @@ export const getMuscleGroup = (name: string): MuscleGroup => {
   // 胸部判定
   if (n.includes('臥推') || n.includes('胸') || n.includes('chest') || n.includes('夾胸') || n.includes('bench') || n.includes('fly') || n.includes('飛鳥') || n.includes('撐體') || n.includes('俯地挺身')) return 'chest';
   
-  // 背部判定
+  // 背部判定 (其餘硬舉如傳統硬舉歸類為背部)
   if (n.includes('划船') || n.includes('下拉') || n.includes('引體') || n.includes('row') || n.includes('lat') || n.includes('硬舉') || n.includes('back') || n.includes('pull') || n.includes('deadlift')) return 'back';
   
-  // 腿部判定
-  if (n.includes('蹲') || n.includes('腿') || n.includes('squat') || n.includes('leg') || n.includes('踏車') || n.includes('quad') || n.includes('calve')) return 'quads';
-  
-  // 核心判定
-  if (n.includes('捲腹') || n.includes('核心') || n.includes('棒式') || n.includes('abs') || n.includes('core') || n.includes('crunch') || n.includes('plank')) return 'core';
-  
-  // 臀部判定
-  if (n.includes('臀') || n.includes('glute') || n.includes('thrust') || n.includes('hip')) return 'glutes';
+  // 臀部判定 (其餘包含臀字眼但未匹配到腿部的動作)
+  if (n.includes('臀') || n.includes('glute')) return 'glutes';
   
   return 'core';
 };

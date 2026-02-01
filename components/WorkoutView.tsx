@@ -30,9 +30,9 @@ export const ORGANIZED_EXERCISES: Record<string, string[]> = {
   'chest': ['槓鈴平板臥推', '槓鈴上斜臥推', '啞鈴平板臥推', '啞鈴上斜臥推', '史密斯平板臥推', '坐姿器械推胸', '蝴蝶機夾胸', '跪姿繩索夾胸', '雙槓撐體', '標準俯地挺身', '器械上斜推胸', '史密斯上斜臥推'],
   'back': ['引體向上', '滑輪下拉', '槓鈴划船', '啞鈴單臂划船', '坐姿划船機', 'T桿划船機', '器械反握高位下拉', '傳統硬舉', '輔助引體向上機', 'V把坐姿划船', '寬握水平划船', '滑輪反握下拉'],
   'shoulders': ['啞鈴肩推', '槓鈴肩推', '阿諾肩推', '器械肩推', '史密斯機肩推', '啞鈴側平舉', '滑輪側平舉', '器械側平舉', '啞鈴前平舉', '蝴蝶機後三角飛鳥', '滑輪面拉', '俯身啞鈴反向飛鳥'],
-  'legs': ['槓鈴深蹲', '啞鈴高腳杯蹲', '上斜腿推機', '保加利亞啞鈴分腿蹲', '哈克深蹲', '仰臥腿後勾', '坐姿腿屈伸', '槓鈴臀推', '坐姿腿後勾', '器械站姿提踵', '相撲硬舉', '器械腿外展', '器械腿內收', '六角槓硬舉'],
+  'legs': ['槓鈴深蹲', '啞鈴高腳杯蹲', '上斜腿推機', '保加利亞啞鈴分腿蹲', '哈克深蹲', '仰臥腿後勾', '坐姿腿後勾', '器械站姿提踵', '相撲硬舉', '器械腿外展', '器械腿內收', '六角槓硬舉'],
   'arms': ['槓鈴彎舉', '反手槓鈴彎舉', '啞鈴交替彎舉', '啞鈴錘式彎舉', '牧師椅彎舉', '滑輪繩索下壓', '窄握槓鈴臥推', '仰臥槓鈴臂屈伸', '啞鈴頸後臂屈伸', '滑輪直桿彎舉', '二頭肌器械彎舉', '滑輪直桿過頭臂屈伸'],
-  'core': ['標準捲腹', '啞臥抬腿', '棒式', '俄羅斯轉體', '健腹輪', '腳踏車捲腹', '懸垂提膝', '登山者', '側棒式', '跪姿滑輪捲腹', '反向捲腹', '側向捲腹']
+  'core': ['仰臥起坐', '羅馬椅抬腿', '棒式', '俄羅斯轉體', '健腹輪', '器械捲腹', '懸垂抬腿', '登山者', '側棒式', '跪姿滑輪捲腹', '下斜捲腹', '滑輪側捲腹']
 };
 
 export const EXERCISE_DATABASE = Object.values(ORGANIZED_EXERCISES).flat();
@@ -303,6 +303,30 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                   <img src="https://www.docteur-fitness.com/wp-content/uploads/2021/10/souleve-de-terre-a-la-trap-bar.gif" alt="六角槓硬舉" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
                 ) : currentDetailEx?.name === '器械腿外展' ? (
                   <img src="https://static.wixstatic.com/media/2edbed_2c54524226684ddea7f4e2e08a472a3a~mv2.gif" alt="器械腿外展" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
+                ) : currentDetailEx?.name === '仰臥起坐' ? (
+                  <img src="https://www.docteur-fitness.com/wp-content/uploads/2000/07/crunch-au-sol-exercice-musculation.gif" alt="仰臥起坐" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
+                ) : currentDetailEx?.name === '羅馬椅抬腿' ? (
+                  <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/04/releve-jambes-chaise-romaine-abdominaux.gif" alt="羅馬椅抬腿" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
+                ) : currentDetailEx?.name === '棒式' ? (
+                  <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/05/planche-abdos.gif" alt="棒式" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
+                ) : currentDetailEx?.name === '俄羅斯轉體' ? (
+                  <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/04/rotations-russes-obliques.gif" alt="俄羅斯轉體" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
+                ) : currentDetailEx?.name === '健腹輪' ? (
+                  <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/02/roulette-abdominaux.gif" alt="健腹輪" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
+                ) : currentDetailEx?.name === '器械捲腹' ? (
+                  <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/04/crunch-machine-abdos.gif" alt="器械捲腹" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
+                ) : currentDetailEx?.name === '懸垂抬腿' ? (
+                  <img src="https://www.docteur-fitness.com/wp-content/uploads/2000/07/releve-de-genoux-suspendu-exercice-musculation.gif" alt="懸垂抬腿" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
+                ) : currentDetailEx?.name === '登山者' ? (
+                  <img src="https://www.docteur-fitness.com/wp-content/uploads/2000/06/mountain-climber-exercice-musculation.gif" alt="登山者" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
+                ) : currentDetailEx?.name === '側棒式' ? (
+                  <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/01/planche-laterale-obliques.gif" alt="側棒式" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
+                ) : currentDetailEx?.name === '跪姿滑輪捲腹' ? (
+                  <img src="https://www.docteur-fitness.com/wp-content/uploads/2000/06/crunch-poulie-haute-exercice-musculation.gif" alt="跪姿滑輪捲腹" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
+                ) : currentDetailEx?.name === '下斜捲腹' ? (
+                  <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/02/sit-up-decline.gif" alt="下斜捲腹" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
+                ) : currentDetailEx?.name === '滑輪側捲腹' ? (
+                  <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/04/flexions-laterales-poulie-basse.gif" alt="滑輪側捲腹" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
                 ) : gifUrl ? (
                   <img src={gifUrl} alt={currentDetailEx?.name} style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
                 ) : (
