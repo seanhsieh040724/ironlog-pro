@@ -32,7 +32,7 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
   if (!context) return null;
   const { customRoutines, setCustomRoutines } = context;
 
-  // 抓取 GIF 邏輯
+  // 抓取 GIF 邏輯（與 WorkoutView 一致）
   useEffect(() => {
     if (selectedExName) {
       fetchExerciseGif(selectedExName).then(setGifUrl);
@@ -103,135 +103,46 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
 
   const splitSystems: RoutineSplitGroup[] = [
     {
-      id: 'full-body',
-      title: '全身高效訓練系統 (Full Body)',
-      description: '適合每週訓練 2-3 次，以複合動作為主，最高效率建立基礎力量。',
-      routines: [
-        { id: 'fb-1', name: '全身訓練 A: 爆發與力量', exercises: [
-          { id: 'fb1e1', name: '槓鈴深蹲', muscleGroup: 'quads', defaultSets: 4, defaultReps: 8, defaultWeight: 60 },
-          { id: 'fb1e2', name: '槓鈴平板臥推', muscleGroup: 'chest', defaultSets: 4, defaultReps: 8, defaultWeight: 50 },
-          { id: 'fb1e3', name: '引體向上', muscleGroup: 'back', defaultSets: 3, defaultReps: 8, defaultWeight: 0 },
-          { id: 'fb1e4', name: '槓鈴肩推', muscleGroup: 'shoulders', defaultSets: 3, defaultReps: 10, defaultWeight: 30 },
-          { id: 'fb1e5', name: '棒式', muscleGroup: 'core', defaultSets: 3, defaultReps: 1, defaultWeight: 0 }
-        ]},
-        { id: 'fb-2', name: '全身訓練 B: 代謝與雕塑', exercises: [
-          { id: 'fb2e1', name: '傳統硬舉', muscleGroup: 'back', defaultSets: 3, defaultReps: 5, defaultWeight: 80 },
-          { id: 'fb2e2', name: '滑輪下拉', muscleGroup: 'back', defaultSets: 3, defaultReps: 12, defaultWeight: 45 },
-          { id: 'fb2e3', name: '啞鈴上斜臥推', muscleGroup: 'chest', defaultSets: 3, defaultReps: 12, defaultWeight: 20 },
-          { id: 'fb2e4', name: '啞鈴高腳杯蹲', muscleGroup: 'quads', defaultSets: 3, defaultReps: 15, defaultWeight: 24 },
-          { id: 'fb2e5', name: '懸垂抬腿', muscleGroup: 'core', defaultSets: 3, defaultReps: 15, defaultWeight: 0 }
-        ]}
-      ]
-    },
-    {
       id: '2-split',
       title: '二分化訓練系統 (Upper/Lower)',
-      description: '適合每週訓練 4 次，將身體分為上下半身交替，確保肌肉充分恢復。',
+      description: '適合每週訓練 2-4 次，效率極高的全身平衡方案',
       routines: [
-        { id: '2s-1', name: 'Day 1: 上半身 (推拉合集)', exercises: [
+        { id: '2s-1', name: 'Day 1: 上半身 (胸/背/肩)', exercises: [
           { id: '2s1e1', name: '槓鈴平板臥推', muscleGroup: 'chest', defaultSets: 4, defaultReps: 8, defaultWeight: 60 },
           { id: '2s1e2', name: '滑輪下拉', muscleGroup: 'back', defaultSets: 4, defaultReps: 10, defaultWeight: 50 },
           { id: '2s1e3', name: '啞鈴肩推', muscleGroup: 'shoulders', defaultSets: 3, defaultReps: 12, defaultWeight: 20 },
-          { id: '2s1e4', name: '槓鈴划船', muscleGroup: 'back', defaultSets: 3, defaultReps: 10, defaultWeight: 45 }
+          { id: '2s1e4', name: '滑輪下壓', muscleGroup: 'arms', defaultSets: 3, defaultReps: 12, defaultWeight: 25 }
         ]},
-        { id: '2s-2', name: 'Day 2: 下半身 (腿部核心)', exercises: [
+        { id: '2s-2', name: 'Day 2: 下半身 (腿/核心)', exercises: [
           { id: '2s2e1', name: '槓鈴深蹲', muscleGroup: 'quads', defaultSets: 4, defaultReps: 8, defaultWeight: 80 },
-          { id: '2s2e2', name: '仰臥腿後勾', muscleGroup: 'quads', defaultSets: 3, defaultReps: 12, defaultWeight: 35 },
+          { id: '2s2e2', name: '羅馬尼亞硬舉', muscleGroup: 'back', defaultSets: 3, defaultReps: 10, defaultWeight: 70 },
           { id: '2s2e3', name: '器械腿伸展', muscleGroup: 'quads', defaultSets: 3, defaultReps: 12, defaultWeight: 40 },
-          { id: '2s2e4', name: '仰臥起坐', muscleGroup: 'core', defaultSets: 3, defaultReps: 20, defaultWeight: 0 }
+          { id: '2s2e4', name: '棒式', muscleGroup: 'core', defaultSets: 3, defaultReps: 1, defaultWeight: 0 }
         ]}
       ]
     },
     {
       id: '3-split',
       title: '三分化 PPL 系統 (Push/Pull/Legs)',
-      description: '最經典的科學分化，根據發力模式區分，適合中高階健身者。',
+      description: '最經典的科學分化，針對不同發力模式深度訓練',
       routines: [
         { id: '3s-1', name: 'Day 1: 推 (Push) - 胸肩三頭', exercises: [
           { id: '3s1e1', name: '啞鈴上斜臥推', muscleGroup: 'chest', defaultSets: 4, defaultReps: 10, defaultWeight: 25 },
-          { id: '3s1e2', name: '蝴蝶機夾胸', muscleGroup: 'chest', defaultSets: 3, defaultReps: 15, defaultWeight: 40 },
+          { id: '3s1e2', name: '槓鈴肩推', muscleGroup: 'shoulders', defaultSets: 3, defaultReps: 8, defaultWeight: 40 },
           { id: '3s1e3', name: '啞鈴側平舉', muscleGroup: 'shoulders', defaultSets: 4, defaultReps: 15, defaultWeight: 8 },
-          { id: '3s1e4', name: '滑輪繩索下壓', muscleGroup: 'arms', defaultSets: 3, defaultReps: 12, defaultWeight: 25 }
+          { id: '3s1e4', name: '仰臥槓鈴臂屈伸', muscleGroup: 'arms', defaultSets: 3, defaultReps: 12, defaultWeight: 20 }
         ]},
         { id: '3s-2', name: 'Day 2: 拉 (Pull) - 背部二頭', exercises: [
-          { id: '3s2e1', name: '滑輪下拉', muscleGroup: 'back', defaultSets: 4, defaultReps: 10, defaultWeight: 50 },
-          { id: '3s2e2', name: '坐姿划船機', muscleGroup: 'back', defaultSets: 4, defaultReps: 10, defaultWeight: 45 },
-          { id: '3s2e3', name: '滑輪面拉', muscleGroup: 'shoulders', defaultSets: 3, defaultReps: 15, defaultWeight: 20 },
-          { id: '3s2e4', name: '啞鈴交替彎舉', muscleGroup: 'arms', defaultSets: 3, defaultReps: 12, defaultWeight: 14 }
+          { id: '3s2e1', name: '引體向上', muscleGroup: 'back', defaultSets: 4, defaultReps: 8, defaultWeight: 0 },
+          { id: '3s2e2', name: '槓鈴划船', muscleGroup: 'back', defaultSets: 4, defaultReps: 10, defaultWeight: 50 },
+          { id: '3s2e3', name: '啞鈴交替彎舉', muscleGroup: 'arms', defaultSets: 3, defaultReps: 12, defaultWeight: 14 },
+          { id: '3s2e4', name: '蝴蝶機後三角飛鳥', muscleGroup: 'shoulders', defaultSets: 3, defaultReps: 15, defaultWeight: 35 }
         ]},
-        { id: '3s-3', name: 'Day 3: 腿 (Legs) - 腿部臀部', exercises: [
-          { id: '3s3e1', name: '保加利亞啞鈴分腿蹲', muscleGroup: 'quads', defaultSets: 3, defaultReps: 10, defaultWeight: 15 },
-          { id: '3s3e2', name: '相撲硬舉', muscleGroup: 'quads', defaultSets: 3, defaultReps: 10, defaultWeight: 70 },
-          { id: '3s3e3', name: '坐姿腿後勾', muscleGroup: 'quads', defaultSets: 3, defaultReps: 12, defaultWeight: 40 },
-          { id: '3s3e4', name: '器械站姿提踵', muscleGroup: 'quads', defaultSets: 3, defaultReps: 15, defaultWeight: 30 }
-        ]}
-      ]
-    },
-    {
-      id: '4-split',
-      title: '四分化進階系統 (Advanced 4-Split)',
-      description: '將全身拆分為四天，能對各部位進行更高密度的孤立訓練，適合追求體態的人。',
-      routines: [
-        { id: '4s-1', name: '胸部與三頭 (Chest/Triceps)', exercises: [
-          { id: '4s1e1', name: '槓鈴平板臥推', muscleGroup: 'chest', defaultSets: 4, defaultReps: 8, defaultWeight: 60 },
-          { id: '4s1e2', name: '啞鈴上斜臥推', muscleGroup: 'chest', defaultSets: 4, defaultReps: 10, defaultWeight: 25 },
-          { id: '4s1e3', name: '雙槓撐體', muscleGroup: 'chest', defaultSets: 3, defaultReps: 10, defaultWeight: 0 },
-          { id: '4s1e4', name: '窄握槓鈴臥推', muscleGroup: 'arms', defaultSets: 3, defaultReps: 10, defaultWeight: 40 }
-        ]},
-        { id: '4s-2', name: '背部與二頭 (Back/Biceps)', exercises: [
-          { id: '4s2e1', name: '引體向上', muscleGroup: 'back', defaultSets: 4, defaultReps: 8, defaultWeight: 0 },
-          { id: '4s2e2', name: '槓鈴划船', muscleGroup: 'back', defaultSets: 4, defaultReps: 10, defaultWeight: 50 },
-          { id: '4s2e3', name: '啞鈴單臂划船', muscleGroup: 'back', defaultSets: 3, defaultReps: 12, defaultWeight: 20 },
-          { id: '4s2e4', name: '槓鈴彎舉', muscleGroup: 'arms', defaultSets: 3, defaultReps: 10, defaultWeight: 25 }
-        ]},
-        { id: '4s-3', name: '肩膀與核心 (Shoulders/Core)', exercises: [
-          { id: '4s3e1', name: '啞鈴肩推', muscleGroup: 'shoulders', defaultSets: 4, defaultReps: 10, defaultWeight: 20 },
-          { id: '4s3e2', name: '啞鈴側平舉', muscleGroup: 'shoulders', defaultSets: 4, defaultReps: 15, defaultWeight: 8 },
-          { id: '4s3e3', name: '滑輪面拉', muscleGroup: 'shoulders', defaultSets: 3, defaultReps: 15, defaultWeight: 20 },
-          { id: '4s3e4', name: '羅馬椅抬腿', muscleGroup: 'core', defaultSets: 4, defaultReps: 15, defaultWeight: 0 }
-        ]},
-        { id: '4s-4', name: '腿部專日 (Leg Day)', exercises: [
-          { id: '4s4e1', name: '槓鈴深蹲', muscleGroup: 'quads', defaultSets: 4, defaultReps: 8, defaultWeight: 80 },
-          { id: '4s4e2', name: '上斜腿推機', muscleGroup: 'quads', defaultSets: 4, defaultReps: 12, defaultWeight: 120 },
-          { id: '4s4e3', name: '坐姿腿後勾', muscleGroup: 'quads', defaultSets: 3, defaultReps: 12, defaultWeight: 40 },
-          { id: '4s4e4', name: '器械站姿提踵', muscleGroup: 'quads', defaultSets: 4, defaultReps: 15, defaultWeight: 40 }
-        ]}
-      ]
-    },
-    {
-      id: '5-split',
-      title: '經典五分化 (Bro Split)',
-      description: '最受歡迎的職業分化，每天集中火力轟炸一個肌群，追求極限肥大。',
-      routines: [
-        { id: '5s-1', name: '星期一: 胸部日', exercises: [
-          { id: '5s1e1', name: '槓鈴平板臥推', muscleGroup: 'chest', defaultSets: 4, defaultReps: 8, defaultWeight: 60 },
-          { id: '5s1e2', name: '啞鈴上斜臥推', muscleGroup: 'chest', defaultSets: 4, defaultReps: 10, defaultWeight: 25 },
-          { id: '5s1e3', name: '跪姿繩索夾胸', muscleGroup: 'chest', defaultSets: 3, defaultReps: 15, defaultWeight: 20 },
-          { id: '5s1e4', name: '坐姿器械推胸', muscleGroup: 'chest', defaultSets: 3, defaultReps: 12, defaultWeight: 50 }
-        ]},
-        { id: '5s-2', name: '星期二: 背部日', exercises: [
-          { id: '5s2e1', name: '傳統硬舉', muscleGroup: 'back', defaultSets: 3, defaultReps: 5, defaultWeight: 90 },
-          { id: '5s2e2', name: '滑輪下拉', muscleGroup: 'back', defaultSets: 4, defaultReps: 10, defaultWeight: 55 },
-          { id: '5s2e3', name: '坐姿划船機', muscleGroup: 'back', defaultSets: 4, defaultReps: 12, defaultWeight: 45 },
-          { id: '5s2e4', name: '器械反握高位下拉', muscleGroup: 'back', defaultSets: 3, defaultReps: 12, defaultWeight: 40 }
-        ]},
-        { id: '5s-3', name: '星期三: 肩膀日', exercises: [
-          { id: '5s3e1', name: '阿諾肩推', muscleGroup: 'shoulders', defaultSets: 4, defaultReps: 10, defaultWeight: 18 },
-          { id: '5s3e2', name: '器械側平舉', muscleGroup: 'shoulders', defaultSets: 4, defaultReps: 15, defaultWeight: 30 },
-          { id: '5s3e3', name: '蝴蝶機後三角飛鳥', muscleGroup: 'shoulders', defaultSets: 3, defaultReps: 15, defaultWeight: 35 },
-          { id: '5s3e4', name: '啞鈴前平舉', muscleGroup: 'shoulders', defaultSets: 3, defaultReps: 12, defaultWeight: 10 }
-        ]},
-        { id: '5s-4', name: '星期四: 腿部日', exercises: [
-          { id: '5s4e1', name: '哈克深蹲', muscleGroup: 'quads', defaultSets: 4, defaultReps: 10, defaultWeight: 60 },
-          { id: '5s4e2', name: '保加利亞啞鈴分腿蹲', muscleGroup: 'quads', defaultSets: 3, defaultReps: 10, defaultWeight: 15 },
-          { id: '5s4e3', name: '仰臥腿後勾', muscleGroup: 'quads', defaultSets: 4, defaultReps: 12, defaultWeight: 35 },
-          { id: '5s4e4', name: '器械站姿提踵', muscleGroup: 'quads', defaultSets: 4, defaultReps: 20, defaultWeight: 30 }
-        ]},
-        { id: '5s-5', name: '星期五: 手臂日', exercises: [
-          { id: '5s5e1', name: '槓鈴彎舉', muscleGroup: 'arms', defaultSets: 4, defaultReps: 10, defaultWeight: 30 },
-          { id: '5s5e2', name: '滑輪繩索下壓', muscleGroup: 'arms', defaultSets: 4, defaultReps: 12, defaultWeight: 25 },
-          { id: '5s5e3', name: '牧師椅彎舉', muscleGroup: 'arms', defaultSets: 3, defaultReps: 12, defaultWeight: 20 },
-          { id: '5s5e4', name: '啞鈴頸後臂屈伸', muscleGroup: 'arms', defaultSets: 3, defaultReps: 12, defaultWeight: 16 }
+        { id: '3s-3', name: 'Day 3: 腿 (Legs) - 下肢/臀部', exercises: [
+          { id: '3s3e1', name: '保加利亞分腿蹲', muscleGroup: 'quads', defaultSets: 3, defaultReps: 10, defaultWeight: 15 },
+          { id: '3s3e2', name: '槓鈴臀推', muscleGroup: 'quads', defaultSets: 4, defaultReps: 10, defaultWeight: 60 },
+          { id: '3s3e3', name: '器械腿屈伸', muscleGroup: 'quads', defaultSets: 3, defaultReps: 12, defaultWeight: 40 },
+          { id: '3s3e4', name: '站姿提踵', muscleGroup: 'quads', defaultSets: 3, defaultReps: 15, defaultWeight: 30 }
         ]}
       ]
     }
@@ -312,6 +223,7 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
                 <div className="space-y-5 flex-1 overflow-hidden flex flex-col">
                   {!selectedExName ? (
                     <>
+                      {/* 搜尋庫：與記錄頁面一模一樣 */}
                       <div className="flex items-center gap-4 bg-slate-900/80 border border-white/5 rounded-2xl px-6 py-4 shadow-inner shrink-0">
                         <Search className="w-5 h-5 text-slate-600" />
                         <input 
@@ -379,6 +291,7 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
                       </div>
                     </>
                   ) : (
+                    /* 詳細資訊介面：與記錄頁面一模一樣（搬過來） */
                     <div className="flex-1 overflow-y-auto no-scrollbar space-y-6 pb-24">
                       <div className="flex items-center justify-between px-1">
                         <h2 className="text-2xl font-black italic uppercase text-white truncate max-w-[280px] pr-3">{selectedExName}</h2>
@@ -386,6 +299,7 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
 
                       <div className="w-full relative px-1">
                         <div className="relative overflow-hidden rounded-[24px] shadow-2xl border border-white/5 bg-slate-900 min-h-[240px] flex items-center justify-center">
+                          {/* 搬過來的硬連結 GIF 邏輯 */}
                           {selectedExName === '啞鈴肩推' ? (
                             <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/02/developpe-epaule-halteres.gif" alt="啞鈴肩推" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
                           ) : selectedExName === '槓鈴肩推' ? (
@@ -551,6 +465,7 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
                         </p>
                       </div>
 
+                      {/* 課表專用：預設數值設定區 */}
                       <div className="space-y-5 px-1">
                         <div className="flex items-center gap-2.5">
                           <Target className="w-5 h-5 text-neon-green" />
@@ -647,10 +562,10 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
                  >
                    <div className="flex items-center gap-5 overflow-hidden">
                       <div className="w-11 h-11 bg-slate-800 rounded-xl flex items-center justify-center text-[12px] font-black text-neon-green shrink-0">
-                         {r.name.includes('星期') ? 'D' + (idx + 1) : 'S' + (idx + 1)}
+                         D{idx + 1}
                       </div>
                       <div className="text-left overflow-hidden">
-                        <div className="text-base font-black italic uppercase text-slate-200 truncate pr-2">{r.name.includes(': ') ? r.name.split(': ')[1] : r.name}</div>
+                        <div className="text-base font-black italic uppercase text-slate-200 truncate pr-2">{r.name.split(': ')[1] || r.name}</div>
                         <div className="text-[9px] font-bold text-slate-600 uppercase tracking-widest mt-1">{r.exercises.length} EXERCISES</div>
                       </div>
                    </div>
