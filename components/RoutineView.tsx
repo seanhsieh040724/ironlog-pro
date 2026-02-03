@@ -206,7 +206,7 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
         ) : name === '引體向上' ? (
           <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/02/traction-musculation-dos.gif" alt="引體向上" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
         ) : name === '滑輪下拉' ? (
-          <img src="https://www.docteur-fitness.com/wp-content/uploads/2021/11/血液-vertical-poitrine.gif" alt="滑輪下拉" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
+          <img src="https://www.docteur-fitness.com/wp-content/uploads/2021/11/tirage-vertical-poitrine.gif" alt="滑輪下拉" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
         ) : name === '槓鈴划船' ? (
           <img src="https://www.docteur-fitness.com/wp-content/uploads/2021/09/rowing-barre.gif" alt="槓鈴划船" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
         ) : name === '啞鈴單臂划船' ? (

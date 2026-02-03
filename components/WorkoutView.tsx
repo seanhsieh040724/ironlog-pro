@@ -3,10 +3,11 @@ import React, { useState, useMemo, useContext, useEffect } from 'react';
 import { WorkoutSession, ExerciseEntry, MuscleGroup } from '../types';
 import { 
   Plus, Trash2, Search, Check, Target, ChevronRight, ChevronLeft, 
-  PlusSquare, Play, Timer, Save, BookOpen, MinusCircle, PlusCircle
+  PlusSquare, Play, Timer, Save, BookOpen, MinusCircle, PlusCircle,
+  Loader2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getMuscleGroup, getMuscleGroupDisplay, getExerciseMethod } from '../utils/fitnessMath';
+import { getMuscleGroup, getMuscleGroupDisplay, getExerciseMethod, fetchExerciseGif } from '../utils/fitnessMath';
 import { AppContext } from '../App';
 
 export const ORGANIZED_EXERCISES: Record<string, string[]> = {
@@ -32,6 +33,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
   const [activeCategory, setActiveCategory] = useState<string>('chest');
   const [searchTerm, setSearchTerm] = useState('');
   const [elapsedTime, setElapsedTime] = useState<string>("00:00");
+  const [currentGif, setCurrentGif] = useState<string | null>(null);
 
   const currentDetailEx = useMemo(() => session?.exercises.find(e => e.id === activeExerciseId), [session, activeExerciseId]);
 
@@ -52,6 +54,13 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
     }
     return () => clearInterval(interval);
   }, [session?.timerStartedAt]);
+
+  useEffect(() => {
+    if (activeExerciseId && currentDetailEx) {
+      setCurrentGif(null);
+      fetchExerciseGif(currentDetailEx.name).then(setCurrentGif);
+    }
+  }, [activeExerciseId, currentDetailEx?.name]);
 
   const addExercise = (name: string) => {
     const muscle = getMuscleGroup(name);
@@ -101,38 +110,30 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
   }, [searchTerm]);
 
   const renderExerciseGif = (name: string) => {
-    // 寫死的 GIF 網址邏輯
-    const gifMap: Record<string, string> = {
-      "啞鈴肩推": "https://www.docteur-fitness.com/wp-content/uploads/2022/02/developpe-epaule-halteres.gif",
-      "槓鈴肩推": "https://www.docteur-fitness.com/wp-content/uploads/2000/08/developpe-militaire-exercice-musculation.gif",
-      "阿諾肩推": "https://www.docteur-fitness.com/wp-content/uploads/2000/08/developpe-arnold-exercice-musculation.gif",
-      "器械肩推": "https://www.docteur-fitness.com/wp-content/uploads/2022/11/developpe-epaules-a-la-machine-shoulder-press.gif",
-      "史密斯機肩推": "https://www.docteur-fitness.com/wp-content/uploads/2022/08/developpe-epaules-smith-machine.gif",
-      "啞鈴側平舉": "https://www.docteur-fitness.com/wp-content/uploads/2000/08/elevations-laterales-exercice-musculation.gif",
-      "滑輪側平舉": "https://www.docteur-fitness.com/wp-content/uploads/2022/11/elevations-laterales-unilaterale-poulie.gif",
-      "器械側平舉": "https://www.docteur-fitness.com/wp-content/uploads/2022/02/elevation-laterale-machine.gif",
-      "啞鈴前平舉": "https://www.docteur-fitness.com/wp-content/uploads/2000/08/elevations-frontales-exercice-musculation.gif",
-      "蝴蝶機後三角飛鳥": "https://www.docteur-fitness.com/wp-content/uploads/2021/12/pec-deck-inverse.gif",
-      "滑輪面拉": "https://www.docteur-fitness.com/wp-content/uploads/2022/01/face-pull.gif",
-      "俯身啞鈴反向飛鳥": "https://www.docteur-fitness.com/wp-content/uploads/2021/12/oiseau-assis-sur-banc.gif",
-      "啞鈴上斜臥推": "https://www.docteur-fitness.com/wp-content/uploads/2000/06/developpe-incline-halteres-exercice-musculation.gif",
-      "槓鈴平板臥推": "https://www.docteur-fitness.com/wp-content/uploads/2022/01/developpe-couche-prise-inversee.gif",
-      "槓鈴上斜臥推": "https://www.docteur-fitness.com/wp-content/uploads/2021/10/developpe-incline-barre.gif",
-      "啞鈴平板臥推": "https://www.docteur-fitness.com/wp-content/uploads/2000/05/developpe-couche-halteres-exercice-musculation.gif",
-      "史密斯平板臥推": "https://www.docteur-fitness.com/wp-content/uploads/2022/08/developpe-couche-smith-machine.gif",
-      "坐姿器械推胸": "https://www.docteur-fitness.com/wp-content/uploads/2022/11/developpe-machine-assis-pectoraux.gif",
-      "蝴蝶機夾胸": "https://www.docteur-fitness.com/wp-content/uploads/2000/06/pec-deck-butterfly-exercice-musculation.gif",
-      "跪姿繩索夾胸": "https://www.docteur-fitness.com/wp-content/uploads/2023/07/ecarte-a-la-poulie-vis-a-vis-haute-a-genoux.gif",
-      "槓鈴深蹲": "https://www.docteur-fitness.com/wp-content/uploads/2021/11/homme-faisant-un-squat-avec-barre.gif",
-      "引體向上": "https://www.docteur-fitness.com/wp-content/uploads/2022/02/traction-musculation-dos.gif",
-      "滑輪下拉": "https://www.docteur-fitness.com/wp-content/uploads/2021/11/血液-vertical-poitrine.gif"
-    };
-
-    const url = gifMap[name] || "https://fitnessprogramer.com/wp-content/uploads/2021/02/barbell_bench_press.gif";
+    // 針對『滑輪下拉』直接寫死網址，確保不受其他變數干擾
+    if (name === '滑輪下拉') {
+      return (
+        <div className="relative overflow-hidden rounded-[24px] shadow-2xl border border-white/5 bg-slate-900 min-h-[240px] flex items-center justify-center">
+          <img 
+            src="https://www.docteur-fitness.com/wp-content/uploads/2021/11/tirage-vertical-poitrine.gif" 
+            alt="滑輪下拉" 
+            style={{ width: '100%', borderRadius: '15px', display: 'block' }} 
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-neon-green/5 to-transparent h-24 w-full animate-[scan_3s_linear_infinite] pointer-events-none" />
+        </div>
+      );
+    }
 
     return (
       <div className="relative overflow-hidden rounded-[24px] shadow-2xl border border-white/5 bg-slate-900 min-h-[240px] flex items-center justify-center">
-        <img src={url} alt={name} style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
+        {currentGif ? (
+          <img src={currentGif} alt={name} style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
+        ) : (
+          <div className="flex flex-col items-center gap-4 py-12 text-slate-700">
+             <Loader2 className="w-9 h-9 animate-spin" />
+             <p className="text-[10px] font-black uppercase tracking-widest">正在載入示範...</p>
+          </div>
+        )}
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-neon-green/5 to-transparent h-24 w-full animate-[scan_3s_linear_infinite] pointer-events-none" />
       </div>
     );
@@ -209,7 +210,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
               </div>
             </div>
 
-            {/* 底部固定儲存按鈕 */}
+            {/* 底部固定儲存按鈕，僅在有勾選完成組數時顯示 */}
             {session.exercises.some(ex => ex.sets.some(s => s.completed)) && (
               <div className="fixed bottom-[110px] left-0 right-0 z-40 px-8 max-w-md mx-auto">
                 <button 
@@ -229,7 +230,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                 <span className="text-xs font-black uppercase tracking-widest">返回搜尋</span>
               </button>
               <h2 className="text-2xl font-black italic uppercase text-white truncate max-w-[240px] pr-3">{currentDetailEx?.name}</h2>
-              <button onClick={() => { if(confirm('移除？')) { onUpdate({ ...session, exercises: session.exercises.filter(e => e.id !== currentDetailEx!.id) }); setActiveExerciseId(null); } }} className="w-11 h-11 bg-red-500/10 rounded-xl flex items-center justify-center text-red-500/40"><Trash2 className="w-5 h-5" /></button>
+              <button onClick={() => { if(confirm('從本次訓練清單中移除此項目？')) { onUpdate({ ...session, exercises: session.exercises.filter(e => e.id !== currentDetailEx!.id) }); setActiveExerciseId(null); } }} className="w-11 h-11 bg-red-500/10 rounded-xl flex items-center justify-center text-red-500/40"><Trash2 className="w-5 h-5" /></button>
             </div>
 
             <div className="w-full relative px-1">
