@@ -208,7 +208,7 @@ const App: React.FC = () => {
           <TabButton active={activeTab === 'workout'} onClick={() => setActiveTab('workout')} icon={<Dumbbell />} label="訓練" />
           <TabButton active={activeTab === 'history'} onClick={() => setActiveTab('history')} icon={<History />} label="記錄" />
           <TabButton active={activeTab === 'routines'} onClick={() => setActiveTab('routines')} icon={<LayoutGrid />} label="課表" />
-          <TabButton active={activeTab === 'profile'} onClick={() => setActiveTab('profile'} icon={<User />} label="個人" />
+          <TabButton active={activeTab === 'profile'} onClick={() => setActiveTab('profile')} icon={<User />} label="個人" />
         </nav>
 
         <RestTimer 
