@@ -205,7 +205,6 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
               </div>
               <div>
                 <h3 className="text-base font-black italic uppercase tracking-tighter text-white pr-2">訓練容量分布</h3>
-                <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest mt-1.5">Muscle stimulation breakdown</p>
               </div>
            </div>
            <div className="flex bg-slate-800/80 p-1.5 rounded-2xl border border-white/5">
