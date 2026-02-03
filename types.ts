@@ -1,4 +1,3 @@
-
 export type MuscleGroup = 'chest' | 'back' | 'quads' | 'hamstrings' | 'shoulders' | 'arms' | 'core' | 'glutes';
 
 export interface SetEntry {
@@ -28,6 +27,7 @@ export interface Exercise {
 export interface WorkoutSession {
   id: string;
   startTime: number;
+  timerStartedAt?: number; // 新增：點擊「開始訓練」的時間戳記
   endTime?: number;
   title: string;
   exercises: ExerciseEntry[];

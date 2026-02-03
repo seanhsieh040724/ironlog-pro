@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { WorkoutSession, MuscleGroup, ExerciseEntry } from '../types';
 import { getMuscleGroupDisplay } from '../utils/fitnessMath';
-import { Clock, Activity, BarChart3, Trash2, LayoutGrid, Save, CalendarDays, ChevronRight } from 'lucide-react';
+import { Clock, Activity, BarChart3, Trash2, LayoutGrid, Save, CalendarDays, ChevronRight, Timer } from 'lucide-react';
 import { isSameDay, format } from 'date-fns';
 import startOfWeek from 'date-fns/startOfWeek';
 import startOfMonth from 'date-fns/startOfMonth';
@@ -29,7 +29,10 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
     let totalExercises: ExerciseEntry[] = [];
     
     filteredHistory.forEach(s => {
-      totalMinutes += Math.round(((s.endTime || Date.now()) - s.startTime) / 60000);
+      // 優先使用自定義計時開始點，若無則退回 startTime
+      const beginTime = s.timerStartedAt || s.startTime;
+      const doneTime = s.endTime || s.startTime; // 避免未完成時過大
+      totalMinutes += Math.max(0, Math.round((doneTime - beginTime) / 60000));
       totalExercises = [...totalExercises, ...s.exercises];
     });
 
@@ -130,12 +133,12 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
               <div className="flex justify-between items-start">
                 <div className="space-y-2">
                   <h4 className="text-3xl font-black italic uppercase text-white leading-tight pr-3">當日總訓練</h4>
-                  <div className="flex items-center space-x-5 text-xs text-slate-500 font-bold uppercase tracking-widest">
-                    <span className="flex items-center gap-2 bg-slate-800/50 px-2.5 py-1 rounded-md">
-                      <Clock className="w-3.5 h-3.5 text-neon-green" /> {dailyStats.totalMinutes} MINS
+                  <div className="flex flex-wrap items-center gap-3 mt-2">
+                    <span className="flex items-center gap-2 bg-neon-green/10 text-neon-green border border-neon-green/20 px-3 py-1.5 rounded-xl text-xs font-black italic">
+                      <Timer className="w-3.5 h-3.5" /> 運動時間: {dailyStats.totalMinutes} 分鐘
                     </span>
-                    <span className="bg-slate-800/50 px-2.5 py-1 rounded-md">
-                      {dailyStats.totalExercises.length} EXERCISES
+                    <span className="bg-slate-800/50 text-slate-400 px-3 py-1.5 rounded-xl text-xs font-black">
+                      {dailyStats.totalExercises.length} 項動作
                     </span>
                   </div>
                 </div>
@@ -149,12 +152,14 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
                   <div key={session.id} className="space-y-4">
                     <div className="flex items-center justify-between px-2">
                        <div className="flex items-center gap-2.5">
-                          <div className="w-1.5 h-4 bg-neon-green/30 rounded-full" />
-                          <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">時段 {sIdx + 1}: {format(new Date(session.startTime), 'HH:mm')}</span>
+                          <div className="w-1.5 h-4 bg-slate-800 rounded-full" />
+                          <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">
+                            訓練開始於 {format(new Date(session.startTime), 'HH:mm')}
+                          </span>
                        </div>
                        <button 
                          onClick={() => handleDeleteSession(session.id)}
-                         className="text-slate-700 hover:text-red-500 active:scale-90 transition-all"
+                         className="text-slate-800 hover:text-red-500 active:scale-90 transition-all"
                        >
                          <Trash2 className="w-4 h-4" />
                        </button>

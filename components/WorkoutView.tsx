@@ -1,8 +1,8 @@
-import React, { useState, useMemo, useContext, useEffect } from 'react';
+import React, { useState, useMemo, useContext, useEffect, useRef } from 'react';
 import { WorkoutSession, ExerciseEntry, SetEntry, MuscleGroup } from '../types';
 import { 
   Plus, Trash2, Search, Save, PlusCircle, 
-  Check, MinusCircle, Target, Sparkles, ChevronRight, ChevronLeft, Loader2, AlertCircle, BookOpen, PlusSquare
+  Check, MinusCircle, Target, Sparkles, ChevronRight, ChevronLeft, Loader2, AlertCircle, BookOpen, PlusSquare, Play, Timer
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getMuscleGroup, getMuscleGroupDisplay, fetchExerciseGif, getExerciseMethod } from '../utils/fitnessMath';
@@ -31,6 +31,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
   const [activeCategory, setActiveCategory] = useState<string>('chest');
   const [searchTerm, setSearchTerm] = useState('');
   const [gifUrl, setGifUrl] = useState<string | null>(null);
+  const [elapsedTime, setElapsedTime] = useState<string>("00:00");
 
   const currentDetailEx = useMemo(() => session?.exercises.find(e => e.id === activeExerciseId), [session, activeExerciseId]);
 
@@ -39,6 +40,25 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
       fetchExerciseGif(currentDetailEx.name).then(setGifUrl);
     }
   }, [currentDetailEx?.name]);
+
+  // 訓練計時核心邏輯
+  useEffect(() => {
+    let interval: number;
+    if (session?.timerStartedAt) {
+      const updateTimer = () => {
+        const diff = Date.now() - session.timerStartedAt!;
+        const totalSeconds = Math.floor(diff / 1000);
+        const mins = Math.floor(totalSeconds / 60);
+        const secs = totalSeconds % 60;
+        setElapsedTime(`${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`);
+      };
+      updateTimer();
+      interval = window.setInterval(updateTimer, 1000);
+    } else {
+      setElapsedTime("00:00");
+    }
+    return () => clearInterval(interval);
+  }, [session?.timerStartedAt]);
 
   const addExercise = (name: string) => {
     const newExId = crypto.randomUUID();
@@ -62,6 +82,12 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
     });
     setActiveExerciseId(newExId);
     setSearchTerm('');
+  };
+
+  const startWorkoutTimer = () => {
+    if (session && !session.timerStartedAt) {
+      onUpdate({ ...session, timerStartedAt: Date.now() });
+    }
   };
 
   const filteredExercises = useMemo(() => {
@@ -326,13 +352,28 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
 
             <div className="space-y-5 px-1">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <Target className="w-5 h-5 text-neon-green" />
-                  <h3 className="text-sm font-black italic uppercase text-white">訓練錄入</h3>
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2.5">
+                    <Target className="w-5 h-5 text-neon-green" />
+                    <h3 className="text-sm font-black italic uppercase text-white">訓練錄入</h3>
+                  </div>
+                  {session.timerStartedAt && (
+                    <div className="flex items-center gap-1.5 px-3 py-1 bg-neon-green/10 border border-neon-green/30 rounded-lg">
+                      <Timer className="w-3.5 h-3.5 text-neon-green animate-pulse" />
+                      <span className="text-[11px] font-black text-neon-green font-mono">{elapsedTime}</span>
+                    </div>
+                  )}
                 </div>
-                <button onClick={() => onUpdate({ ...session, exercises: session.exercises.map(ex => ex.id === currentDetailEx!.id ? { ...ex, sets: [...ex.sets, { id: crypto.randomUUID(), weight: ex.sets[ex.sets.length-1]?.weight || 0, reps: ex.sets[ex.sets.length-1]?.reps || 10, completed: false }] } : ex) })} className="flex items-center gap-1.5 text-neon-green text-[10px] font-black uppercase">
-                  <PlusCircle className="w-4 h-4" /> 加一組
-                </button>
+                <div className="flex items-center gap-3">
+                  {!session.timerStartedAt && (
+                    <button onClick={startWorkoutTimer} className="flex items-center gap-1.5 text-neon-green text-[10px] font-black uppercase">
+                      <Play className="w-4 h-4 fill-current" /> 開始訓練
+                    </button>
+                  )}
+                  <button onClick={() => onUpdate({ ...session, exercises: session.exercises.map(ex => ex.id === currentDetailEx!.id ? { ...ex, sets: [...ex.sets, { id: crypto.randomUUID(), weight: ex.sets[ex.sets.length-1]?.weight || 0, reps: ex.sets[ex.sets.length-1]?.reps || 10, completed: false }] } : ex) })} className="flex items-center gap-1.5 text-neon-green text-[10px] font-black uppercase">
+                    <PlusCircle className="w-4 h-4" /> 加一組
+                  </button>
+                </div>
               </div>
               <div className="space-y-4">
                 {currentDetailEx!.sets.map((set, index) => (
@@ -403,7 +444,13 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
               </div>
               <div className="pt-6 pb-12">
                 <button 
-                  onClick={onFinish} 
+                  onClick={() => {
+                    // 如果尚未開始計時，在儲存時強制記一個點
+                    if (!session.timerStartedAt) {
+                       onUpdate({ ...session, timerStartedAt: Date.now() });
+                    }
+                    onFinish();
+                  }} 
                   className="w-full bg-neon-green text-black font-black h-12 rounded-xl uppercase italic text-base active:scale-95 transition-all shadow-[0_10px_20px_rgba(173,255,47,0.2)] flex items-center justify-center gap-3 tracking-tighter"
                 >
                   <Save className="w-5 h-5 stroke-[2.5]" /> 儲存訓練

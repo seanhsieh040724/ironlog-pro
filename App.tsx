@@ -6,10 +6,9 @@ import { ProfileView } from './components/ProfileView';
 import { RestTimer } from './components/RestTimer';
 import { CalendarStrip } from './components/CalendarStrip';
 import { AppTab, WorkoutSession, BodyMetric, UserGoal, RoutineTemplate } from './types';
-import { Dumbbell, History, User, Calendar as CalendarIcon, LayoutGrid } from 'lucide-react';
+import { Dumbbell, History, User, LayoutGrid } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
-import zhTW from 'date-fns/locale/zh-TW';
 
 export interface AppContextType {
   history: WorkoutSession[];
@@ -98,7 +97,6 @@ const App: React.FC = () => {
   const handleSaveWorkout = () => {
     if (!currentSession) return;
 
-    // 修復：過濾掉沒有任何已勾選完成(completed)組數的動作
     const completedExercises = currentSession.exercises.filter(ex => 
       ex.sets.some(set => set.completed)
     );
@@ -116,7 +114,6 @@ const App: React.FC = () => {
 
     setHistory([completedSession, ...history]);
     
-    // 重設當前 Session
     setCurrentSession({
       id: crypto.randomUUID(),
       startTime: Date.now(),
@@ -149,27 +146,7 @@ const App: React.FC = () => {
   return (
     <AppContext.Provider value={contextValue}>
       <div className="min-h-screen bg-[#020617] text-slate-50 flex flex-col max-w-md mx-auto relative overflow-hidden font-['Outfit']">
-        <header className="pt-12 pb-6 px-6 sticky top-0 z-40 bg-[#020617]/90 backdrop-blur-2xl border-b border-white/5">
-          <div className="flex justify-between items-end">
-            <div className="space-y-1.5 overflow-hidden">
-              <div className="flex items-center gap-2 text-neon-green">
-                <CalendarIcon className="w-4 h-4" />
-                <span className="text-[11px] font-black uppercase tracking-[0.2em]">今日訓練進度</span>
-              </div>
-              <h1 className="text-4xl font-black italic tracking-tighter uppercase pr-4">
-                {format(new Date(), 'MM.dd EEEE', { locale: zhTW })}
-              </h1>
-            </div>
-            <button 
-              onClick={() => setActiveTab('profile')} 
-              className={`w-14 h-14 rounded-2xl flex items-center justify-center border border-white/10 transition-all active:scale-90 shrink-0 ${activeTab === 'profile' ? 'bg-neon-green text-black' : 'bg-slate-800 text-slate-400'}`}
-            >
-              <User className="w-7 h-7" />
-            </button>
-          </div>
-        </header>
-
-        <main className="flex-1 pb-32 px-5 pt-6 overflow-y-auto no-scrollbar">
+        <main className="flex-1 pb-32 px-5 pt-12 overflow-y-auto no-scrollbar">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
@@ -228,10 +205,10 @@ const App: React.FC = () => {
         </main>
 
         <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-[#020617]/95 backdrop-blur-3xl border-t border-white/5 safe-bottom z-50 px-8 py-5 flex justify-between items-center rounded-t-[40px]">
-          <TabButton active={activeTab === 'workout'} onClick={() => setActiveTab('workout')} icon={<Dumbbell />} label="記錄" />
-          <TabButton active={activeTab === 'history'} onClick={() => setActiveTab('history')} icon={<History />} label="歷史" />
+          <TabButton active={activeTab === 'workout'} onClick={() => setActiveTab('workout')} icon={<Dumbbell />} label="訓練" />
+          <TabButton active={activeTab === 'history'} onClick={() => setActiveTab('history')} icon={<History />} label="記錄" />
           <TabButton active={activeTab === 'routines'} onClick={() => setActiveTab('routines')} icon={<LayoutGrid />} label="課表" />
-          <TabButton active={activeTab === 'profile'} onClick={() => setActiveTab('profile')} icon={<User />} label="個人" />
+          <TabButton active={activeTab === 'profile'} onClick={() => setActiveTab('profile'} icon={<User />} label="個人" />
         </nav>
 
         <RestTimer 
