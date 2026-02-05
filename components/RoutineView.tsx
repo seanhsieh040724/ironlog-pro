@@ -16,7 +16,6 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
   const [previewRoutine, setPreviewRoutine] = useState<RoutineTemplate | null>(null);
   const [integratedRoutine, setIntegratedRoutine] = useState<RoutineTemplate | null>(null);
   
-  // 整合頁面專用的訓練錄入狀態
   const [sessionExercises, setSessionExercises] = useState<ExerciseEntry[]>([]);
   
   const [isCreating, setIsCreating] = useState(false);
@@ -29,23 +28,25 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedExName, setSelectedExName] = useState<string | null>(null);
   
-  // 新增動作時使用的模擬狀態，以確保與 WorkoutView 邏輯一致
   const [mockSets, setMockSets] = useState<SetEntry[]>([]);
   const [dummyTimerActive, setDummyTimerActive] = useState(false);
   const [gifUrl, setGifUrl] = useState<string | null>(null);
+  const [isGifLoading, setIsGifLoading] = useState(false);
 
   if (!context) return null;
   const { customRoutines, setCustomRoutines, setHistory, history, triggerRestTimer } = context;
 
-  // 當選中動作時，初始化模擬組數（預設四組）
   useEffect(() => {
     if (selectedExName) {
       setMockSets(Array.from({ length: 4 }).map(() => ({
         id: crypto.randomUUID(), weight: 0, reps: 10, completed: false
       })));
       setDummyTimerActive(false);
-      setGifUrl(null);
-      fetchExerciseGif(selectedExName).then(setGifUrl);
+      setIsGifLoading(true);
+      fetchExerciseGif(selectedExName).then(url => {
+        setGifUrl(url);
+        setTimeout(() => setIsGifLoading(false), 300);
+      });
     }
   }, [selectedExName]);
 
@@ -86,7 +87,6 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
 
   const addExerciseToTemplate = () => {
     if (!previewRoutine || !selectedExName) return;
-    // 取第一組的數據作為預設值
     const firstSet = mockSets[0];
     const newEntry = {
       id: crypto.randomUUID(),
@@ -127,163 +127,34 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
     setIntegratedRoutine(template);
   };
 
-  // 渲染 GIF 的共用邏輯（完全搬移自 WorkoutView，包含所有寫死的網址）
-  const renderExerciseGif = (name: string) => {
+  /**
+   * 統一的 GIF 渲染組件，具備 Skeleton 加載效果
+   */
+  const ExerciseGifDisplay = ({ name }: { name: string }) => {
+    const [localGifUrl, setLocalGifUrl] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+      fetchExerciseGif(name).then(url => {
+        setLocalGifUrl(url);
+      });
+    }, [name]);
+
     return (
       <div className="relative overflow-hidden rounded-[24px] shadow-2xl border border-white/5 bg-slate-900 min-h-[240px] flex items-center justify-center">
-        {name === '啞鈴肩推' ? (
-          <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/02/developpe-epaule-halteres.gif" alt="啞鈴肩推" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === '槓鈴肩推' ? (
-          <img src="https://www.docteur-fitness.com/wp-content/uploads/2000/08/developpe-militaire-exercice-musculation.gif" alt="槓鈴肩推" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === '阿諾肩推' ? (
-          <img src="https://www.docteur-fitness.com/wp-content/uploads/2000/08/developpe-arnold-exercice-musculation.gif" alt="阿諾肩推" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === '器械肩推' ? (
-          <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/11/developpe-epaules-a-la-machine-shoulder-press.gif" alt="器械肩推" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === '史密斯機肩推' ? (
-          <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/08/developpe-epaules-smith-machine.gif" alt="史密斯機肩推" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === '啞鈴側平舉' ? (
-          <img src="https://www.docteur-fitness.com/wp-content/uploads/2000/08/elevations-laterales-exercice-musculation.gif" alt="啞鈴側平舉" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === '滑輪側平舉' ? (
-          <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/11/elevations-laterales-unilaterale-poulie.gif" alt="滑輪側平舉" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === '器械側平舉' ? (
-          <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/02/elevation-laterale-machine.gif" alt="器械側平舉" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === '啞鈴前平舉' ? (
-          <img src="https://www.docteur-fitness.com/wp-content/uploads/2000/08/elevations-frontales-exercice-musculation.gif" alt="啞鈴前平舉" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === '蝴蝶機後三角飛鳥' ? (
-          <img src="https://www.docteur-fitness.com/wp-content/uploads/2021/12/pec-deck-inverse.gif" alt="蝴蝶機後三角飛鳥" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === '滑輪面拉' ? (
-          <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/01/face-pull.gif" alt="滑輪面拉" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === '俯身啞鈴反向飛鳥' ? (
-          <img src="https://www.docteur-fitness.com/wp-content/uploads/2021/12/oiseau-assis-sur-banc.gif" alt="俯身啞鈴反向飛鳥" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === '啞鈴上斜臥推' ? (
-          <img src="https://www.docteur-fitness.com/wp-content/uploads/2000/06/developpe-incline-halteres-exercice-musculation.gif" alt="啞鈴上斜臥推" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === '槓鈴平板臥推' ? (
-          <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/01/developpe-couche-prise-inversee.gif" alt="槓鈴平板臥推" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === '槓鈴上斜臥推' ? (
-          <img src="https://www.docteur-fitness.com/wp-content/uploads/2021/10/developpe-incline-barre.gif" alt="槓鈴上斜臥推" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === '啞鈴平板臥推' ? (
-          <img src="https://www.docteur-fitness.com/wp-content/uploads/2000/05/developpe-couche-halteres-exercice-musculation.gif" alt="啞鈴平板臥推" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === '史密斯平板臥推' ? (
-          <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/08/developpe-couche-smith-machine.gif" alt="史密斯平板臥推" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === '坐姿器械推胸' ? (
-          <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/11/developpe-machine-assis-pectoraux.gif" alt="坐姿器械推胸" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === '蝴蝶機夾胸' ? (
-          <img src="https://www.docteur-fitness.com/wp-content/uploads/2000/06/pec-deck-butterfly-exercice-musculation.gif" alt="蝴蝶機夾胸" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === '跪姿繩索夾胸' ? (
-          <img src="https://www.docteur-fitness.com/wp-content/uploads/2023/07/ecarte-a-la-poulie-vis-a-vis-haute-a-genoux.gif" alt="跪姿繩索夾胸" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === '器械上斜推胸' ? (
-          <img src="https://www.docteur-fitness.com/wp-content/uploads/2000/06/developpe-incline-machine-convergente-exercice-musculation.gif" alt="器械上斜推胸" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === '史密斯上斜臥推' ? (
-          <img src="https://fitliferegime.com/wp-content/uploads/2024/04/Smith-Machine-Incline-Press.gif" alt="史密斯上斜臥推" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === '雙槓撐體' ? (
-          <img src="https://i.pinimg.com/originals/e7/45/d6/e745d6fcd41963a8a6d36c4b66c009a9.gif" alt="雙槓撐體" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === '標準俯地挺身' ? (
-          <img src="https://www.docteur-fitness.com/wp-content/uploads/2020/10/pompe-musculation.gif" alt="標準俯地挺身" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === '槓鈴彎舉' ? (
-          <img src="https://www.docteur-fitness.com/wp-content/uploads/2021/09/curl-barre.gif" alt="槓鈴彎舉" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === '啞鈴錘式彎舉' ? (
-          <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/09/curl-haltere-prise-neutre.gif" alt="啞鈴錘式彎舉" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === '啞鈴交替彎舉' ? (
-          <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/08/curl-biceps-avec-halteres-alterne.gif" alt="啞鈴交替彎舉" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === '牧師椅彎舉' ? (
-          <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/01/curl-au-pupitre-barre-ez-larry-scott.gif" alt="牧師椅彎舉" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === '滑輪直桿彎舉' ? (
-          <img src="https://www.docteur-fitness.com/wp-content/uploads/2021/10/curl-biceps-poulie-basse.gif" alt="滑輪直桿彎舉" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === '反手槓鈴彎舉' ? (
-          <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/04/curl-inverse-barre.gif" alt="反手槓鈴彎舉" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === '二頭肌器械彎舉' ? (
-          <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/01/curl-pupitre-machine-prechargee.gif" alt="二頭肌器械彎舉" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === '滑輪繩索下壓' ? (
-          <img src="https://www.aesthetics-blog.com/wp-content/uploads/2023/04/12271301-Cable-Standing-One-Arm-Tricep-Pushdown-Overhand-Grip_Upper-Arms_720.gif" alt="滑輪繩索下壓" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === '窄握槓鈴臥推' ? (
-          <img src="https://www.aesthetics-blog.com/wp-content/uploads/2021/10/00301301-Barbell-Close-Grip-Bench-Press_Upper-Arms_720.gif" alt="窄握槓鈴臥推" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === '仰臥槓鈴臂屈伸' ? (
-          <img src="https://www.aesthetics-blog.com/wp-content/uploads/2019/08/00601301-Barbell-Lying-Triceps-Extension-Skull-Crusher_Triceps-SFIX_720.gif" alt="仰臥槓鈴臂屈伸" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === '啞鈴頸後臂屈伸' ? (
-          <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/12/extensions-des-triceps-assis-avec-haltere.gif" alt="啞鈴頸後臂屈伸" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === '滑輪直桿過頭臂屈伸' ? (
-          <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/01/extension-triceps-incline-poulie-basse.gif" alt="滑輪直桿過頭臂屈伸" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === '引體向上' ? (
-          <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/02/traction-musculation-dos.gif" alt="引體向上" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === '滑輪下拉' ? (
-          <img src="https://www.docteur-fitness.com/wp-content/uploads/2021/11/血液-vertical-poitrine.gif" alt="滑輪下拉" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === '槓鈴划船' ? (
-          <img src="https://www.docteur-fitness.com/wp-content/uploads/2021/09/rowing-barre.gif" alt="槓鈴划船" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === '啞鈴單臂划船' ? (
-          <img src="https://www.docteur-fitness.com/wp-content/uploads/2021/08/rowing-haltere-un-bras.gif" alt="啞鈴單臂划船" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === '坐姿划船機' ? (
-          <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/01/rowing-assis-machine-hammer-strenght.gif" alt="坐姿划船機" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === 'T桿划船機' ? (
-          <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/01/rowing-t-bar-machine.gif" alt="T桿划船機" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === '器械反握高位下拉' ? (
-          <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/01/tirage-avant-iso-laterale-hammer-strength.gif" alt="器械反握高位下拉" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === '傳統硬舉' ? (
-          <img src="https://www.docteur-fitness.com/wp-content/uploads/2021/12/souleve-de-terre.gif" alt="傳統硬舉" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === '輔助引體向上機' ? (
-          <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/02/traction-assistee-machine.gif" alt="輔助引體向上機" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === 'V把坐姿划船' ? (
-          <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/02/tirage-horizontal-poulie.gif" alt="V把坐姿划船" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === '寬握水平划船' ? (
-          <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/10/tirage-horizontal-prise-large.gif" alt="寬握水平划船" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === '滑輪反握下拉' ? (
-          <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/01/tirage-vertical-prise-inversee.gif" alt="滑輪反握下拉" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === '槓鈴深蹲' ? (
-          <img src="https://www.docteur-fitness.com/wp-content/uploads/2021/11/homme-faisant-un-squat-avec-barre.gif" alt="槓鈴深蹲" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === '啞鈴高腳杯蹲' ? (
-          <img src="https://www.docteur-fitness.com/wp-content/uploads/2000/06/squat-goblet-exercice-musculation.gif" alt="啞鈴高腳杯蹲" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === '上斜腿推機' ? (
-          <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/08/presse-a-cuisses-inclinee.gif" alt="上斜腿推機" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === '保加利亞啞鈴分腿蹲' ? (
-          <img src="https://www.aesthetics-blog.com/wp-content/uploads/2023/02/04101301-Dumbbell-Single-Leg-Split-Squat_Thighs-FIX_720.gif" alt="保加利亞啞鈴分腿蹲" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === '哈克深蹲' ? (
-          <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/01/hack-squat.gif" alt="哈克深蹲" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === '仰臥腿後勾' ? (
-          <img src="https://www.docteur-fitness.com/wp-content/uploads/2021/10/leg-curl-allonge.gif" alt="仰臥腿後勾" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === '坐姿腿屈伸' ? (
-          <img src="https://www.docteur-fitness.com/wp-content/uploads/2000/06/leg-extension-exercice-musculation.gif" alt="坐姿腿屈伸" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === '槓鈴臀推' ? (
-          <img src="https://www.docteur-fitness.com/wp-content/uploads/2021/12/hips-thrust.gif" alt="槓鈴臀推" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === '坐姿腿後勾' ? (
-          <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/02/leg-curl-assis-machine.gif" alt="坐姿腿後勾" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === '器械站姿提踵' ? (
-          <img src="https://www.docteur-fitness.com/wp-content/uploads/2021/10/extension-mollets-debout-machine.gif" alt="器械站姿提踵" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === '相撲硬舉' ? (
-          <img src="https://www.docteur-fitness.com/wp-content/uploads/2021/10/souleve-de-terre-sumo.gif" alt="相撲硬舉" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === '六角槓硬舉' ? (
-          <img src="https://www.docteur-fitness.com/wp-content/uploads/2021/10/souleve-de-terre-a-la-trap-bar.gif" alt="六角槓硬舉" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === '器械腿外展' ? (
-          <img src="https://static.wixstatic.com/media/2edbed_2c54524226684ddea7f4e2e08a472a3a~mv2.gif" alt="器械腿外展" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === '仰臥起坐' ? (
-          <img src="https://www.docteur-fitness.com/wp-content/uploads/2000/07/crunch-au-sol-exercice-musculation.gif" alt="仰臥起坐" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === '羅馬椅抬腿' ? (
-          <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/04/releve-jambes-chaise-romaine-abdominaux.gif" alt="羅馬椅抬腿" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === '棒式' ? (
-          <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/05/planche-abdos.gif" alt="棒式" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === '俄羅斯轉體' ? (
-          <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/04/rotations-russes-obliques.gif" alt="俄羅斯轉體" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === '健腹輪' ? (
-          <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/02/roulette-abdominaux.gif" alt="健腹輪" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === '器械捲腹' ? (
-          <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/04/crunch-machine-abdos.gif" alt="器械捲腹" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === '懸垂抬腿' ? (
-          <img src="https://www.docteur-fitness.com/wp-content/uploads/2000/07/releve-de-genoux-suspendu-exercice-musculation.gif" alt="懸垂抬腿" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === '登山者' ? (
-          <img src="https://www.docteur-fitness.com/wp-content/uploads/2000/06/mountain-climber-exercice-musculation.gif" alt="登山者" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === '側棒式' ? (
-          <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/01/planche-laterale-obliques.gif" alt="側棒式" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === '跪姿滑輪捲腹' ? (
-          <img src="https://www.docteur-fitness.com/wp-content/uploads/2000/06/crunch-poulie-haute-exercice-musculation.gif" alt="跪姿滑輪捲腹" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === '下斜捲腹' ? (
-          <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/02/sit-up-decline.gif" alt="下斜捲腹" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : name === '滑輪側捲腹' ? (
-          <img src="https://www.docteur-fitness.com/wp-content/uploads/2022/04/flexions-laterales-poulie-basse.gif" alt="滑輪側捲腹" style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : gifUrl ? (
-          <img src={gifUrl} alt={name} style={{ width: '100%', borderRadius: '15px', display: 'block' }} />
-        ) : (
-          <div className="flex flex-col items-center gap-4 py-12 text-slate-700">
-             <Loader2 className="w-9 h-9 animate-spin" />
-             <p className="text-[10px] font-black uppercase tracking-widest">正在載入示範...</p>
+        {isLoading && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-slate-900 z-10">
+            <Loader2 className="w-8 h-8 animate-spin text-neon-green" />
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">準備示範中...</p>
           </div>
+        )}
+        {localGifUrl && (
+          <img 
+            src={localGifUrl} 
+            alt={name} 
+            className="w-full h-auto object-cover rounded-[15px] block"
+            onLoad={() => setIsLoading(false)}
+          />
         )}
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-neon-green/5 to-transparent h-24 w-full animate-[scan_3s_linear_infinite] pointer-events-none" />
       </div>
@@ -373,7 +244,7 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
               </div>
 
               <div className="w-full relative px-1">
-                {renderExerciseGif(ex.name)}
+                <ExerciseGifDisplay name={ex.name} />
               </div>
 
               <div className="mx-1 p-6 rounded-[28px] bg-slate-900/40 border border-white/5 space-y-3.5 shadow-xl">
@@ -600,15 +471,12 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
                     </>
                   ) : (
                     <div className="flex-1 overflow-y-auto no-scrollbar space-y-8 pb-32">
-                      {/* 動作標題 */}
                       <h2 className="text-2xl font-black italic uppercase text-white truncate px-1">{selectedExName}</h2>
 
-                      {/* 1. 寫死的網址 (完全搬移自 WorkoutView) */}
                       <div className="w-full relative px-1">
-                        {renderExerciseGif(selectedExName)}
+                        <ExerciseGifDisplay name={selectedExName} />
                       </div>
 
-                      {/* 2. 運動方法 (完全搬移自 WorkoutView) */}
                       <div className="mx-1 p-6 rounded-[28px] bg-slate-900/40 border border-white/5 space-y-3.5 shadow-xl">
                         <div className="flex items-center gap-2.5 text-neon-green">
                           <BookOpen className="w-5 h-5" />
@@ -619,7 +487,6 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
                         </p>
                       </div>
 
-                      {/* 3. 訓練錄入 (完全搬移自 WorkoutView，包含計時器、開始訓練與加一組按鈕) */}
                       <div className="space-y-6 px-1">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-4">
@@ -698,7 +565,6 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
                         </div>
                       </div>
 
-                      {/* 確認加入按鈕 */}
                       <div className="fixed bottom-12 left-0 right-0 z-50 px-8">
                         <button onClick={addExerciseToTemplate} className="w-full bg-neon-green text-black font-black h-16 rounded-[28px] uppercase italic text-lg active:scale-95 shadow-[0_10px_30px_rgba(173,255,47,0.3)] flex items-center justify-center gap-4 transition-all">
                           <Check className="w-6 h-6 stroke-[3]" /> 確認加入此項目
