@@ -2,16 +2,16 @@
 import React, { useContext, useMemo, useState, useEffect, useRef } from 'react';
 import { AppContext } from '../App';
 import { BodyMetric, UserGoal } from '../types';
-import { getBMIAnalysis, calculateSuggestedCalories, getMuscleGroupDisplay } from '../utils/fitnessMath';
-import { Target, Activity, Scale, Ruler, Zap, Heart, User, Trash2, LogOut, Flame, Camera, Edit3, CheckCircle2, Save, Utensils, Droplets, Info, BookOpen, Chrome, ChevronRight, Apple, ShieldAlert, X, TrendingUp } from 'lucide-react';
+import { getBMIAnalysis, calculateSuggestedCalories } from '../utils/fitnessMath';
+import { Target, Activity, Scale, Ruler, Zap, Heart, User, Trash2, LogOut, Flame, Camera, Edit3, CheckCircle2, Save, Utensils, Droplets, Info, Chrome, ChevronRight, Apple, ShieldAlert, X, TrendingUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const ProfileView: React.FC = () => {
   const context = useContext(AppContext);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  const user = context?.user;
-  const setUser = context?.setUser;
+  const user = context?.user as any;
+  const setUser = (context as any)?.setUser;
 
   // 彈窗狀態
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -42,7 +42,10 @@ export const ProfileView: React.FC = () => {
   // 本地臨時狀態，用於編輯
   const [tempMetrics, setTempMetrics] = useState<BodyMetric>(latest);
   const [tempGoal, setTempGoal] = useState<UserGoal>(globalGoal);
-  const [isSaved, setIsSaved] = useState(false);
+  
+  // 獨立的儲存反饋狀態
+  const [isMetricsSaved, setIsMetricsSaved] = useState(false);
+  const [isGoalSaved, setIsGoalSaved] = useState(false);
 
   useEffect(() => {
     setTempMetrics(latest);
@@ -85,14 +88,24 @@ export const ProfileView: React.FC = () => {
     };
   }, [tempMetrics]);
 
-  const handleSaveAll = () => {
+  // 儲存身體數據
+  const handleSaveMetrics = () => {
     const newMetric = { ...tempMetrics, id: crypto.randomUUID(), date: Date.now() };
-    setBodyMetrics([newMetric, ...bodyMetrics.slice(1)]);
+    const updatedMetrics = [newMetric, ...bodyMetrics.slice(1)];
+    setBodyMetrics(updatedMetrics);
+    localStorage.setItem('ironlog_v3_metrics', JSON.stringify(updatedMetrics));
+    
+    setIsMetricsSaved(true);
+    setTimeout(() => setIsMetricsSaved(false), 2000);
+  };
+
+  // 儲存目標數據
+  const handleSaveGoal = () => {
     setGlobalGoal(tempGoal);
     localStorage.setItem('ironlog_v3_goal', JSON.stringify(tempGoal));
-    localStorage.setItem('ironlog_v3_metrics', JSON.stringify([newMetric, ...bodyMetrics.slice(1)]));
-    setIsSaved(true);
-    setTimeout(() => setIsSaved(false), 2000);
+    
+    setIsGoalSaved(true);
+    setTimeout(() => setIsGoalSaved(false), 2000);
   };
 
   const handleImageClick = () => {
@@ -209,11 +222,11 @@ export const ProfileView: React.FC = () => {
            </div>
            
            <button 
-             onClick={handleSaveAll} 
-             className={`px-5 py-3 rounded-xl font-black uppercase italic transition-all flex items-center justify-center gap-2 text-[12px] min-w-[80px] ${isSaved ? 'bg-emerald-500 text-white' : 'bg-neon-green text-black active:scale-95 shadow-lg shadow-neon-green/10'}`}
+             onClick={handleSaveMetrics} 
+             className={`px-5 py-3 rounded-xl font-black uppercase italic transition-all flex items-center justify-center gap-2 text-[12px] min-w-[80px] ${isMetricsSaved ? 'bg-emerald-500 text-white' : 'bg-neon-green text-black active:scale-95 shadow-lg shadow-neon-green/10'}`}
            >
-             {isSaved ? <CheckCircle2 className="w-4 h-4" /> : <Save className="w-4 h-4" />}
-             {isSaved ? '已儲存' : '儲存全部'}
+             {isMetricsSaved ? <CheckCircle2 className="w-4 h-4" /> : <Save className="w-4 h-4" />}
+             {isMetricsSaved ? '已儲存' : '儲存數據'}
            </button>
         </div>
         
@@ -290,16 +303,26 @@ export const ProfileView: React.FC = () => {
         </div>
       </div>
 
-      {/* 體態管理目標區塊 - 包含每日總熱量建議 */}
+      {/* 體態管理目標區塊 */}
       <div className="glass rounded-[44px] p-8 border-white/5 relative overflow-hidden shadow-2xl">
-         <div className="flex items-center gap-4 mb-8">
-            <div className="p-3.5 bg-sky-500/10 rounded-2xl">
-              <Target className="w-6 h-6 text-sky-400" />
+         <div className="flex justify-between items-center mb-8">
+            <div className="flex items-center gap-4">
+               <div className="p-3.5 bg-sky-500/10 rounded-2xl">
+                 <Target className="w-6 h-6 text-sky-400" />
+               </div>
+               <div>
+                 <h3 className="text-base font-black italic uppercase tracking-tighter text-white leading-none">體態管理目標</h3>
+                 <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-1">設定目標，精準執行</p>
+               </div>
             </div>
-            <div>
-              <h3 className="text-base font-black italic uppercase tracking-tighter text-white leading-none">體態管理目標</h3>
-              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-1">設定目標，精準執行</p>
-            </div>
+
+            <button 
+              onClick={handleSaveGoal} 
+              className={`px-5 py-3 rounded-xl font-black uppercase italic transition-all flex items-center justify-center gap-2 text-[12px] min-w-[80px] ${isGoalSaved ? 'bg-emerald-500 text-white' : 'bg-neon-green text-black active:scale-95 shadow-lg shadow-neon-green/10'}`}
+            >
+              {isGoalSaved ? <CheckCircle2 className="w-4 h-4" /> : <Save className="w-4 h-4" />}
+              {isGoalSaved ? '已儲存' : '儲存目標'}
+            </button>
          </div>
 
          <div className="space-y-6">

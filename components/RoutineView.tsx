@@ -7,7 +7,8 @@ import { ORGANIZED_EXERCISES, EXERCISE_DATABASE } from './WorkoutView';
 import { 
   LayoutGrid, Trash2, ArrowLeft, Plus, ChevronRight, X, Search, Edit2, 
   Check, Sparkles, Layers, BookOpen, ChevronLeft, Zap, Play, Save, 
-  Target, PlusCircle, MinusCircle, Loader2, Timer, PlusSquare, Weight
+  Target, PlusCircle, MinusCircle, Loader2, Timer, PlusSquare, Weight,
+  PauseCircle, PlayCircle, Clock
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -127,9 +128,6 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
     setIntegratedRoutine(template);
   };
 
-  /**
-   * 統一的 GIF 渲染組件，具備 Skeleton 加載效果
-   */
   const ExerciseGifDisplay = ({ name }: { name: string }) => {
     const [localGifUrl, setLocalGifUrl] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -162,7 +160,40 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
   };
 
   const IntegratedWorkoutView = ({ routine }: { routine: RoutineTemplate }) => {
+    const [timerStartedAt, setTimerStartedAt] = useState<number | null>(null);
+    const [elapsedTime, setElapsedTime] = useState<string>("00:00");
+
+    useEffect(() => {
+      let interval: number;
+      if (timerStartedAt) {
+        const updateTimer = () => {
+          const diff = Date.now() - timerStartedAt;
+          const totalSeconds = Math.floor(diff / 1000);
+          const mins = Math.floor(totalSeconds / 60);
+          const secs = totalSeconds % 60;
+          setElapsedTime(`${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`);
+        };
+        updateTimer();
+        interval = window.setInterval(updateTimer, 1000);
+      } else {
+        setElapsedTime("00:00");
+      }
+      return () => clearInterval(interval);
+    }, [timerStartedAt]);
+
+    const startWorkoutTimer = () => {
+      if (!timerStartedAt) {
+        setTimerStartedAt(Date.now());
+      }
+    };
+
     const updateSetData = (exIndex: number, setId: string, updates: Partial<SetEntry>, sIdx: number) => {
+      // 關鍵規則：如果是「完成動作 (completed)」且尚未啟動計時，就啟動。
+      // 打勾動作絕不停止計時器。
+      if (updates.completed && !timerStartedAt) {
+        startWorkoutTimer();
+      }
+      
       setSessionExercises(prev => {
         const newExs = [...prev];
         const ex = { ...newExs[exIndex] };
@@ -212,26 +243,29 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
       }
       const finalSession: WorkoutSession = {
         id: crypto.randomUUID(),
-        startTime: Date.now(),
+        startTime: timerStartedAt || Date.now(),
+        timerStartedAt: timerStartedAt || undefined,
         endTime: Date.now(),
         title: routine.name,
         exercises: completedExercises
       };
       setHistory([finalSession, ...history]);
-      alert('訓練紀錄已儲存！');
+      alert('訓練紀錄已儲存！總訓練時間：' + elapsedTime);
+      // 重置頁面，計時器也隨之銷毀
       setIntegratedRoutine(null);
       setPreviewRoutine(null);
     };
 
     return (
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-10 pb-48">
-        <div className="flex items-center gap-5 px-1 sticky top-0 z-50 bg-[#020617]/90 backdrop-blur-xl py-4 border-b border-white/5">
-          <button onClick={() => setIntegratedRoutine(null)} className="w-11 h-11 bg-slate-800 rounded-xl flex items-center justify-center text-neon-green border border-white/5 active:scale-90 transition-all">
+        {/* 固定標題 */}
+        <div className="flex items-center gap-5 px-1 sticky top-0 z-[60] bg-[#020617]/90 backdrop-blur-xl py-4 border-b border-white/5">
+          <button onClick={() => { if(timerStartedAt && !confirm('訓練正在計時中，確定要離開嗎？')) return; setIntegratedRoutine(null); }} className="w-11 h-11 bg-slate-800 rounded-xl flex items-center justify-center text-neon-green border border-white/5 active:scale-90 transition-all">
             <ArrowLeft className="w-6 h-6" />
           </button>
           <div className="flex-1 overflow-hidden">
             <h2 className="text-xl font-black italic tracking-tighter uppercase truncate text-white">{routine.name}</h2>
-            <p className="text-[10px] font-black text-neon-green uppercase tracking-widest mt-1">整合訓練頁面</p>
+            <p className="text-[10px] font-black text-neon-green uppercase tracking-widest mt-0.5">整合訓練模式</p>
           </div>
         </div>
 
@@ -259,13 +293,30 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
 
               <div className="space-y-6 px-1">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2.5">
-                    <Target className="w-5 h-5 text-neon-green" />
-                    <h3 className="text-sm font-black italic uppercase text-white">訓練錄入</h3>
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2.5">
+                      <Target className="w-5 h-5 text-neon-green" />
+                      <h3 className="text-sm font-black italic uppercase text-white">訓練錄入</h3>
+                    </div>
+                    {/* 計時器顯示位置：標題右側 */}
+                    {timerStartedAt && (
+                      <div className="flex items-center gap-1.5 px-3 py-1 bg-neon-green/10 border border-neon-green/30 rounded-lg">
+                        <Timer className="w-3.5 h-3.5 text-neon-green animate-pulse" />
+                        <span className="text-[11px] font-black text-neon-green font-mono">{elapsedTime}</span>
+                      </div>
+                    )}
                   </div>
-                  <button onClick={() => addSetToEx(exIdx)} className="flex items-center gap-1.5 text-neon-green text-[10px] font-black uppercase">
-                    <PlusCircle className="w-4 h-4" /> 加一組
-                  </button>
+                  <div className="flex items-center gap-3">
+                    {/* 開始按鈕放置在加一組左側 */}
+                    {!timerStartedAt && (
+                      <button onClick={startWorkoutTimer} className="flex items-center gap-1.5 text-neon-green text-[10px] font-black uppercase group">
+                        <PlayCircle className="w-4 h-4 fill-current group-active:scale-90 transition-transform" /> 開始訓練
+                      </button>
+                    )}
+                    <button onClick={() => addSetToEx(exIdx)} className="flex items-center gap-1.5 text-neon-green text-[10px] font-black uppercase">
+                      <PlusCircle className="w-4 h-4" /> 加一組
+                    </button>
+                  </div>
                 </div>
 
                 <div className="space-y-4">
@@ -302,7 +353,14 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
 
                       <div className="col-span-2 flex justify-end">
                         <button 
-                          onClick={() => { const nc = !set.completed; if(nc) triggerRestTimer(); updateSetData(exIdx, set.id, { completed: nc }, sIdx); }} 
+                          onClick={() => { 
+                            const nc = !set.completed; 
+                            if(nc) { 
+                              startWorkoutTimer(); 
+                              triggerRestTimer(); 
+                            } 
+                            updateSetData(exIdx, set.id, { completed: nc }, sIdx); 
+                          }} 
                           className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all active:scale-90 ${set.completed ? 'bg-neon-green text-black shadow-lg shadow-neon-green/10' : 'bg-slate-800 text-slate-600 shadow-inner'}`}
                         >
                           <Check className="w-6 h-6 stroke-[4]" />
@@ -316,8 +374,12 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
           ))}
         </div>
 
-        <div className="fixed bottom-[110px] left-0 right-0 z-50 px-8">
-           <button onClick={handleSaveWorkout} className="w-full bg-neon-green text-black font-black h-16 rounded-[28px] uppercase italic text-lg shadow-[0_15px_40px_rgba(173,255,47,0.3)] flex items-center justify-center gap-4 active:scale-95 transition-all">
+        {/* 底部功能區：只保留儲存按鈕，徹底移除原本的白色按鈕 */}
+        <div className="fixed bottom-[110px] left-0 right-0 z-[70] px-8">
+           <button 
+             onClick={handleSaveWorkout} 
+             className="w-full bg-neon-green text-black font-black h-16 rounded-[28px] uppercase italic text-lg shadow-[0_15px_40px_rgba(173,255,47,0.3)] flex items-center justify-center gap-4 active:scale-95 transition-all"
+           >
              <Save className="w-6 h-6 stroke-[2.5]" /> 儲存本次訓練紀錄
            </button>
         </div>
@@ -329,10 +391,11 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
     return <IntegratedWorkoutView routine={integratedRoutine} />;
   }
 
+  // ... 課表預覽與建立邏輯保持不變 ...
   if (previewRoutine) {
     const isCustom = customRoutines.some(r => r.id === previewRoutine.id);
     return (
-      <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6 pb-44">
+      <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="space-y-6 pb-44">
         <div className="flex items-center gap-5 px-1">
           <button onClick={() => setPreviewRoutine(null)} className="w-11 h-11 bg-slate-800 rounded-xl flex items-center justify-center text-neon-green border border-white/5 active:scale-90 transition-all">
             <ArrowLeft className="w-6 h-6" />
@@ -705,7 +768,7 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
               { id: 'fb-1', name: '全身訓練 A', exercises: [
                 { id: 'fb1a', name: '槓鈴深蹲', muscleGroup: 'legs', defaultSets: 3, defaultReps: 8, defaultWeight: 0 },
                 { id: 'fb1b', name: '槓鈴平板臥推', muscleGroup: 'chest', defaultSets: 3, defaultReps: 8, defaultWeight: 0 },
-                { id: 'fb1c', name: '滑輪下拉', muscleGroup: 'back', defaultSets: 3, defaultReps: 10, defaultWeight: 0 },
+                { id: 'fb1c', name: '滑轮下拉', muscleGroup: 'back', defaultSets: 3, defaultReps: 10, defaultWeight: 0 },
                 { id: 'fb1d', name: '啞鈴側平舉', muscleGroup: 'shoulders', defaultSets: 3, defaultReps: 15, defaultWeight: 0 }
               ]},
               { id: 'fb-2', name: '全身訓練 B', exercises: [
