@@ -6,9 +6,10 @@ import { ProfileView } from './components/ProfileView';
 import { RestTimer } from './components/RestTimer';
 import { CalendarStrip } from './components/CalendarStrip';
 import { AppTab, WorkoutSession, BodyMetric, UserGoal, RoutineTemplate } from './types';
-import { Dumbbell, History, User, LayoutGrid } from 'lucide-react';
+import { Dumbbell, History, User, LayoutGrid, Calendar } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
+import { ContainerStyle, lightTheme } from './themeStyles';
 
 export interface AppContextType {
   history: WorkoutSession[];
@@ -145,8 +146,27 @@ const App: React.FC = () => {
 
   return (
     <AppContext.Provider value={contextValue}>
-      <div className="min-h-screen bg-[#020617] text-slate-50 flex flex-col max-w-md mx-auto relative overflow-hidden font-['Outfit']">
+      <div style={ContainerStyle} className="flex flex-col max-w-md mx-auto relative overflow-hidden">
         <main className="flex-1 pb-32 px-5 pt-12 overflow-y-auto no-scrollbar">
+          {/* 頂部固定日期標示 */}
+          {activeTab === 'workout' && (
+            <div className="flex items-center justify-between mb-8 px-1">
+              <div className="flex items-center gap-4">
+                <div style={{ backgroundColor: lightTheme.card }} className="w-12 h-12 rounded-2xl flex items-center justify-center border border-black/5 shadow-sm shrink-0">
+                  <Calendar className="w-6 h-6 text-black" />
+                </div>
+                <div>
+                  <h1 style={{ color: lightTheme.text }} className="text-2xl font-black italic uppercase tracking-tighter leading-none">
+                    {format(new Date(), 'MMMM dd')}
+                  </h1>
+                  <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em] mt-1.5">
+                    {format(new Date(), 'EEEE')} / TODAY'S MISSION
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
@@ -164,7 +184,7 @@ const App: React.FC = () => {
               )}
               {activeTab === 'history' && (
                 <div className="space-y-6">
-                  <div className="bg-slate-900/40 rounded-[32px] border border-white/5 shadow-inner">
+                  <div style={{ backgroundColor: lightTheme.card }} className="rounded-[32px] border border-black/5 shadow-sm">
                     <CalendarStrip 
                       selectedDate={selectedDate} 
                       onDateSelect={setSelectedDate} 
@@ -204,7 +224,7 @@ const App: React.FC = () => {
           </AnimatePresence>
         </main>
 
-        <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-[#020617]/95 backdrop-blur-3xl border-t border-white/5 safe-bottom z-50 px-8 py-5 flex justify-between items-center rounded-t-[40px]">
+        <nav style={{ backgroundColor: 'rgba(255, 255, 255, 0.9)', backdropFilter: 'blur(20px)' }} className="fixed bottom-0 left-0 right-0 max-w-md mx-auto border-t border-black/5 safe-bottom z-50 px-8 py-5 flex justify-between items-center rounded-t-[40px] shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
           <TabButton active={activeTab === 'workout'} onClick={() => setActiveTab('workout')} icon={<Dumbbell />} label="訓練" />
           <TabButton active={activeTab === 'history'} onClick={() => setActiveTab('history')} icon={<History />} label="記錄" />
           <TabButton active={activeTab === 'routines'} onClick={() => setActiveTab('routines')} icon={<LayoutGrid />} label="課表" />
@@ -222,8 +242,8 @@ const App: React.FC = () => {
 };
 
 const TabButton = ({ active, onClick, icon, label }: any) => (
-  <button onClick={onClick} className={`flex flex-col items-center gap-2 transition-all w-16 ${active ? 'text-neon-green' : 'text-slate-500'}`}>
-    <div className={`p-2.5 rounded-2xl transition-all ${active ? 'bg-neon-green/10 shadow-[0_0_20px_rgba(173,255,47,0.1)]' : ''}`}>
+  <button onClick={onClick} className={`flex flex-col items-center gap-2 transition-all w-16 ${active ? 'text-[#82CC00]' : 'text-slate-400'}`}>
+    <div className={`p-2.5 rounded-2xl transition-all ${active ? 'bg-[#CCFF00]/10 shadow-[0_0_20px_rgba(204,255,0,0.1)]' : ''}`}>
       {React.cloneElement(icon, { className: `w-6 h-6 ${active ? 'stroke-[2.5]' : 'stroke-2'}` })}
     </div>
     <span className="text-[11px] font-black uppercase tracking-widest">{label}</span>

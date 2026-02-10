@@ -1,12 +1,13 @@
 import React, { useState, useMemo } from 'react';
 import { WorkoutSession, MuscleGroup, ExerciseEntry } from '../types';
 import { getMuscleGroupDisplay } from '../utils/fitnessMath';
-import { Clock, Activity, BarChart3, Trash2, LayoutGrid, Save, CalendarDays, ChevronRight, Timer } from 'lucide-react';
+import { Activity, BarChart3, Trash2, CalendarDays, Timer, Save } from 'lucide-react';
 import { isSameDay, format } from 'date-fns';
 import startOfWeek from 'date-fns/startOfWeek';
 import startOfMonth from 'date-fns/startOfMonth';
 import startOfYear from 'date-fns/startOfYear';
 import { motion, AnimatePresence } from 'framer-motion';
+import { lightTheme } from '../themeStyles';
 
 interface HistoryViewProps {
   history: WorkoutSession[];
@@ -29,9 +30,8 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
     let totalExercises: ExerciseEntry[] = [];
     
     filteredHistory.forEach(s => {
-      // 優先使用自定義計時開始點，若無則退回 startTime
       const beginTime = s.timerStartedAt || s.startTime;
-      const doneTime = s.endTime || s.startTime; // 避免未完成時過大
+      const doneTime = s.endTime || s.startTime;
       totalMinutes += Math.max(0, Math.round((doneTime - beginTime) / 60000));
       totalExercises = [...totalExercises, ...s.exercises];
     });
@@ -88,10 +88,17 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
   }, [history, analysisPeriod]);
 
   const getHeatColor = (setCount: number) => {
-    if (setCount === 0) return '#1e293b'; 
-    if (setCount <= 10) return '#22c55e';  
-    if (setCount <= 15) return '#eab308';  
-    return '#ef4444';                  
+    if (setCount === 0) return '#E2E8F0'; 
+    if (setCount <= 10) return '#82CC00';  // 綠色
+    if (setCount <= 15) return '#FACC15';  // 黃色
+    return '#FF3B30';                      // 紅色
+  };
+
+  const getLoadStatus = (setCount: number) => {
+    if (setCount === 0) return { label: '休息恢復', color: 'text-slate-300' };
+    if (setCount <= 10) return { label: '輕量 (1-10 組)', color: 'text-[#82CC00]' };
+    if (setCount <= 15) return { label: '適中 (11-15 組)', color: 'text-yellow-500' };
+    return { label: '力竭 (16+ 組)', color: 'text-red-500' };
   };
 
   return (
@@ -99,16 +106,11 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
       <div className="space-y-6">
         <div className="flex items-center justify-between px-2">
           <div className="flex items-center gap-3 text-slate-400">
-             <CalendarDays className="w-5 h-5 text-neon-green" />
-             <h2 className="text-base font-black italic tracking-tighter uppercase pr-2">
-               訓練日報 <span className="text-white">/ {format(selectedDate, 'MM.dd')}</span>
+             <CalendarDays className="w-5 h-5 text-black" />
+             <h2 style={{ color: lightTheme.text }} className="text-base font-black italic tracking-tighter uppercase pr-2">
+               訓練日報 <span className="text-slate-300">/ {format(selectedDate, 'MM.dd')}</span>
              </h2>
           </div>
-          {dailyStats && (
-            <div className="text-xs font-black text-slate-600 uppercase tracking-widest">
-              {dailyStats.sessionCount} Sessions Total
-            </div>
-          )}
         </div>
 
         <AnimatePresence mode="popLayout">
@@ -116,68 +118,60 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
             <motion.div 
               initial={{ opacity: 0, y: 10 }} 
               animate={{ opacity: 1, y: 0 }} 
-              className="py-16 flex flex-col items-center justify-center glass rounded-[40px] border-white/5 bg-slate-900/20"
+              style={{ backgroundColor: lightTheme.card }}
+              className="py-16 flex flex-col items-center justify-center rounded-[40px] border border-black/5 shadow-sm"
             >
-              <div className="w-20 h-20 bg-slate-800/50 rounded-full flex items-center justify-center mb-5 text-slate-700">
-                <Activity className="w-10 h-10" />
+              <div style={{ backgroundColor: lightTheme.bg }} className="w-16 h-16 rounded-full flex items-center justify-center mb-5 text-slate-100 shadow-inner">
+                <Activity className="w-8 h-8" />
               </div>
-              <p className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-600">這天沒有訓練紀錄</p>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-800 mt-2.5 italic">Rest is part of the process</p>
+              <p className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-300">這天沒有訓練紀錄</p>
             </motion.div>
           ) : (
             <motion.div 
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="glass rounded-[44px] p-8 border-white/5 space-y-7 shadow-2xl relative overflow-hidden group"
+              style={{ backgroundColor: lightTheme.bg }}
+              className="rounded-[44px] p-8 border border-black/5 space-y-7 shadow-xl relative overflow-hidden group"
             >
               <div className="flex justify-between items-start">
                 <div className="space-y-2">
-                  <h4 className="text-3xl font-black italic uppercase text-white leading-tight pr-3">當日總訓練</h4>
+                  <h4 style={{ color: lightTheme.text }} className="text-3xl font-black italic uppercase leading-tight pr-3">當日總訓練</h4>
                   <div className="flex flex-wrap items-center gap-3 mt-2">
-                    <span className="flex items-center gap-2 bg-neon-green/10 text-neon-green border border-neon-green/20 px-3 py-1.5 rounded-xl text-xs font-black italic">
-                      <Timer className="w-3.5 h-3.5" /> 運動時間: {dailyStats.totalMinutes} 分鐘
+                    <span style={{ backgroundColor: lightTheme.card, color: lightTheme.text }} className="flex items-center gap-2 border border-black/5 px-3 py-1.5 rounded-xl text-xs font-black italic shadow-inner">
+                      <Timer className="w-3.5 h-3.5 text-black" /> {dailyStats.totalMinutes} 分鐘
                     </span>
-                    <span className="bg-slate-800/50 text-slate-400 px-3 py-1.5 rounded-xl text-xs font-black">
+                    <span style={{ backgroundColor: lightTheme.card, color: '#6E6E73' }} className="border border-black/5 px-3 py-1.5 rounded-xl text-xs font-black">
                       {dailyStats.totalExercises.length} 項動作
                     </span>
                   </div>
                 </div>
-                <div className="w-14 h-14 bg-neon-green/10 rounded-2xl flex items-center justify-center text-neon-green">
-                   <Activity className="w-7 h-7 animate-pulse" />
+                <div style={{ backgroundColor: lightTheme.accent }} className="w-14 h-14 rounded-2xl flex items-center justify-center text-black shadow-lg">
+                   <Activity className="w-7 h-7" />
                 </div>
               </div>
 
               <div className="space-y-7">
-                {filteredHistory.map((session, sIdx) => (
+                {filteredHistory.map((session) => (
                   <div key={session.id} className="space-y-4">
                     <div className="flex items-center justify-between px-2">
-                       <div className="flex items-center gap-2.5">
-                          <div className="w-1.5 h-4 bg-slate-800 rounded-full" />
-                          <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">
-                            訓練開始於 {format(new Date(session.startTime), 'HH:mm')}
-                          </span>
-                       </div>
-                       <button 
-                         onClick={() => handleDeleteSession(session.id)}
-                         className="text-slate-800 hover:text-red-500 active:scale-90 transition-all"
-                       >
+                       <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                         {format(new Date(session.startTime), 'HH:mm')} 開始
+                       </span>
+                       <button onClick={() => handleDeleteSession(session.id)} className="text-slate-200 hover:text-red-400 active:scale-90 transition-all">
                          <Trash2 className="w-4 h-4" />
                        </button>
                     </div>
-                    
                     <div className="space-y-3">
                       {session.exercises.map(ex => (
-                        <div key={ex.id} className="flex justify-between items-center bg-black/40 p-5 rounded-3xl border border-white/5">
-                          <div className="flex items-center gap-4 overflow-hidden">
-                            <div className="overflow-hidden">
-                              <span className="text-base font-black text-white italic uppercase tracking-tight truncate block pr-2">{ex.name}</span>
-                              <div className="text-[9px] font-bold text-slate-600 uppercase tracking-widest mt-1">{ex.sets.length} SETS TOTAL</div>
-                            </div>
+                        <div key={ex.id} style={{ backgroundColor: lightTheme.card }} className="flex justify-between items-center p-5 rounded-3xl border border-black/5 shadow-sm">
+                          <div className="overflow-hidden">
+                            <span style={{ color: lightTheme.text }} className="text-base font-black italic uppercase tracking-tight truncate block pr-2">{ex.name}</span>
+                            <div className="text-[9px] font-bold text-slate-300 uppercase mt-1">{ex.sets.length} 組</div>
                           </div>
                           <div className="text-right shrink-0 ml-4">
-                            <span className="text-lg font-black italic text-neon-green pr-0.5">{ex.sets[0]?.weight}kg</span>
-                            <span className="mx-1 text-slate-800 font-black italic">×</span>
-                            <span className="text-lg font-black italic text-white">{ex.sets[0]?.reps}</span>
+                            <span style={{ color: '#82CC00' }} className="text-lg font-black italic pr-0.5">{ex.sets[0]?.weight}kg</span>
+                            <span className="mx-1 text-slate-200 font-black italic">×</span>
+                            <span style={{ color: lightTheme.text }} className="text-lg font-black italic">{ex.sets[0]?.reps}</span>
                           </div>
                         </div>
                       ))}
@@ -188,28 +182,30 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
 
               <button 
                 onClick={handleSaveDayAsRoutine}
-                className="w-full py-6 bg-neon-green text-black font-black rounded-3xl text-xs uppercase tracking-tighter flex items-center justify-center gap-3.5 active:scale-[0.98] transition-all shadow-[0_10px_30px_rgba(173,255,47,0.1)]"
+                style={{ backgroundColor: lightTheme.accent }}
+                className="w-full py-6 text-black font-black rounded-3xl text-xs uppercase flex items-center justify-center gap-3.5 active:scale-[0.98] transition-all shadow-md"
               >
-                <Save className="w-5 h-5 stroke-[3]" /> 將今日訓練存為自訂課表
+                <Save className="w-5 h-5" /> 存為自訂課表
               </button>
             </motion.div>
           )}
         </AnimatePresence>
       </div>
 
-      <div className="glass rounded-[44px] p-8 border-white/5 space-y-9 bg-gradient-to-b from-transparent to-slate-900/20 shadow-2xl">
+      <div style={{ backgroundColor: lightTheme.bg }} className="rounded-[44px] p-8 border border-black/5 space-y-9 shadow-xl">
         <div className="flex justify-between items-center">
            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-neon-green/10 rounded-xl flex items-center justify-center">
-                <BarChart3 className="w-6 h-6 text-neon-green" />
+              <div style={{ backgroundColor: lightTheme.card }} className="w-12 h-12 border border-black/5 rounded-xl flex items-center justify-center shadow-inner">
+                <BarChart3 className="w-6 h-6 text-black" />
               </div>
               <div>
-                <h3 className="text-base font-black italic uppercase tracking-tighter text-white pr-2">訓練容量分布</h3>
+                <h3 style={{ color: lightTheme.text }} className="text-base font-black italic uppercase tracking-tighter pr-2">訓練容量分布</h3>
+                <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest mt-1">負荷程度標示</p>
               </div>
            </div>
-           <div className="flex bg-slate-800/80 p-1.5 rounded-2xl border border-white/5">
+           <div style={{ backgroundColor: lightTheme.card }} className="flex p-1.5 rounded-2xl border border-black/5 shadow-inner">
               {(['week', 'month'] as const).map(p => (
-                <button key={p} onClick={() => setAnalysisPeriod(p)} className={`px-5 py-2 rounded-xl text-[10px] font-black uppercase transition-all ${analysisPeriod === p ? 'bg-neon-green text-black shadow-lg shadow-neon-green/10' : 'text-slate-500 hover:text-slate-400'}`}>
+                <button key={p} onClick={() => setAnalysisPeriod(p)} className={`px-5 py-2 rounded-xl text-[10px] font-black uppercase transition-all ${analysisPeriod === p ? 'bg-black text-white shadow-md' : 'text-slate-300'}`}>
                   {p === 'week' ? '週' : '月'}
                 </button>
               ))}
@@ -221,19 +217,29 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
              const setTotal = analysisData[muscle] || 0;
              const progressPercentage = Math.min(100, (setTotal / 20) * 100);
              const barColor = getHeatColor(setTotal);
+             const loadStatus = getLoadStatus(setTotal);
              
              return (
-               <div key={muscle} className="space-y-2.5">
-                  <div className="flex justify-between text-[11px] font-black uppercase tracking-widest px-1">
-                     <span className="text-slate-500">{getMuscleGroupDisplay(muscle).cn}</span>
-                     <span className={setTotal > 0 ? "text-neon-green italic" : "text-slate-800"}>{setTotal} SETS</span>
+               <div key={muscle} className="space-y-3">
+                  <div className="flex justify-between items-end px-1">
+                     <div className="space-y-1">
+                        <span className="text-xs font-black uppercase text-slate-400 block">{getMuscleGroupDisplay(muscle).cn}</span>
+                        <div className={`text-[10px] font-black uppercase flex items-center gap-1.5 ${loadStatus.color}`}>
+                           <div className="w-1.5 h-1.5 rounded-full bg-current opacity-40" />
+                           {loadStatus.label}
+                        </div>
+                     </div>
+                     <div className="text-right">
+                        <span className={setTotal > 0 ? "text-xl font-black italic text-black" : "text-slate-200 font-black italic text-lg"}>{setTotal}</span>
+                        <span className="text-[9px] font-black text-slate-300 uppercase ml-1.5">Sets</span>
+                     </div>
                   </div>
-                  <div className="h-3.5 w-full bg-slate-900/60 rounded-full overflow-hidden border border-white/5">
+                  <div style={{ backgroundColor: lightTheme.card }} className="h-3.5 w-full rounded-full overflow-hidden border border-black/5 shadow-inner p-0.5">
                      <motion.div 
                        initial={{ width: 0 }} 
                        animate={{ width: `${progressPercentage}%`, backgroundColor: barColor }} 
                        transition={{ duration: 1.5, ease: "circOut" }}
-                       className="h-full shadow-[0_0_10px_rgba(37,99,235,0.2)]" 
+                       className="h-full rounded-full shadow-sm" 
                      />
                   </div>
                </div>
@@ -241,18 +247,19 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
            })}
         </div>
 
-        <div className="pt-5 border-t border-white/5">
-          <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-5">訓練負荷程度說明 (組數 / {analysisPeriod === 'week' ? '週' : '月'})</p>
-          <div className="flex justify-between">
-            {[0, 5, 13, 20].map((s, i) => (
-              <div key={i} className="flex flex-col items-center gap-2.5">
-                <div className="w-8 h-2.5 rounded-full shadow-sm" style={{ backgroundColor: getHeatColor(s) }} />
-                <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest">
-                  {s === 0 ? '休息中' : s === 5 ? '輕量(1-10)' : s === 13 ? '適中(11-15)' : '極限(16+)'}
-                </span>
-              </div>
-            ))}
-          </div>
+        <div className="flex flex-wrap gap-4 pt-4 border-t border-black/5">
+           <div className="flex items-center gap-2">
+              <div className="w-2.5 h-2.5 rounded-full bg-[#82CC00]" />
+              <span className="text-[9px] font-black uppercase text-slate-400">輕量 (1-10 組)</span>
+           </div>
+           <div className="flex items-center gap-2">
+              <div className="w-2.5 h-2.5 rounded-full bg-[#FACC15]" />
+              <span className="text-[9px] font-black uppercase text-slate-400">適中 (11-15 組)</span>
+           </div>
+           <div className="flex items-center gap-2">
+              <div className="w-2.5 h-2.5 rounded-full bg-[#FF3B30]" />
+              <span className="text-[9px] font-black uppercase text-slate-400">力竭 (16+ 組)</span>
+           </div>
         </div>
       </div>
     </div>

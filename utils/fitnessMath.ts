@@ -33,6 +33,34 @@ export const calculateSuggestedCalories = (
   return Math.round(tdee);
 };
 
+export const calculateMacros = (calories: number, weight: number, goal: string) => {
+  if (calories <= 0) return { protein: 0, carbs: 0, fats: 0 };
+  
+  // 蛋白質建議：健身人群通常為 1.8g - 2.2g per kg
+  const pGrams = Math.round(weight * 2);
+  const pCal = pGrams * 4;
+  
+  let fPercent = 0.25; // 脂肪預設佔 25%
+  if (goal === 'cut') fPercent = 0.20;
+  
+  const fCal = calories * fPercent;
+  const fGrams = Math.round(fCal / 9);
+  
+  const cCal = calories - pCal - fCal;
+  const cGrams = Math.max(0, Math.round(cCal / 4));
+  
+  return {
+    protein: pGrams,
+    carbs: cGrams,
+    fats: fGrams
+  };
+};
+
+export const calculateWaterIntake = (weight: number) => {
+  // 基礎建議 35ml - 40ml 每公斤體重
+  return Math.round(weight * 35);
+};
+
 export const getMuscleGroupDisplay = (mg: MuscleGroup | string): { cn: string, en: string } => {
   const map: Record<string, { cn: string, en: string }> = {
     chest: { cn: '胸部', en: 'CHEST' },
@@ -225,7 +253,7 @@ const EXERCISE_METHODS: Record<string, string> = {
 
   "滑輪面拉": "01 雙手握住繩索把手，向後退一步使繩索繃緊，手臂向前伸直，稍微挺胸。\n\n02 緩慢讓繩索拉回前方，控制背部與肩後的張力，感受到後三角肌的舒張。\n\n03 感覺後三角肌與上背肌群收縮，將繩索拉向臉部方向，手肘向外張開。",
 
-  "俯身啞鈴反向飛鳥": "01 雙腳微彎、俯身與地面接近平行，背部平直，雙手持啞鈴自然垂下。\n\n02 緩慢下降啞鈴回原位，維持手肘微彎的角度，感受到後三角肌的舒張。\n\n03 感覺後三角肌收縮，將啞鈴向兩側後上方舉起，專注於後肩的擠壓感受。",
+  "俯身啞鈴反向飛鳥": "01 雙腳微彎、俯身與地面接近平行，背部平平直，雙手持啞鈴自然垂下。\n\n02 緩慢下降啞鈴回原位，維持手肘微彎的角度，感受到後三角肌的舒張。\n\n03 感覺後三角肌收縮，將啞鈴向兩側後上方舉起，專注於後肩的擠壓感受。",
 
   // 腿部 (Legs)
   "槓鈴深蹲": "01 槓鈴架於上背後三角肌及斜方肌上，雙腳與肩同寬，核心收緊並維持背部平直。\n\n02 緩慢下蹲，控制重心於腳掌中央，直到大腿與地面平行或略低，感受臀部與大腿肌群的舒張。\n\n03 感覺腿部肌群收縮發力，腳掌踩穩地面，將身體向上推回起始位置。",

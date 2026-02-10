@@ -4,11 +4,11 @@
   "description": "極簡、高效、充滿激勵的健身追蹤 PWA。鋼鐵般的意志，數位化的記錄。",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#020617",
-  "theme_color": "#020617",
+  "background_color": "#FFFFFF",
+  "theme_color": "#FFFFFF",
   "icons": [
     {
-      "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI0FERkYyRiIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxyZWN0IHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgcng9IjUiIGZpbGw9IiMwMjA2MTciIHN0cm9rZT0ibm9uZSIvPjxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDQuOCwgNC44KSBzY2FsZSgwLjYpIj48cGF0aCBkPSJtNi41IDYuNSAxMSAxMSIvPjxwYXRoIGQ9Im0yMSAyMS0xLTEiLz48cGF0aCBkPSJtMyAzIDEgMSIvPjxwYXRoIGQ9Im0xOCAyMiA0LTQiLz48cGF0aCBkPSJtMiA2IDQtNCIvPjxwYXRoIGQ9Im0zIDEwIDctNyIvPjxwYXRoIGQ9Im0xNCAyMSA3LTciLz48L2c+PC9zdmc+",
+      "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAyMDYxNyIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxyZWN0IHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgcng9IjUiIGZpbGw9IiNBREZGMkYiLz48ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSg0LjgsIDQuOCkgc2NhbGUoMC42KSI+PHBhdGggZD0ibTYuNSA2LjUgMTEgMTEiLz48cGF0aCBkPSJtMjEgMjEtMS0xIi8+PHBhdGggZD0ibTMgMyAxIDEiLz48cGF0aCBkPSJtMTggMjIgNC00Ii8+PHBhdGggZD0ibTIgNiA0LTQiLz48cGF0aCBkPSJtMyAxMCA3LTciLz48cGF0aCBkPSJtMTggMjEgNy03Ii8+PC9nPjwvc3ZnPg==",
       "sizes": "512x512",
       "type": "image/svg+xml",
       "purpose": "any maskable"
