@@ -4,11 +4,11 @@
   "description": "極簡、高效、充滿激勵的健身追蹤 PWA。鋼鐵般的意志，數位化的記錄。",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#000000",
+  "background_color": "#FFFFFF",
   "theme_color": "#FFFFFF",
   "icons": [
     {
-      "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgcng9IjEyMCIgZmlsbD0iIzAwMDAwMCIgLz48cGF0aCBkPSJNMTIwIDI1NmgyNzJNMTIwIDE4MHYxNTJNMzkyIDE4MHYxNTJNODAgMjU2aDQwTTM5MiAyNTZoNDAiIHN0cm9rZT0iI0NDRkYwMCIgc3Ryb2tlLXdpZHRoPSI0OCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBmaWxsPSJub25lIiAvPjwvc3ZnPg==",
+      "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgcng9IjEyMCIgZmlsbD0iI0ZGRkZGRiIgLz48ZyB0cmFuc2Zvcm09InJvdGF0ZSgtNDUgMjU2IDI1NikiPjxyZWN0IHg9IjEyMCIgeT0iMjM2IiB3aWR0aD0iMjcyIiBoZWlnaHQ9IjQwIiByeD0iMjAiIGZpbGw9IiM4MkNDMDAiIC8+PHJlY3QgeD0iMTAwIiB5PSIxNzYiIHdpZHRoPSI2MCIgaGVpZ2h0PSIxNjAiIHJ4PSIyMCIgZmlsbD0iIzgyQ0MwMCIgLz48cmVjdCB4PSIzNTIiIHk9IjE3NiIgd2lkdGg9IjYwIiBoZWlnaHQ9IjE2MCIgcng9IjIwIiBmaWxsPSIjODJDQzAwIiAvPjwvZz48L3N2Zz4=",
       "sizes": "512x512",
       "type": "image/svg+xml",
       "purpose": "any maskable"
