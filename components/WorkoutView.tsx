@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useContext, useEffect, useRef } from 'react';
 import { WorkoutSession, ExerciseEntry, SetEntry, MuscleGroup } from '../types';
 import { 
@@ -14,7 +13,7 @@ export const ORGANIZED_EXERCISES: Record<string, string[]> = {
   'chest': ['槓鈴平板臥推', '槓鈴上斜臥推', '啞鈴平板臥推', '啞鈴上斜臥推', '史密斯平板臥推', '坐姿器械推胸', '蝴蝶機夾胸', '跪姿繩索夾胸', '雙槓撐體', '標準俯地挺身', '器械上斜推胸', '史密斯上斜臥推'],
   'back': ['引體向上', '滑輪下拉', '槓鈴划船', '啞鈴單臂划船', '坐姿划船機', 'T桿划船機', '器械反握高位下拉', '傳統硬舉', '輔助引體向上機', 'V把坐姿划船', '寬握水平划船', '滑輪反握下拉'],
   'shoulders': ['啞鈴肩推', '槓鈴肩推', '阿諾肩推', '器械肩推', '史密斯機肩推', '啞鈴側平舉', '滑輪側平舉', '器械側平舉', '啞鈴前平舉', '蝴蝶機後三角飛鳥', '滑輪面拉', '俯身啞鈴反向飛鳥'],
-  'legs': ['槓鈴深蹲', '啞鈴高腳杯蹲', '上斜腿推機', '保加利亞啞鈴分腿蹲', '哈克深蹲', '仰臥腿後勾', '坐姿腿後勾', '器械站姿提踵', '相撲硬舉', '器械腿外展', '器械腿內收', '六角槓硬舉'],
+  'legs': ['槓鈴深蹲', '啞鈴高腳杯蹲', '上斜腿推機', '水平腿推機', '槓鈴臀推', '保加利亞啞鈴分腿蹲', '哈克深蹲', '仰臥腿後勾', '坐姿腿後勾', '器械站姿提踵', '相撲硬舉', '器械腿外展', '器械腿內收', '六角槓硬舉'],
   'arms': ['槓鈴彎舉', '反手槓鈴彎舉', '啞鈴交替彎舉', '啞鈴錘式彎舉', '牧師椅彎舉', '滑輪繩索下壓', '窄握槓鈴臥推', '仰臥槓鈴臂屈伸', '啞鈴頸後臂屈伸', '滑輪直桿彎舉', '二頭肌器械彎舉', '滑輪直桿過頭臂屈伸'],
   'core': ['仰臥起坐', '羅馬椅抬腿', '棒式', '俄羅斯轉體', '健腹輪', '器械捲腹', '懸垂抬腿', '登山者', '側棒式', '跪姿滑輪捲腹', '下斜捲腹', '滑輪側捲腹']
 };
@@ -109,6 +108,15 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
 
   if (!session) return null;
 
+  // 取得寫死的 GIF 網址邏輯
+  const getHardcodedGif = (name: string) => {
+    if (name === '槓鈴臀推') return 'https://www.docteur-fitness.com/wp-content/uploads/2021/12/hips-thrust.gif';
+    if (name === '水平腿推機') return 'https://i.pinimg.com/originals/81/0f/96/810f969dcadba4d95912efa62e75ba61.gif';
+    return null;
+  };
+
+  const displayGifSrc = currentDetailEx ? (getHardcodedGif(currentDetailEx.name) || gifUrl || '') : '';
+
   return (
     <div className="relative min-h-screen">
       <AnimatePresence mode="wait">
@@ -195,20 +203,19 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
 
             <div className="w-full relative px-1">
               <div style={{ backgroundColor: lightTheme.card }} className="relative overflow-hidden rounded-[24px] shadow-sm border border-black/5 min-h-[240px] flex items-center justify-center">
-                {isGifLoading ? (
+                {isGifLoading && !getHardcodedGif(currentDetailEx?.name || '') ? (
                   <div className="flex flex-col items-center gap-4 py-12 text-slate-400">
                     <Loader2 className="w-9 h-9 animate-spin text-black" />
                     <p className="text-[10px] font-black uppercase tracking-widest">載入動作中...</p>
                   </div>
                 ) : (
                   <img 
-                    src={gifUrl || ''} 
+                    src={displayGifSrc} 
                     alt={currentDetailEx?.name} 
                     className="w-full h-auto object-cover rounded-[15px] block"
                     onLoad={() => setIsGifLoading(false)}
                   />
                 )}
-                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/5 to-transparent h-24 w-full animate-[scan_3s_linear_infinite] pointer-events-none" />
               </div>
             </div>
 

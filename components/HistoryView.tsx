@@ -89,16 +89,16 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
 
   const getHeatColor = (setCount: number) => {
     if (setCount === 0) return '#E2E8F0'; 
-    if (setCount <= 10) return '#82CC00';  // 綠色
-    if (setCount <= 15) return '#FACC15';  // 黃色
-    return '#FF3B30';                      // 紅色
+    if (setCount <= 10) return '#82CC00';  // 輕量
+    if (setCount <= 15) return '#FACC15';  // 適中
+    return '#FF3B30';                      // 力竭
   };
 
   const getLoadStatus = (setCount: number) => {
     if (setCount === 0) return { label: '休息恢復', color: 'text-slate-300' };
-    if (setCount <= 10) return { label: '輕量 (1-10 組)', color: 'text-[#82CC00]' };
-    if (setCount <= 15) return { label: '適中 (11-15 組)', color: 'text-yellow-500' };
-    return { label: '力竭 (16+ 組)', color: 'text-red-500' };
+    if (setCount <= 10) return { label: '輕量(1-10組)', color: 'text-[#82CC00]' };
+    if (setCount <= 15) return { label: '適中(11-15組)', color: 'text-yellow-500' };
+    return { label: '力竭(16+組)', color: 'text-red-500' };
   };
 
   return (
@@ -200,7 +200,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
               </div>
               <div>
                 <h3 style={{ color: lightTheme.text }} className="text-base font-black italic uppercase tracking-tighter pr-2">訓練容量分布</h3>
-                <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest mt-1">負荷程度標示</p>
+                <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest mt-1">累積負荷分析</p>
               </div>
            </div>
            <div style={{ backgroundColor: lightTheme.card }} className="flex p-1.5 rounded-2xl border border-black/5 shadow-inner">
@@ -247,18 +247,19 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
            })}
         </div>
 
-        <div className="flex flex-wrap gap-4 pt-4 border-t border-black/5">
+        {/* 負荷強度圖例 - 依照使用者要求調整格式 */}
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-3 pt-4 border-t border-black/5">
            <div className="flex items-center gap-2">
-              <div className="w-2.5 h-2.5 rounded-full bg-[#82CC00]" />
-              <span className="text-[9px] font-black uppercase text-slate-400">輕量 (1-10 組)</span>
+              <div className="w-3.5 h-3.5 rounded bg-[#82CC00] shadow-sm" />
+              <span className="text-[10px] font-black uppercase text-slate-400 tracking-tighter">輕量(1-10組)</span>
            </div>
            <div className="flex items-center gap-2">
-              <div className="w-2.5 h-2.5 rounded-full bg-[#FACC15]" />
-              <span className="text-[9px] font-black uppercase text-slate-400">適中 (11-15 組)</span>
+              <div className="w-3.5 h-3.5 rounded bg-[#FACC15] shadow-sm" />
+              <span className="text-[10px] font-black uppercase text-slate-400 tracking-tighter">適中(11-15組)</span>
            </div>
            <div className="flex items-center gap-2">
-              <div className="w-2.5 h-2.5 rounded-full bg-[#FF3B30]" />
-              <span className="text-[9px] font-black uppercase text-slate-400">力竭 (16+ 組)</span>
+              <div className="w-3.5 h-3.5 rounded bg-[#FF3B30] shadow-sm" />
+              <span className="text-[10px] font-black uppercase text-slate-400 tracking-tighter">力竭(16+組)</span>
            </div>
         </div>
       </div>

@@ -80,12 +80,20 @@ export const getMuscleGroup = (name: string): MuscleGroup => {
   const n = name.toLowerCase();
   if (n.includes('彎舉') || n.includes('下壓') || n.includes('三頭') || n.includes('二頭') || n.includes('腕') || n.includes('臂屈伸') || n.includes('窄握') || n.includes('curl') || n.includes('tricep') || n.includes('bicep') || n.includes('arm')) return 'arms';
   if (n.includes('捲腹') || n.includes('起坐') || n.includes('抬腿') || n.includes('核心') || n.includes('棒式') || n.includes('abs') || n.includes('core') || n.includes('crunch') || n.includes('plank')) return 'core';
-  if (n.includes('蹲') || n.includes('腿') || n.includes('squat') || n.includes('leg') || n.includes('踏車') || n.includes('quad') || n.includes('calve') || n.includes('臀推') || n.includes('thrust') || n.includes('hip') || n.includes('提踵') || n.includes('calf') || n.includes('相撲') || n.includes('sumo') || n.includes('六角槓') || n.includes('trap bar')) return 'quads';
+  if (n.includes('蹲') || n.includes('腿') || n.includes('squat') || n.includes('leg') || n.includes('踏車') || n.includes('quad') || n.includes('calve') || n.includes('臀推') || n.includes('thrust') || n.includes('hip') || n.includes('提踵') || n.includes('calf') || n.includes('相撲') || n.includes('sumo') || n.includes('六角槓') || n.includes('trap bar') || n.includes('臀')) return 'quads';
   if (n.includes('肩') || n.includes('平舉') || n.includes('聳肩') || n.includes('shoulder') || n.includes('press') || n.includes('lateral') || n.includes('面拉') || n.includes('後三角') || n.includes('反向飛鳥')) return 'shoulders';
   if (n.includes('臥推') || n.includes('胸') || n.includes('chest') || n.includes('夾胸') || n.includes('bench') || n.includes('fly') || n.includes('飛鳥') || n.includes('撐體') || n.includes('俯地挺身')) return 'chest';
   if (n.includes('划船') || n.includes('下拉') || n.includes('引體') || n.includes('row') || n.includes('lat') || n.includes('硬舉') || n.includes('back') || n.includes('pull') || n.includes('deadlift')) return 'back';
   if (n.includes('臀') || n.includes('glute')) return 'glutes';
   return 'core';
+};
+
+/**
+ * Fix: Added missing fetchExerciseGif export.
+ * Retrieves the demonstration GIF URL for a specific exercise from the registry.
+ */
+export const fetchExerciseGif = async (name: string): Promise<string | null> => {
+  return EXERCISE_MEDIA_REGISTRY[name] || null;
 };
 
 const EXERCISE_MEDIA_REGISTRY: Record<string, string> = {
@@ -140,6 +148,8 @@ const EXERCISE_MEDIA_REGISTRY: Record<string, string> = {
   "槓鈴深蹲": "https://www.docteur-fitness.com/wp-content/uploads/2021/11/homme-faisant-un-squat-avec-barre.gif",
   "啞鈴高腳杯蹲": "https://www.docteur-fitness.com/wp-content/uploads/2000/06/squat-goblet-exercice-musculation.gif",
   "上斜腿推機": "https://www.docteur-fitness.com/wp-content/uploads/2022/08/presse-a-cuisses-inclinee.gif",
+  "水平腿推機": "https://i.pinimg.com/originals/81/0f/96/810f969dcadba4d95912efa62e75ba61.gif",
+  "槓鈴臀推": "https://www.docteur-fitness.com/wp-content/uploads/2021/12/hips-thrust.gif",
   "保加利亞啞鈴分腿蹲": "https://www.aesthetics-blog.com/wp-content/uploads/2023/02/04101301-Dumbbell-Single-Leg-Split-Squat_Thighs-FIX_720.gif",
   "哈克深蹲": "https://www.docteur-fitness.com/wp-content/uploads/2022/01/hack-squat.gif",
   "仰臥腿後勾": "https://www.docteur-fitness.com/wp-content/uploads/2021/10/leg-curl-allonge.gif",
@@ -161,22 +171,6 @@ const EXERCISE_MEDIA_REGISTRY: Record<string, string> = {
   "跪姿滑輪捲腹": "https://www.docteur-fitness.com/wp-content/uploads/2000/06/crunch-poulie-haute-exercice-musculation.gif",
   "下斜捲腹": "https://www.docteur-fitness.com/wp-content/uploads/2022/02/sit-up-decline.gif",
   "滑輪側捲腹": "https://www.docteur-fitness.com/wp-content/uploads/2022/04/flexions-laterales-poulie-basse.gif"
-};
-
-export const fetchExerciseGif = async (exerciseName: string): Promise<string> => {
-  const name = exerciseName.trim();
-  const registeredUrl = EXERCISE_MEDIA_REGISTRY[name];
-  if (registeredUrl) return registeredUrl;
-  const group = getMuscleGroup(exerciseName);
-  const fallbackMap: Record<string, string> = {
-    "chest": "https://fitnessprogramer.com/wp-content/uploads/2021/02/barbell_bench_press.gif",
-    "back": "https://fitnessprogramer.com/wp-content/uploads/2021/02/lat_pulldown.gif",
-    "quads": "https://fitnessprogramer.com/wp-content/uploads/2021/02/barbell_full_squat.gif",
-    "arms": "https://fitnessprogramer.com/wp-content/uploads/2021/02/barbell_curl.gif",
-    "shoulders": "https://fitnessprogramer.com/wp-content/uploads/2021/02/dumbbell_shoulder_press.gif",
-    "core": "https://fitnessprogramer.com/wp-content/uploads/2021/02/crunch.gif"
-  };
-  return fallbackMap[group] || "https://fitnessprogramer.com/wp-content/uploads/2021/02/barbell_bench_press.gif";
 };
 
 const EXERCISE_METHODS: Record<string, string> = {
@@ -208,7 +202,7 @@ const EXERCISE_METHODS: Record<string, string> = {
   // 背部 (Back)
   "引體向上": "01 雙手略寬於肩握住單槓，身體自然垂懸，核心收緊，穩定軀幹不晃動。\n\n02 緩慢下降身體回到垂懸狀態，控制下落速度，感受背闊肌兩側的拉伸與舒張。\n\n03 感覺背部肌群收縮時，帶動手肘向下拉，將身體向上拉起直到下巴超過單槓高度。",
 
-  "滑輪下拉": "01 坐在機器上並將護墊調整至固定大腿，雙手寬握把手，身體微後傾，鎖定肩胛骨。\n\n02 緩慢放回重量使把手向上移動，控制背部的張力，感受背闊肌由內而外的完全舒張。\n\n03 感覺背部肌群收縮，用力將把手向下拉至上胸處，手肘向下並向後夾緊，稍作停頓。",
+  "滑輪下拉": "01 坐在機器上並將護墊調整至大腿，雙手寬握把手，身體微後傾，鎖定肩胛骨。\n\n02 緩慢放回重量使把手向上移動，控制背部的張力，感受背闊肌由內而外的完全舒張。\n\n03 感覺背部肌群收縮，用力將把手向下拉至上胸處，手肘向下並向後夾緊，稍作停頓。",
 
   "槓鈴划船": "01 雙腳與肩同寬，上半身前傾並保持背部平直，雙手略寬於肩握住槓鈴，雙臂自然下垂。\n\n02 緩慢放下槓鈴，控制重量不與地面碰撞，始讓背部保持緊繃，感受背部肌群的深度舒張。\n\n03 感覺背部肌群收縮，將槓鈴拉向腹部位置，手肘向後上方帶動，並在頂峰擠壓背部。",
 
@@ -226,7 +220,7 @@ const EXERCISE_METHODS: Record<string, string> = {
 
   "V把坐姿划船": "01 坐在划船機上，雙手握住 V 型把手，雙腳微彎踏穩踏板，背部保持挺直不晃動。\n\n02 緩慢將手臂前伸回放重量，控制背部張力，感受背部深層肌群的牽拉與舒張。\n\n03 感覺背部肌群收縮，將 V 把拉向腹部中線，手肘向後夾緊並保持挺胸擠壓。",
 
-  "寬握水平划船": "01 使用寬握把手，坐穩後背部挺直，雙手略寬於肩握把，手肘抬高與肩膀接近水平。\n\n02 緩慢回放重量，讓把手帶動雙臂前伸，感受到後三角肌與中背部肌群的舒張。\n\n03 感覺後背收縮，將把手向胸部方向拉，手肘向兩側張開並向後擠壓，強化後背厚度。",
+  "寬握水平划船": "01 使用寬握把手，坐穩後背部挺直，雙手略寬於肩握把，手肘抬高與肩膀接近水平。\n\n02 緩慢回放重量，讓把手帶動雙臂前伸，感受到後三角肌與中背部肌群的舒張。\n\n03 感覺後三角肌收縮，將把手向胸部方向拉，手肘向兩側張開並向後擠壓，強化後背厚度。",
 
   "滑輪反握下拉": "01 雙手反握（掌心朝己）滑輪把手，坐穩並鎖定大腿，上半身微後傾以穩定重心。\n\n02 緩慢將把手送回上方，控制肌肉放鬆的速度，感受到背闊肌垂直向上的舒張。\n\n03 感覺背部收縮，帶動手肘垂直向下夾緊，將把手下拉至鎖骨位置並擠壓背肌。",
 
@@ -258,9 +252,13 @@ const EXERCISE_METHODS: Record<string, string> = {
   // 腿部 (Legs)
   "槓鈴深蹲": "01 槓鈴架於上背後三角肌及斜方肌上，雙腳與肩同寬，核心收緊並維持背部平直。\n\n02 緩慢下蹲，控制重心於腳掌中央，直到大腿與地面平行或略低，感受臀部與大腿肌群的舒張。\n\n03 感覺腿部肌群收縮發力，腳掌踩穩地面，將身體向上推回起始位置。",
 
-  "啞鈴高腳杯蹲": "01 雙手捧住啞鈴一端置於胸前，雙腳略寬於肩，腳尖微向外張開以利下蹲路徑。\n\n02 保持背部挺直，緩慢下降臀部進行深蹲，感受到股四頭肌與臀大肌的舒張。\n\n03 感覺腿部收縮，利用下肢力量垂直推起身體，回到站立姿勢。",
+  "啞鈴高腳杯蹲": "01 雙手捧住啞鈴一端置於胸前，雙腳目標設定正確路徑，挺胸。\n\n02 保持背部挺直，緩慢下降臀部進行深蹲，感受到股四頭肌與臀大肌的舒張。\n\n03 感覺腿部收縮，利用下肢力量垂直推起身體，回到站立姿勢。",
 
-  "上斜腿推機": "01 斜躺於座墊，雙腳踩在踏板中央與肩同寬，解鎖安全把手後伸直雙腿但不鎖死膝蓋。\n\n02 緩慢彎曲膝蓋，控制踏板下降直到膝蓋接近胸部，感受到腿部肌群受壓與舒張。\n\n03 感覺腿部肌群強力收縮，用力將踏板推回頂端，過程中背部始終緊貼靠墊。",
+  "上斜腿推機": "01 斜躺於座墊，雙腳踩在踏板中央與肩同寬，解鎖安全把手後伸直雙腿但不鎖死膝蓋。\n\n02 緩慢彎曲手肘下降身體，直到感受胸肌下緣有明顯的牽拉感與舒張。\n\n03 感覺胸肌下緣收縮發力，將身體撐回起始位置，過程保持肩部穩定。",
+
+  "水平腿推機": "01 坐在機器上並將雙腳平放於踏板，與肩同寬。\n\n02 用力推開踏板直到雙腿伸直，注意膝蓋不鎖死。\n\n03 緩慢控制重量回放，感受股四頭肌的受力與舒張。",
+
+  "槓鈴臀推": "01 坐地靠在長凳邊緣，將槓鈴置於髖部上方（可使用護墊）。\n\n02 呼氣並收縮臀肌，將髖部向上推起直至大腿與軀幹呈水平。\n\n03 緩慢下降回到起始位置，專注於臀大肌發力。",
 
   "保加利亞啞鈴分腿蹲": "01 一腳向後跨置於長凳，另一腳在前踩地支撐，雙手各持一啞鈴垂於身體兩側。\n\n02 緩慢下降身體，保持重心在支撐腳腳跟，感受臀部肌群的深度舒張與牽拉。\n\n03 感覺臀部與大腿收縮，用力蹬地將身體撐起，回到起始位置。",
 
@@ -326,7 +324,7 @@ const EXERCISE_METHODS: Record<string, string> = {
 
   "跪姿滑輪捲腹": "01 跪在滑輪機前，雙手握住繩索並置於耳側，身體微前傾，背部微拱。\n\n02 緩慢讓滑輪拉力帶動軀幹向上回位，控制肌肉拉長速度，感受腹肌的舒張。\n\n03 感覺腹肌強力收縮，用力將手肘向膝蓋方向拉近，在底部深壓腹部。",
 
-  "下斜捲腹": "01 躺在下斜凳上，雙腳勾住護擋固定身體，手部輕扶頭部兩側。\n\n02 緩慢將上半身向後下降，對抗重力控制節奏，感受到腹部肌群深度的舒張。\n\n03 感覺腹肌收縮，將胸部向腿部方向捲起，專注於腹部上端的擠壓感受。",
+  "下斜捲腹": "01 躺在下斜凳上，雙腳勾住護擋固定身體，手部輕扶頭部兩側。\n\n02 緩慢將上半身向後下降，對抗重力控制節節，感受到腹部肌群深度的舒張。\n\n03 感覺腹肌收縮，將胸部向腿部方向捲起，專注於腹部上端的擠壓感受。",
 
   "滑輪側捲腹": "01 側面面向滑輪機並握住把手，單手或雙手握把，維持站姿且核心鎖定。\n\n02 緩慢控制滑輪回收，讓軀幹向滑輪方向微側彎，感受另一側腹斜肌的舒張。\n\n03 感覺側腹肌群收縮，將軀幹向反方向下拉捲曲，強化腰側線條。"
 };

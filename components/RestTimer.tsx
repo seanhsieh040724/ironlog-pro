@@ -88,7 +88,7 @@ export const RestTimer: React.FC<RestTimerProps> = ({ active, seconds: initialSe
           </div>
           
           <div className="flex space-x-3 w-full">
-             <button onClick={() => { targetTimeRef.current = Date.now() + (configSeconds * 1000); notificationSentRef.current = false; setTimeLeft(configSeconds); }} style={{ backgroundColor: lightTheme.card }} className="flex-1 border border-black/5 py-4 rounded-2xl flex items-center justify-center text-slate-200 active:scale-95 transition-all shadow-sm">
+             <button onClick={() => { targetTimeRef.current = Date.now() + (configSeconds * 1000); notificationSentRef.current = false; setTimeLeft(configSeconds); }} style={{ backgroundColor: '#000000' }} className="flex-1 border border-black/5 py-4 rounded-2xl flex items-center justify-center text-white active:scale-95 transition-all shadow-sm">
                <RotateCcw className="w-5 h-5" />
              </button>
              <button onClick={onClose} style={{ backgroundColor: lightTheme.accent }} className="flex-[2] text-black font-black py-4 rounded-2xl active:scale-95 transition-all uppercase tracking-tighter flex items-center justify-center gap-2 shadow-lg shadow-[#CCFF00]/10">

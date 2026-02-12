@@ -6,8 +6,10 @@ import {
   Target, Activity, User, Trash2, 
   Flame, Edit3, CheckCircle2, Save, Beef, Wheat, 
   Droplets, Waves, GlassWater, 
-  Cake, Maximize2, Weight as WeightIcon, UserCheck, Bike
+  Cake, Maximize2, Weight as WeightIcon, UserCheck, Bike, 
+  Mail, Apple, Chrome, X, Camera
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { lightTheme } from '../themeStyles';
 
 export const ProfileView: React.FC = () => {
@@ -17,6 +19,7 @@ export const ProfileView: React.FC = () => {
   const [profileImage, setProfileImage] = useState<string | null>(localStorage.getItem('ironlog_user_avatar'));
   const [userName, setUserName] = useState<string>(localStorage.getItem('ironlog_user_name') || '');
   const [isEditingName, setIsEditingName] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
   
   const bodyMetrics = context?.bodyMetrics || [];
   const globalGoal: UserGoal = context?.goal || { type: 'maintain', targetWeight: 0, startWeight: 0, activityLevel: 1.55 };
@@ -93,12 +96,15 @@ export const ProfileView: React.FC = () => {
       <div style={{ backgroundColor: lightTheme.card }} className="rounded-[40px] p-7 border border-black/5 relative overflow-hidden shadow-sm">
          <div className="relative z-10 flex items-center gap-6">
             <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
-              <div style={{ backgroundColor: lightTheme.bg }} className="w-20 h-20 rounded-[28px] overflow-hidden border-2 border-black/5 flex items-center justify-center shadow-inner">
+              <div style={{ backgroundColor: lightTheme.bg }} className="w-20 h-20 rounded-[28px] overflow-hidden border-2 border-black/5 flex items-center justify-center shadow-inner relative">
                 {profileImage ? (
                   <img src={profileImage} alt="Profile" className="w-full h-full object-cover" />
                 ) : (
                   <User className="w-10 h-10 text-slate-100" />
                 )}
+                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <Camera className="text-white w-6 h-6" />
+                </div>
               </div>
               <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={(e) => {
                 const file = e.target.files?.[0];
@@ -131,10 +137,14 @@ export const ProfileView: React.FC = () => {
                 )}
                 <Edit3 className="w-4 h-4 text-slate-300 shrink-0" />
               </div>
-              <div className="inline-flex items-center gap-2 px-2.5 py-0.5 bg-black/5 rounded-full">
+              
+              <button 
+                onClick={() => setShowLoginModal(true)}
+                className="inline-flex items-center gap-2 px-4 py-1.5 bg-black text-white rounded-full hover:bg-black/80 transition-all active:scale-95 shadow-md group"
+              >
                 <div className="w-1.5 h-1.5 rounded-full bg-[#82CC00] animate-pulse" />
-                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">戰士 ID #{(latest.date % 10000)}</p>
-              </div>
+                <p className="text-[11px] font-black uppercase tracking-widest leading-none">登入</p>
+              </button>
             </div>
          </div>
       </div>
@@ -290,7 +300,86 @@ export const ProfileView: React.FC = () => {
       <button onClick={() => { if(confirm('確定要清除所有本地數據？')) { localStorage.clear(); window.location.reload(); }}} className="w-full py-6 border border-red-100 rounded-[32px] text-red-200 text-[11px] font-black uppercase tracking-widest flex items-center justify-center gap-2.5 active:bg-red-50 transition-all">
         <Trash2 className="w-5 h-5" /> 清除所有本地數據
       </button>
+
+      {/* 登入模態視窗 - iOS 風格優化 */}
+      <AnimatePresence>
+        {showLoginModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/40 backdrop-blur-md">
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              style={{ backgroundColor: lightTheme.bg }}
+              className="w-full max-w-sm rounded-[44px] p-8 border border-black/5 shadow-2xl relative"
+            >
+              <button 
+                onClick={() => setShowLoginModal(false)}
+                className="absolute top-6 right-6 p-2 bg-slate-100 rounded-full text-slate-400 active:scale-90 transition-transform"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className="flex flex-col items-center text-center space-y-8 mt-4">
+                <div style={{ backgroundColor: lightTheme.accent }} className="w-16 h-16 rounded-2xl flex items-center justify-center text-black shadow-lg">
+                  <UserCheck className="w-8 h-8" />
+                </div>
+                
+                <div>
+                  <h3 style={{ color: lightTheme.text }} className="text-xl font-black italic uppercase tracking-tighter">使用以下帳號繼續</h3>
+                </div>
+
+                <div className="w-full space-y-4">
+                  <LoginButton 
+                    variant="google"
+                    icon={<Chrome className="w-6 h-6" />} 
+                    label="使用 Gmail 登入" 
+                    onClick={() => { alert('Gmail 登入功能正在串接中...'); setShowLoginModal(false); }}
+                  />
+                  <LoginButton 
+                    variant="apple"
+                    icon={<Apple className="w-6 h-6 fill-white" />} 
+                    label="使用 Apple 登入" 
+                    onClick={() => { alert('Apple 登入功能正在串接中...'); setShowLoginModal(false); }}
+                  />
+                  <LoginButton 
+                    variant="email"
+                    icon={<Mail className="w-6 h-6" />} 
+                    label="使用 電子郵件 登入" 
+                    onClick={() => { alert('郵件登入功能正在串接中...'); setShowLoginModal(false); }}
+                  />
+                </div>
+
+                <p className="text-[9px] text-slate-300 font-medium px-4 leading-relaxed">
+                  點擊登入即表示您同意我們的服務條款與隱私政策
+                </p>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
+  );
+};
+
+const LoginButton = ({ variant, icon, label, onClick }: any) => {
+  const styles = {
+    apple: "bg-black text-white border-black",
+    google: "bg-white text-black border-slate-200",
+    email: "bg-[#007AFF] text-white border-[#007AFF]"
+  };
+
+  return (
+    <button 
+      onClick={onClick}
+      className={`w-full py-4 px-6 rounded-2xl flex items-center gap-4 active:scale-[0.98] transition-all shadow-sm border ${styles[variant as keyof typeof styles]}`}
+    >
+      <div className="shrink-0">
+        {icon}
+      </div>
+      <span className="flex-1 text-[13px] font-black uppercase tracking-widest text-center pr-6">
+        {label}
+      </span>
+    </button>
   );
 };
 

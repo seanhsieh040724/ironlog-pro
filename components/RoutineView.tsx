@@ -1,4 +1,3 @@
-
 import React, { useState, useContext, useMemo, useEffect } from 'react';
 import { AppContext } from '../App';
 import { RoutineTemplate, MuscleGroup, ExerciseEntry, SetEntry, WorkoutSession } from '../types';
@@ -12,6 +11,277 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { lightTheme } from '../themeStyles';
+
+// 取得寫死的 GIF 網址邏輯 (封裝為常數供外部使用)
+const getHardcodedGif = (n: string) => {
+  if (n === '槓鈴臀推') return 'https://www.docteur-fitness.com/wp-content/uploads/2021/12/hips-thrust.gif';
+  if (n === '水平腿推機') return 'https://i.pinimg.com/originals/81/0f/96/810f969dcadba4d95912efa62e75ba61.gif';
+  return null;
+};
+
+// 將組件移出 RoutineView 作用域，防止每次 render 時重新宣告組件導致跳轉
+const ExerciseGifDisplay: React.FC<{ name: string }> = ({ name }) => {
+  const [localGifUrl, setLocalGifUrl] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    setIsLoading(true);
+    fetchExerciseGif(name).then(url => {
+      setLocalGifUrl(url);
+    });
+  }, [name]);
+
+  const displaySrc = getHardcodedGif(name) || localGifUrl || '';
+
+  return (
+    <div style={{ backgroundColor: lightTheme.card }} className="relative overflow-hidden rounded-[24px] shadow-sm border border-black/5 min-h-[240px] flex items-center justify-center">
+      {isLoading && !getHardcodedGif(name) && (
+        <div style={{ backgroundColor: lightTheme.card }} className="absolute inset-0 flex flex-col items-center justify-center gap-4 z-10">
+          <Loader2 className="w-8 h-8 animate-spin text-black" />
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">準備中...</p>
+        </div>
+      )}
+      {displaySrc && (
+        <img 
+          src={displaySrc} 
+          alt={name} 
+          className="w-full h-auto object-cover rounded-[15px] block"
+          onLoad={() => setIsLoading(false)}
+        />
+      )}
+    </div>
+  );
+};
+
+interface IntegratedWorkoutViewProps {
+  routine: RoutineTemplate;
+  sessionExercises: ExerciseEntry[];
+  setSessionExercises: React.Dispatch<React.SetStateAction<ExerciseEntry[]>>;
+  onClose: () => void;
+  onFinish: (finalSession: WorkoutSession) => void;
+}
+
+const IntegratedWorkoutView: React.FC<IntegratedWorkoutViewProps> = ({ 
+  routine, 
+  sessionExercises, 
+  setSessionExercises, 
+  onClose,
+  onFinish 
+}) => {
+  const context = useContext(AppContext);
+  const [timerStartedAt, setTimerStartedAt] = useState<number | null>(null);
+  const [elapsedTime, setElapsedTime] = useState<string>("00:00");
+
+  useEffect(() => {
+    let interval: number;
+    if (timerStartedAt) {
+      const updateTimer = () => {
+        const diff = Date.now() - timerStartedAt;
+        const totalSeconds = Math.floor(diff / 1000);
+        const mins = Math.floor(totalSeconds / 60);
+        const secs = totalSeconds % 60;
+        setElapsedTime(`${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`);
+      };
+      updateTimer();
+      interval = window.setInterval(updateTimer, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [timerStartedAt]);
+
+  const startWorkoutTimer = () => {
+    if (!timerStartedAt) {
+      setTimerStartedAt(Date.now());
+    }
+  };
+
+  const updateSetData = (exIndex: number, setId: string, updates: Partial<SetEntry>, sIdx: number) => {
+    setSessionExercises(prev => {
+      const newExs = [...prev];
+      const ex = { ...newExs[exIndex] };
+      ex.sets = ex.sets.map((s, i) => {
+        if (s.id === setId) return { ...s, ...updates };
+        if (updates.weight !== undefined && sIdx === 0) return { ...s, weight: updates.weight };
+        return s;
+      });
+      newExs[exIndex] = ex;
+      return newExs;
+    });
+  };
+
+  const addSetToEx = (exIndex: number) => {
+    setSessionExercises(prev => {
+      const newExs = [...prev];
+      const ex = { ...newExs[exIndex] };
+      const lastSet = ex.sets[ex.sets.length - 1];
+      ex.sets = [...ex.sets, { 
+        id: crypto.randomUUID(), 
+        weight: lastSet?.weight || 0, 
+        reps: lastSet?.reps || 10, 
+        completed: false 
+      }];
+      newExs[exIndex] = ex;
+      return newExs;
+    });
+  };
+
+  const removeSetFromEx = (exIndex: number, setId: string) => {
+    setSessionExercises(prev => {
+      const newExs = [...prev];
+      const ex = { ...newExs[exIndex] };
+      ex.sets = ex.sets.filter(s => s.id !== setId);
+      newExs[exIndex] = ex;
+      return newExs;
+    });
+  };
+
+  const handleSaveWorkout = () => {
+    const completedExercises = sessionExercises.filter(ex => 
+      ex.sets.some(set => set.completed)
+    );
+    if (completedExercises.length === 0) {
+      alert('請至少勾選一個完成的組數再儲存。');
+      return;
+    }
+    const finalSession: WorkoutSession = {
+      id: crypto.randomUUID(),
+      startTime: timerStartedAt || Date.now(),
+      timerStartedAt: timerStartedAt || undefined,
+      endTime: Date.now(),
+      title: routine.name,
+      exercises: completedExercises
+    };
+    onFinish(finalSession);
+  };
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-10 pb-48">
+      <div className="flex items-center gap-5 px-1 sticky top-0 z-[60] bg-white/90 backdrop-blur-xl py-4 border-b border-black/5">
+        <button onClick={() => { if(timerStartedAt && !confirm('訓練正在計時中，確定要離開嗎？')) return; onClose(); }} style={{ backgroundColor: lightTheme.accent }} className="w-11 h-11 rounded-xl flex items-center justify-center text-black active:scale-90 transition-all shadow-md">
+          <ArrowLeft className="w-6 h-6 stroke-[3]" />
+        </button>
+        <div className="flex-1 overflow-hidden">
+          <h2 style={{ color: lightTheme.text }} className="text-xl font-black italic tracking-tighter uppercase truncate">{routine.name}</h2>
+          <p className="text-[10px] font-black text-[#82CC00] uppercase tracking-widest mt-0.5">整合訓練模式</p>
+        </div>
+      </div>
+
+      <div className="space-y-24">
+        {sessionExercises.map((ex, exIdx) => (
+          <div key={ex.id} className="space-y-8">
+            <div className="flex items-center gap-4 px-1">
+               <div style={{ backgroundColor: lightTheme.card }} className="w-12 h-12 rounded-2xl flex items-center justify-center text-black font-black text-xl italic border border-black/5">#{exIdx + 1}</div>
+               <h3 style={{ color: lightTheme.text }} className="text-2xl font-black italic uppercase tracking-tighter">{ex.name}</h3>
+            </div>
+
+            <div className="w-full relative px-1">
+              <ExerciseGifDisplay name={ex.name} />
+            </div>
+
+            <div style={{ backgroundColor: lightTheme.card }} className="mx-1 p-6 rounded-[28px] border border-black/5 space-y-3.5 shadow-sm">
+              <div className="flex items-center gap-2.5 text-black">
+                <BookOpen className="w-5 h-5" />
+                <h3 className="text-[11px] font-black uppercase tracking-widest">運動方法</h3>
+              </div>
+              <p className="text-sm font-medium text-slate-500 leading-relaxed italic whitespace-pre-line">
+                {getExerciseMethod(ex.name)}
+              </p>
+            </div>
+
+            <div className="space-y-6 px-1">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2.5">
+                    <Target className="w-5 h-5 text-black" />
+                    <h3 style={{ color: lightTheme.text }} className="text-sm font-black italic uppercase">訓練錄入</h3>
+                  </div>
+                  {timerStartedAt && (
+                    <div className="flex items-center gap-1.5 px-3 py-1 bg-black/5 border border-black/10 rounded-lg">
+                      <Timer className="w-3.5 h-3.5 animate-pulse" />
+                      <span className="text-[11px] font-black font-mono">{elapsedTime}</span>
+                    </div>
+                  )}
+                </div>
+                <div className="flex items-center gap-3">
+                  {!timerStartedAt && (
+                    <button onClick={startWorkoutTimer} className="flex items-center gap-1.5 text-black text-[10px] font-black uppercase group">
+                      <PlayCircle className="w-4 h-4 fill-current group-active:scale-90 transition-transform" /> 開始訓練
+                    </button>
+                  )}
+                  <button onClick={() => addSetToEx(exIdx)} className="flex items-center gap-1.5 text-black text-[10px] font-black uppercase">
+                    <PlusCircle className="w-4 h-4" /> 加一組
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                {ex.sets.map((set, sIdx) => (
+                  <div key={set.id} className={`grid grid-cols-12 gap-2.5 items-center p-4 rounded-[28px] border transition-all ${set.completed ? 'bg-[#CCFF00]/10 border-[#CCFF00]/40' : 'bg-white border-black/5 shadow-sm'}`}>
+                    <div className="col-span-1 flex justify-center">
+                      <button onClick={() => removeSetFromEx(exIdx, set.id)} className="text-slate-200 p-1 active:text-red-500">
+                        <MinusCircle className="w-5 h-5" />
+                      </button>
+                    </div>
+                    <div className="col-span-1 text-base font-black italic text-slate-300 text-center">{sIdx + 1}</div>
+                    
+                    <div className="col-span-4 flex items-center justify-center gap-2">
+                      <input 
+                        type="number" 
+                        value={set.weight || ''} 
+                        placeholder="0" 
+                        onChange={e => updateSetData(exIdx, set.id, { weight: Number(e.target.value) }, sIdx)} 
+                        style={{ color: lightTheme.text }}
+                        className="w-16 bg-slate-100 rounded-xl py-3 text-center text-xl font-black outline-none border border-black/5 focus:border-black/20 transition-all shadow-inner" 
+                      />
+                      <span className="text-[10px] font-black text-slate-300 italic uppercase shrink-0">kg</span>
+                    </div>
+
+                    <div className="col-span-4 flex items-center justify-center gap-2">
+                      <input 
+                        type="number" 
+                        value={set.reps || ''} 
+                        placeholder="0" 
+                        onChange={e => updateSetData(exIdx, set.id, { reps: Number(e.target.value) }, sIdx)} 
+                        style={{ color: lightTheme.text }}
+                        className="w-16 bg-slate-100 rounded-xl py-3 text-center text-xl font-black outline-none border border-black/5 focus:border-black/20 transition-all shadow-inner" 
+                      />
+                      <span className="text-[10px] font-black text-slate-300 italic uppercase shrink-0">rep</span>
+                    </div>
+
+                    <div className="col-span-2 flex justify-end">
+                      <button 
+                        onClick={() => { 
+                          const nc = !set.completed; 
+                          if(nc) { 
+                            startWorkoutTimer(); 
+                            if(context) context.triggerRestTimer(); 
+                          } 
+                          updateSetData(exIdx, set.id, { completed: nc }, sIdx); 
+                        }} 
+                        className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all active:scale-90 border shadow-sm ${set.completed ? 'bg-[#CCFF00] border-[#CCFF00] text-black' : 'bg-slate-50 border-black/5 text-slate-200'}`}
+                      >
+                        <Check className="w-6 h-6 stroke-[4]" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="fixed bottom-[110px] left-0 right-0 z-[70] px-8">
+         <button 
+           onClick={handleSaveWorkout} 
+           style={{ backgroundColor: '#000000', color: '#FFFFFF' }}
+           className="w-full font-black h-14 rounded-2xl uppercase italic text-base active:scale-95 transition-all shadow-xl flex items-center justify-center gap-3 tracking-tighter"
+         >
+           <Save className="w-5 h-5 stroke-[2.5]" style={{ color: lightTheme.accent }} /> 儲存訓練
+         </button>
+      </div>
+    </motion.div>
+  );
+};
 
 export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate) => void }> = ({ onStartRoutine }) => {
   const context = useContext(AppContext);
@@ -35,7 +305,7 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
   const [isGifLoading, setIsGifLoading] = useState(false);
 
   if (!context) return null;
-  const { customRoutines, setCustomRoutines, setHistory, history, triggerRestTimer } = context;
+  const { customRoutines, setCustomRoutines, setHistory, history } = context;
 
   useEffect(() => {
     if (selectedExName) {
@@ -127,263 +397,23 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
     setIntegratedRoutine(template);
   };
 
-  const ExerciseGifDisplay = ({ name }: { name: string }) => {
-    const [localGifUrl, setLocalGifUrl] = useState<string | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
-
-    useEffect(() => {
-      fetchExerciseGif(name).then(url => {
-        setLocalGifUrl(url);
-      });
-    }, [name]);
-
-    return (
-      <div style={{ backgroundColor: lightTheme.card }} className="relative overflow-hidden rounded-[24px] shadow-sm border border-black/5 min-h-[240px] flex items-center justify-center">
-        {isLoading && (
-          <div style={{ backgroundColor: lightTheme.card }} className="absolute inset-0 flex flex-col items-center justify-center gap-4 z-10">
-            <Loader2 className="w-8 h-8 animate-spin text-black" />
-            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">準備中...</p>
-          </div>
-        )}
-        {localGifUrl && (
-          <img 
-            src={localGifUrl} 
-            alt={name} 
-            className="w-full h-auto object-cover rounded-[15px] block"
-            onLoad={() => setIsLoading(false)}
-          />
-        )}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/5 to-transparent h-24 w-full animate-[scan_3s_linear_infinite] pointer-events-none" />
-      </div>
-    );
-  };
-
-  const IntegratedWorkoutView = ({ routine }: { routine: RoutineTemplate }) => {
-    const [timerStartedAt, setTimerStartedAt] = useState<number | null>(null);
-    const [elapsedTime, setElapsedTime] = useState<string>("00:00");
-
-    useEffect(() => {
-      let interval: number;
-      if (timerStartedAt) {
-        const updateTimer = () => {
-          const diff = Date.now() - timerStartedAt;
-          const totalSeconds = Math.floor(diff / 1000);
-          const mins = Math.floor(totalSeconds / 60);
-          const secs = totalSeconds % 60;
-          setElapsedTime(`${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`);
-        };
-        updateTimer();
-        interval = window.setInterval(updateTimer, 1000);
-      } else {
-        setElapsedTime("00:00");
-      }
-      return () => clearInterval(interval);
-    }, [timerStartedAt]);
-
-    const startWorkoutTimer = () => {
-      if (!timerStartedAt) {
-        setTimerStartedAt(Date.now());
-      }
-    };
-
-    const updateSetData = (exIndex: number, setId: string, updates: Partial<SetEntry>, sIdx: number) => {
-      if (updates.completed && !timerStartedAt) {
-        startWorkoutTimer();
-      }
-      
-      setSessionExercises(prev => {
-        const newExs = [...prev];
-        const ex = { ...newExs[exIndex] };
-        ex.sets = ex.sets.map((s, i) => {
-          if (s.id === setId) return { ...s, ...updates };
-          if (updates.weight !== undefined && sIdx === 0) return { ...s, weight: updates.weight };
-          return s;
-        });
-        newExs[exIndex] = ex;
-        return newExs;
-      });
-    };
-
-    const addSetToEx = (exIndex: number) => {
-      setSessionExercises(prev => {
-        const newExs = [...prev];
-        const ex = { ...newExs[exIndex] };
-        const lastSet = ex.sets[ex.sets.length - 1];
-        ex.sets = [...ex.sets, { 
-          id: crypto.randomUUID(), 
-          weight: lastSet?.weight || 0, 
-          reps: lastSet?.reps || 10, 
-          completed: false 
-        }];
-        newExs[exIndex] = ex;
-        return newExs;
-      });
-    };
-
-    const removeSetFromEx = (exIndex: number, setId: string) => {
-      setSessionExercises(prev => {
-        const newExs = [...prev];
-        const ex = { ...newExs[exIndex] };
-        ex.sets = ex.sets.filter(s => s.id !== setId);
-        newExs[exIndex] = ex;
-        return newExs;
-      });
-    };
-
-    const handleSaveWorkout = () => {
-      const completedExercises = sessionExercises.filter(ex => 
-        ex.sets.some(set => set.completed)
-      );
-      if (completedExercises.length === 0) {
-        alert('請至少勾選一個完成的組數再儲存。');
-        return;
-      }
-      const finalSession: WorkoutSession = {
-        id: crypto.randomUUID(),
-        startTime: timerStartedAt || Date.now(),
-        timerStartedAt: timerStartedAt || undefined,
-        endTime: Date.now(),
-        title: routine.name,
-        exercises: completedExercises
-      };
-      setHistory([finalSession, ...history]);
-      alert('訓練紀錄已儲存！總訓練時間：' + elapsedTime);
-      setIntegratedRoutine(null);
-      setPreviewRoutine(null);
-    };
-
-    return (
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-10 pb-48">
-        <div className="flex items-center gap-5 px-1 sticky top-0 z-[60] bg-white/90 backdrop-blur-xl py-4 border-b border-black/5">
-          <button onClick={() => { if(timerStartedAt && !confirm('訓練正在計時中，確定要離開嗎？')) return; setIntegratedRoutine(null); }} style={{ backgroundColor: lightTheme.accent }} className="w-11 h-11 rounded-xl flex items-center justify-center text-black active:scale-90 transition-all shadow-md">
-            <ArrowLeft className="w-6 h-6 stroke-[3]" />
-          </button>
-          <div className="flex-1 overflow-hidden">
-            <h2 style={{ color: lightTheme.text }} className="text-xl font-black italic tracking-tighter uppercase truncate">{routine.name}</h2>
-            <p className="text-[10px] font-black text-[#82CC00] uppercase tracking-widest mt-0.5">整合訓練模式</p>
-          </div>
-        </div>
-
-        <div className="space-y-24">
-          {sessionExercises.map((ex, exIdx) => (
-            <div key={ex.id} className="space-y-8">
-              <div className="flex items-center gap-4 px-1">
-                 <div style={{ backgroundColor: lightTheme.card }} className="w-12 h-12 rounded-2xl flex items-center justify-center text-black font-black text-xl italic border border-black/5">#{exIdx + 1}</div>
-                 <h3 style={{ color: lightTheme.text }} className="text-2xl font-black italic uppercase tracking-tighter">{ex.name}</h3>
-              </div>
-
-              <div className="w-full relative px-1">
-                <ExerciseGifDisplay name={ex.name} />
-              </div>
-
-              <div style={{ backgroundColor: lightTheme.card }} className="mx-1 p-6 rounded-[28px] border border-black/5 space-y-3.5 shadow-sm">
-                <div className="flex items-center gap-2.5 text-black">
-                  <BookOpen className="w-5 h-5" />
-                  <h3 className="text-[11px] font-black uppercase tracking-widest">運動方法</h3>
-                </div>
-                <p className="text-sm font-medium text-slate-500 leading-relaxed italic whitespace-pre-line">
-                  {getExerciseMethod(ex.name)}
-                </p>
-              </div>
-
-              <div className="space-y-6 px-1">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2.5">
-                      <Target className="w-5 h-5 text-black" />
-                      <h3 style={{ color: lightTheme.text }} className="text-sm font-black italic uppercase">訓練錄入</h3>
-                    </div>
-                    {timerStartedAt && (
-                      <div className="flex items-center gap-1.5 px-3 py-1 bg-black/5 border border-black/10 rounded-lg">
-                        <Timer className="w-3.5 h-3.5 animate-pulse" />
-                        <span className="text-[11px] font-black font-mono">{elapsedTime}</span>
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-3">
-                    {!timerStartedAt && (
-                      <button onClick={startWorkoutTimer} className="flex items-center gap-1.5 text-black text-[10px] font-black uppercase group">
-                        <PlayCircle className="w-4 h-4 fill-current group-active:scale-90 transition-transform" /> 開始訓練
-                      </button>
-                    )}
-                    <button onClick={() => addSetToEx(exIdx)} className="flex items-center gap-1.5 text-black text-[10px] font-black uppercase">
-                      <PlusCircle className="w-4 h-4" /> 加一組
-                    </button>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  {ex.sets.map((set, sIdx) => (
-                    <div key={set.id} className={`grid grid-cols-12 gap-2.5 items-center p-4 rounded-[28px] border transition-all ${set.completed ? 'bg-[#CCFF00]/10 border-[#CCFF00]/40' : 'bg-white border-black/5 shadow-sm'}`}>
-                      <div className="col-span-1 flex justify-center">
-                        <button onClick={() => removeSetFromEx(exIdx, set.id)} className="text-slate-200 p-1 active:text-red-500">
-                          <MinusCircle className="w-5 h-5" />
-                        </button>
-                      </div>
-                      <div className="col-span-1 text-base font-black italic text-slate-300 text-center">{sIdx + 1}</div>
-                      
-                      <div className="col-span-4 flex items-center justify-center gap-2">
-                        <input 
-                          type="number" 
-                          value={set.weight || ''} 
-                          placeholder="0" 
-                          onChange={e => updateSetData(exIdx, set.id, { weight: Number(e.target.value) }, sIdx)} 
-                          style={{ color: lightTheme.text }}
-                          className="w-16 bg-slate-50 rounded-xl py-3 text-center text-xl font-black outline-none border border-black/5 focus:border-black/20 transition-all shadow-inner" 
-                        />
-                        <span className="text-[10px] font-black text-slate-300 italic uppercase shrink-0">kg</span>
-                      </div>
-
-                      <div className="col-span-4 flex items-center justify-center gap-2">
-                        <input 
-                          type="number" 
-                          value={set.reps || ''} 
-                          placeholder="0" 
-                          onChange={e => updateSetData(exIdx, set.id, { reps: Number(e.target.value) }, sIdx)} 
-                          style={{ color: lightTheme.text }}
-                          className="w-16 bg-slate-50 rounded-xl py-3 text-center text-xl font-black outline-none border border-black/5 focus:border-black/20 transition-all shadow-inner" 
-                        />
-                        <span className="text-[10px] font-black text-slate-300 italic uppercase shrink-0">rep</span>
-                      </div>
-
-                      <div className="col-span-2 flex justify-end">
-                        <button 
-                          onClick={() => { 
-                            const nc = !set.completed; 
-                            if(nc) { 
-                              startWorkoutTimer(); 
-                              triggerRestTimer(); 
-                            } 
-                            updateSetData(exIdx, set.id, { completed: nc }, sIdx); 
-                          }} 
-                          className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all active:scale-90 border shadow-sm ${set.completed ? 'bg-[#CCFF00] border-[#CCFF00] text-black' : 'bg-slate-50 border-black/5 text-slate-200'}`}
-                        >
-                          <Check className="w-6 h-6 stroke-[4]" />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="fixed bottom-[110px] left-0 right-0 z-[70] px-8">
-           <button 
-             onClick={handleSaveWorkout} 
-             style={{ backgroundColor: '#000000', color: '#FFFFFF' }}
-             className="w-full font-black h-16 rounded-[28px] uppercase italic text-lg shadow-xl flex items-center justify-center gap-4 active:scale-95 transition-all"
-           >
-             <Save className="w-6 h-6 stroke-[2.5]" style={{ color: lightTheme.accent }} /> 儲存訓練紀錄
-           </button>
-        </div>
-      </motion.div>
-    );
+  const handleFinishIntegratedWorkout = (finalSession: WorkoutSession) => {
+    setHistory([finalSession, ...history]);
+    alert('訓練紀錄已儲存！');
+    setIntegratedRoutine(null);
+    setPreviewRoutine(null);
   };
 
   if (integratedRoutine) {
-    return <IntegratedWorkoutView routine={integratedRoutine} />;
+    return (
+      <IntegratedWorkoutView 
+        routine={integratedRoutine} 
+        sessionExercises={sessionExercises}
+        setSessionExercises={setSessionExercises}
+        onClose={() => setIntegratedRoutine(null)}
+        onFinish={handleFinishIntegratedWorkout}
+      />
+    );
   }
 
   if (previewRoutine) {
@@ -540,7 +570,7 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
 
                       <div style={{ backgroundColor: lightTheme.card }} className="mx-1 p-6 rounded-[28px] border border-black/5 space-y-3.5 shadow-sm">
                         <div className="flex items-center gap-2.5 text-black">
-                          <BookOpen className="w-5 h-5" />
+                          < BookOpen className="w-5 h-5" />
                           <h3 className="text-[11px] font-black uppercase tracking-widest">運動方法</h3>
                         </div>
                         <p className="text-sm font-medium text-slate-500 leading-relaxed italic whitespace-pre-line">
