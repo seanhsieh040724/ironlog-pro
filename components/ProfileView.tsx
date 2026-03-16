@@ -4,7 +4,7 @@ import { BodyMetric, UserGoal } from '../types';
 import { getBMIAnalysis, calculateSuggestedCalories, calculateMacros, calculateWaterIntake } from '../utils/fitnessMath';
 import { 
   Target, Activity, User, Trash2, 
-  Flame, Edit3, CheckCircle2, Save, Beef, Wheat, 
+  Flame, Edit3, CheckCircle2, Save, Beef, Soup, 
   Droplets, Waves, GlassWater, 
   Cake, Maximize2, Weight as WeightIcon, UserCheck, Bike, 
   Mail, Apple, Chrome, X, Camera
@@ -164,10 +164,9 @@ export const ProfileView: React.FC = () => {
            
            <button 
              onClick={handleSaveMetrics} 
-             className={`px-5 py-3 rounded-xl font-black uppercase italic transition-all flex items-center justify-center gap-2 text-[12px] ${isMetricsSaved ? 'bg-emerald-500 text-white' : 'bg-black text-white active:scale-95 shadow-md'}`}
+             className={`w-10 h-10 rounded-xl transition-all flex items-center justify-center ${isMetricsSaved ? 'bg-emerald-500 text-white' : 'bg-black text-white active:scale-95 shadow-md'}`}
            >
-             {isMetricsSaved ? <CheckCircle2 className="w-4 h-4" /> : <Save className="w-4 h-4" style={{ color: lightTheme.accent }} />}
-             {isMetricsSaved ? '已儲存' : '儲存'}
+             {isMetricsSaved ? <CheckCircle2 className="w-5 h-5" /> : <Save className="w-5 h-5" style={{ color: lightTheme.accent }} />}
            </button>
         </div>
         
@@ -189,7 +188,11 @@ export const ProfileView: React.FC = () => {
                   <button 
                     key={g}
                     onClick={() => setTempMetrics({ ...tempMetrics, gender: g })}
-                    className={`flex-1 py-2 rounded-xl text-[10px] font-black uppercase border transition-all ${tempMetrics.gender === g ? 'bg-black text-white border-black shadow-md' : 'bg-white text-slate-300 border-black/5'}`}
+                    className={`flex-1 py-2 rounded-xl text-[10px] font-black uppercase border transition-all ${
+                      tempMetrics.gender === g 
+                        ? (g === 'male' ? 'bg-blue-500 text-white border-blue-500 shadow-md' : 'bg-pink-500 text-white border-pink-500 shadow-md') 
+                        : 'bg-white text-slate-300 border-black/5'
+                    }`}
                   >
                     {g === 'male' ? '男' : '女'}
                   </button>
@@ -222,24 +225,30 @@ export const ProfileView: React.FC = () => {
             </div>
             <button 
               onClick={handleSaveGoal} 
-              className={`px-5 py-3 rounded-xl font-black uppercase italic transition-all flex items-center justify-center gap-2 text-[12px] ${isGoalSaved ? 'bg-emerald-500 text-white' : 'bg-black text-white active:scale-95 shadow-md'}`}
+              className={`w-10 h-10 rounded-xl transition-all flex items-center justify-center ${isGoalSaved ? 'bg-emerald-500 text-white' : 'bg-black text-white active:scale-95 shadow-md'}`}
             >
-              {isGoalSaved ? <CheckCircle2 className="w-4 h-4" /> : <Save className="w-4 h-4" style={{ color: lightTheme.accent }} />}
-              {isGoalSaved ? '已儲存' : '儲存'}
+              {isGoalSaved ? <CheckCircle2 className="w-5 h-5" /> : <Save className="w-5 h-5" style={{ color: lightTheme.accent }} />}
             </button>
          </div>
 
          <div className="space-y-6">
             <div className="grid grid-cols-3 gap-2">
-               {(['cut', 'maintain', 'bulk'] as const).map(type => (
-                 <button 
-                   key={type}
-                   onClick={() => setTempGoal({ ...tempGoal, type })}
-                   className={`py-3 rounded-xl text-[11px] font-black uppercase transition-all border ${tempGoal.type === type ? 'bg-black text-white border-black shadow-md' : 'bg-slate-50 text-slate-400 border-black/5'}`}
-                 >
-                   {type === 'cut' ? '減脂' : type === 'bulk' ? '增肌' : '維持'}
-                 </button>
-               ))}
+               {(['cut', 'maintain', 'bulk'] as const).map(type => {
+                 const colors = {
+                   cut: 'bg-rose-500 border-rose-500',
+                   maintain: 'bg-emerald-500 border-emerald-500',
+                   bulk: 'bg-blue-600 border-blue-600'
+                 };
+                 return (
+                   <button 
+                     key={type}
+                     onClick={() => setTempGoal({ ...tempGoal, type })}
+                     className={`py-3 rounded-xl text-[11px] font-black uppercase transition-all border ${tempGoal.type === type ? `${colors[type]} text-white shadow-md` : 'bg-slate-50 text-slate-400 border-black/5'}`}
+                   >
+                     {type === 'cut' ? '減脂' : type === 'bulk' ? '增肌' : '維持'}
+                   </button>
+                 );
+               })}
             </div>
 
             <div className="grid grid-cols-1 gap-3">
@@ -278,7 +287,7 @@ export const ProfileView: React.FC = () => {
 
             <div className="grid grid-cols-3 gap-3">
               <MacroCard icon={<Beef className="w-4 h-4 text-rose-400" />} label="蛋白質" val={macros.protein} unit="G" color="bg-rose-400" />
-              <MacroCard icon={<Wheat className="w-4 h-4 text-amber-400" />} label="碳水" val={macros.carbs} unit="G" color="bg-amber-400" />
+              <MacroCard icon={<Soup className="w-4 h-4 text-amber-400" />} label="碳水" val={macros.carbs} unit="G" color="bg-amber-400" />
               <MacroCard icon={<Droplets className="w-4 h-4 text-indigo-400" />} label="脂肪" val={macros.fats} unit="G" color="bg-indigo-400" />
             </div>
 

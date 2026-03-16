@@ -93,9 +93,11 @@ export const CalendarStrip: React.FC<CalendarStripProps> = ({ selectedDate, onDa
                   ${!isCurrentMonth ? 'opacity-20 scale-90' : 'opacity-100'}
                   ${isSelected 
                     ? 'bg-black text-white font-black shadow-md z-10 scale-105' 
-                    : isToday 
-                      ? 'bg-slate-100 border border-black text-black' 
-                      : 'hover:bg-slate-50 text-slate-400'
+                    : hasWorkout
+                      ? 'bg-[#CCFF00] text-black font-bold'
+                      : isToday 
+                        ? 'bg-slate-100 text-black' 
+                        : 'hover:bg-slate-50 text-slate-400'
                   }
                 `}
               >
@@ -103,10 +105,10 @@ export const CalendarStrip: React.FC<CalendarStripProps> = ({ selectedDate, onDa
                   {format(day, 'd')}
                 </span>
                 
-                {hasWorkout && (
+                {isToday && (
                   <div className={`
                     absolute bottom-2 w-1.5 h-1.5 rounded-full 
-                    ${isSelected ? 'bg-white' : 'bg-black opacity-30'}
+                    ${isSelected ? 'bg-white' : 'bg-black'}
                   `} />
                 )}
               </button>

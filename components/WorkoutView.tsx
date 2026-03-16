@@ -5,13 +5,14 @@ import {
   Check, MinusCircle, Target, Sparkles, ChevronRight, ChevronLeft, Loader2, AlertCircle, BookOpen, PlusSquare, Play, Timer
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ExerciseSmallGif } from './ExerciseSmallGif';
 import { getMuscleGroup, getMuscleGroupDisplay, fetchExerciseGif, getExerciseMethod } from '../utils/fitnessMath';
 import { AppContext } from '../App';
 import { lightTheme, CardStyle, TextStyle, InputStyle, ActionButtonStyle } from '../themeStyles';
 
 export const ORGANIZED_EXERCISES: Record<string, string[]> = {
-  'chest': ['槓鈴平板臥推', '槓鈴上斜臥推', '啞鈴平板臥推', '啞鈴上斜臥推', '史密斯平板臥推', '坐姿器械推胸', '蝴蝶機夾胸', '跪姿繩索夾胸', '雙槓撐體', '標準俯地挺身', '器械上斜推胸', '史密斯上斜臥推'],
-  'back': ['引體向上', '滑輪下拉', '槓鈴划船', '啞鈴單臂划船', '坐姿划船機', 'T桿划船機', '器械反握高位下拉', '傳統硬舉', '輔助引體向上機', 'V把坐姿划船', '寬握水平划船', '滑輪反握下拉'],
+  'chest': ['槓鈴平板臥推', '槓鈴上斜臥推', '啞鈴平板臥推', '啞鈴上斜臥推', '史密斯平板臥推', '坐姿器械推胸', '蝴蝶機夾胸', '跪姿繩索夾胸', '平板繩索飛鳥', '啞鈴平板飛鳥', '啞鈴上斜飛鳥', '器械上斜飛鳥', '上斜器械胸推', '雙槓撐體輔助', '器械平板胸推', '雙槓撐體', '標準俯地挺身', '器械上斜推胸', '史密斯上斜臥推'],
+  'back': ['引體向上', '滑輪下拉', '槓鈴划船', '啞鈴單臂划船', '坐姿划船機', 'T桿划船機', '器械反握高位下拉', '傳統硬舉', '輔助引體向上機', 'V把坐姿划船', '寬握水平划船', '滑輪反握下拉', '器械下拉', '直臂下拉', '啞鈴上斜划船'],
   'shoulders': ['啞鈴肩推', '槓鈴肩推', '阿諾肩推', '器械肩推', '史密斯機肩推', '啞鈴側平舉', '滑輪側平舉', '器械側平舉', '啞鈴前平舉', '蝴蝶機後三角飛鳥', '滑輪面拉', '俯身啞鈴反向飛鳥'],
   'legs': ['槓鈴深蹲', '啞鈴高腳杯蹲', '上斜腿推機', '水平腿推機', '槓鈴臀推', '保加利亞啞鈴分腿蹲', '哈克深蹲', '仰臥腿後勾', '坐姿腿後勾', '器械站姿提踵', '相撲硬舉', '器械腿外展', '器械腿內收', '六角槓硬舉'],
   'arms': ['槓鈴彎舉', '反手槓鈴彎舉', '啞鈴交替彎舉', '啞鈴錘式彎舉', '牧師椅彎舉', '滑輪繩索下壓', '窄握槓鈴臥推', '仰臥槓鈴臂屈伸', '啞鈴頸後臂屈伸', '滑輪直桿彎舉', '二頭肌器械彎舉', '滑輪直桿過頭臂屈伸'],
@@ -25,6 +26,23 @@ interface WorkoutViewProps {
   onUpdate: (session: WorkoutSession) => void;
   onFinish: () => void;
 }
+
+// 移除本地定義的 ExerciseSmallGif 和重複的 getHardcodedGif
+const getHardcodedGif = (name: string) => {
+  if (name === '槓鈴臀推') return 'https://www.docteur-fitness.com/wp-content/uploads/2021/12/hips-thrust.gif';
+  if (name === '水平腿推機') return 'https://i.pinimg.com/originals/81/0f/96/810f969dcadba4d95912efa62e75ba61.gif';
+  if (name === '平板繩索飛鳥') return 'https://modusx.de/wp-content/uploads/cable-crossover-liegend.gif';
+  if (name === '啞鈴平板飛鳥') return 'https://fitliferegime.com/wp-content/uploads/2023/06/Dumbbell-Fly.gif';
+  if (name === '啞鈴上斜飛鳥') return 'https://fitliferegime.com/wp-content/uploads/2023/06/Incline-Dumbbell-Fly.gif';
+  if (name === '器械上斜飛鳥') return 'https://liftmanual.com/wp-content/uploads/2023/04/lever-incline-fly.webp';
+  if (name === '上斜器械胸推') return 'https://liftmanual.com/wp-content/uploads/2023/04/lever-incline-chest-press.gif';
+  if (name === '雙槓撐體輔助') return 'https://www.docteur-fitness.com/wp-content/uploads/2022/04/dips-assiste-machine.gif';
+  if (name === '器械平板胸推') return 'https://apilyfta.com/static/GymvisualPNG/10411101-Lever-Lying-Chest-Press-(plate-loaded)_Chest_small.png';
+  if (name === '器械下拉') return 'https://i.pinimg.com/originals/8c/de/6c/8cde6c7cab8d14552f7eb07871f649a4.gif';
+  if (name === '直臂下拉') return 'https://modusx.de/wp-content/uploads/ueberzuege-kabel-ruecken.gif';
+  if (name === '啞鈴上斜划船') return 'https://www.inspireusafoundation.org/wp-content/uploads/2022/10/dumbbell-incline-row.gif';
+  return null;
+};
 
 export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onFinish }) => {
   const context = useContext(AppContext);
@@ -108,13 +126,6 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
 
   if (!session) return null;
 
-  // 取得寫死的 GIF 網址邏輯
-  const getHardcodedGif = (name: string) => {
-    if (name === '槓鈴臀推') return 'https://www.docteur-fitness.com/wp-content/uploads/2021/12/hips-thrust.gif';
-    if (name === '水平腿推機') return 'https://i.pinimg.com/originals/81/0f/96/810f969dcadba4d95912efa62e75ba61.gif';
-    return null;
-  };
-
   const displayGifSrc = currentDetailEx ? (getHardcodedGif(currentDetailEx.name) || gifUrl || '') : '';
 
   return (
@@ -149,13 +160,13 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                 </div>
               )}
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3">
                 {searchTerm.trim() && !isExactMatch && (
                   <motion.button 
                     whileTap={{ scale: 0.95 }} 
                     onClick={() => addExercise(searchTerm.trim())} 
                     style={{ backgroundColor: lightTheme.card }}
-                    className="col-span-2 p-5 rounded-[20px] border border-black/5 flex items-center justify-between group shadow-sm"
+                    className="p-5 rounded-[20px] border border-black/5 flex items-center justify-between group shadow-sm"
                   >
                     <div className="flex items-center gap-4">
                       <div style={{ backgroundColor: lightTheme.accent }} className="w-10 h-10 rounded-xl flex items-center justify-center text-black">
@@ -163,7 +174,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                       </div>
                       <div className="text-left overflow-hidden">
                         <div className="text-[11px] font-black uppercase tracking-widest leading-none text-slate-400">建立自訂動作</div>
-                        <div style={{ color: lightTheme.text }} className="text-base font-black italic uppercase truncate max-w-[200px] mt-1.5 pr-2">{searchTerm}</div>
+                        <div style={{ color: lightTheme.text }} className="text-base font-black italic uppercase leading-tight mt-1.5 pr-2">{searchTerm}</div>
                       </div>
                     </div>
                     <ChevronRight className="w-5 h-5 text-[#82CC00] stroke-[3]" />
@@ -176,14 +187,19 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                     whileTap={{ scale: 0.95 }} 
                     onClick={() => addExercise(exName)} 
                     style={{ backgroundColor: lightTheme.card }}
-                    className="p-4 rounded-[20px] text-left border border-black/5 flex flex-col justify-center min-h-[76px] group active:border-black/20 shadow-sm"
+                    className="p-3 rounded-[20px] text-left border border-black/5 flex items-center gap-4 group active:border-black/20 shadow-sm"
                   >
-                    <div style={{ color: lightTheme.text }} className="text-[13px] font-black italic uppercase leading-tight truncate pr-1">
-                      {exName}
+                    <div className="w-16 h-16 rounded-xl overflow-hidden bg-slate-100 shrink-0 flex items-center justify-center border border-black/5">
+                      <ExerciseSmallGif name={exName} />
                     </div>
-                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2 flex items-center justify-between">
-                      {getMuscleGroupDisplay(getMuscleGroup(exName)).cn}
-                      <Plus className="w-3.5 h-3.5 text-[#82CC00] stroke-[3] opacity-0 group-active:opacity-100 transition-opacity" />
+                    <div className="flex-1 min-w-0">
+                      <div style={{ color: lightTheme.text }} className="text-[14px] font-black italic uppercase leading-tight py-0.5 pr-1">
+                        {exName}
+                      </div>
+                      <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1.5 flex items-center justify-between">
+                        {getMuscleGroupDisplay(getMuscleGroup(exName)).cn}
+                        <Plus className="w-3.5 h-3.5 text-[#82CC00] stroke-[3] opacity-0 group-active:opacity-100 transition-opacity" />
+                      </div>
                     </div>
                   </motion.button>
                 ))}
@@ -192,13 +208,24 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
           </motion.div>
         ) : (
           <motion.div key="detail" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="space-y-6 pb-40">
-            <div className="flex items-center justify-between">
-              <button onClick={() => setActiveExerciseId(null)} style={{ color: '#82CC00' }} className="flex items-center gap-2 py-2 active:scale-95 transition-all">
-                <ChevronLeft className="w-7 h-7 stroke-[3]" />
-                <span className="text-xs font-black uppercase tracking-widest">返回</span>
+            <div className="flex items-center justify-between mb-8 px-1">
+              <div className="flex items-center gap-2 flex-1 min-w-0">
+                <button 
+                  onClick={() => setActiveExerciseId(null)} 
+                  className="p-2 -ml-2 active:scale-90 transition-all shrink-0"
+                >
+                  <ChevronLeft className="w-8 h-8 text-[#82CC00] stroke-[4]" />
+                </button>
+                <h2 style={{ color: lightTheme.text }} className="text-2xl font-black italic uppercase leading-tight py-1">
+                  {currentDetailEx?.name}
+                </h2>
+              </div>
+              <button 
+                onClick={() => { if(confirm('移除？')) { onUpdate({ ...session, exercises: session.exercises.filter(e => e.id !== currentDetailEx!.id) }); setActiveExerciseId(null); } }} 
+                className="w-10 h-10 bg-red-50 rounded-xl flex items-center justify-center text-red-400 border border-red-100 active:scale-95 transition-all shrink-0"
+              >
+                <Trash2 className="w-4 h-4" />
               </button>
-              <h2 style={{ color: lightTheme.text }} className="text-2xl font-black italic uppercase truncate max-w-[240px] pr-3">{currentDetailEx?.name}</h2>
-              <button onClick={() => { if(confirm('移除？')) { onUpdate({ ...session, exercises: session.exercises.filter(e => e.id !== currentDetailEx!.id) }); setActiveExerciseId(null); } }} className="w-11 h-11 bg-red-50 rounded-xl flex items-center justify-center text-red-400 border border-red-100"><Trash2 className="w-5 h-5" /></button>
             </div>
 
             <div className="w-full relative px-1">

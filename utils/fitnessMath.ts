@@ -119,6 +119,13 @@ const EXERCISE_MEDIA_REGISTRY: Record<string, string> = {
   "跪姿繩索夾胸": "https://www.docteur-fitness.com/wp-content/uploads/2023/07/ecarte-a-la-poulie-vis-a-vis-haute-a-genoux.gif",
   "器械上斜推胸": "https://www.docteur-fitness.com/wp-content/uploads/2000/06/developpe-incline-machine-convergente-exercice-musculation.gif",
   "史密斯上斜臥推": "https://fitliferegime.com/wp-content/uploads/2024/04/Smith-Machine-Incline-Press.gif",
+  "平板繩索飛鳥": "https://modusx.de/wp-content/uploads/cable-crossover-liegend.gif",
+  "啞鈴平板飛鳥": "https://fitliferegime.com/wp-content/uploads/2023/06/Dumbbell-Fly.gif",
+  "啞鈴上斜飛鳥": "https://fitliferegime.com/wp-content/uploads/2023/06/Incline-Dumbbell-Fly.gif",
+  "器械上斜飛鳥": "https://liftmanual.com/wp-content/uploads/2023/04/lever-incline-fly.webp",
+  "上斜器械胸推": "https://liftmanual.com/wp-content/uploads/2023/04/lever-incline-chest-press.gif",
+  "雙槓撐體輔助": "https://www.docteur-fitness.com/wp-content/uploads/2022/04/dips-assiste-machine.gif",
+  "器械平板胸推": "https://apilyfta.com/static/GymvisualPNG/10411101-Lever-Lying-Chest-Press-(plate-loaded)_Chest_small.png",
   "雙槓撐體": "https://i.pinimg.com/originals/e7/45/d6/e745d6fcd41963a8a6d36c4b66c009a9.gif",
   "標準俯地挺身": "https://www.docteur-fitness.com/wp-content/uploads/2020/10/pompe-musculation.gif",
   "槓鈴彎舉": "https://www.docteur-fitness.com/wp-content/uploads/2021/09/curl-barre.gif",
@@ -145,6 +152,9 @@ const EXERCISE_MEDIA_REGISTRY: Record<string, string> = {
   "V把坐姿划船": "https://www.docteur-fitness.com/wp-content/uploads/2022/02/tirage-horizontal-poulie.gif",
   "寬握水平划船": "https://www.docteur-fitness.com/wp-content/uploads/2022/10/tirage-horizontal-prise-large.gif",
   "滑輪反握下拉": "https://www.docteur-fitness.com/wp-content/uploads/2022/01/tirage-vertical-prise-inversee.gif",
+  "器械下拉": "https://i.pinimg.com/originals/8c/de/6c/8cde6c7cab8d14552f7eb07871f649a4.gif",
+  "直臂下拉": "https://modusx.de/wp-content/uploads/ueberzuege-kabel-ruecken.gif",
+  "啞鈴上斜划船": "https://www.inspireusafoundation.org/wp-content/uploads/2022/10/dumbbell-incline-row.gif",
   "槓鈴深蹲": "https://www.docteur-fitness.com/wp-content/uploads/2021/11/homme-faisant-un-squat-avec-barre.gif",
   "啞鈴高腳杯蹲": "https://www.docteur-fitness.com/wp-content/uploads/2000/06/squat-goblet-exercice-musculation.gif",
   "上斜腿推機": "https://www.docteur-fitness.com/wp-content/uploads/2022/08/presse-a-cuisses-inclinee.gif",
@@ -199,6 +209,20 @@ const EXERCISE_METHODS: Record<string, string> = {
 
   "史密斯上斜臥推": "01 將斜凳置於史密斯機內，平躺後確認槓鈴路徑對準上胸，雙手握寬後解鎖。\n\n02 沿著垂直或微斜軌道緩慢降下槓鈴，控制重心，感受上胸纖維的拉伸與舒張。\n\n03 感覺上胸肌肉強力收縮，將槓鈴推回頂端，利用固定軌道進行高強度擠壓。",
 
+  "平板繩索飛鳥": "01 將平板長凳置於兩台滑輪機中間，平躺於凳上，雙手各握住低位滑輪把手。\n\n02 保持手肘微彎，緩慢將手臂向兩側張開，直到感受胸肌完全舒張與拉伸。\n\n03 感覺胸肌收縮發力，帶動雙臂向胸部上方中心併攏，頂峰時強力擠壓胸肌。",
+
+  "啞鈴平板飛鳥": "01 平躺於平板凳，雙手持啞鈴舉至胸部上方，掌心相對，手肘微彎並保持固定。\n\n02 緩慢將啞鈴向兩側弧形下降，感受胸肌的橫向拉伸與舒張。\n\n03 感覺胸肌收縮，帶動啞鈴沿原路徑向上劃弧線併攏，頂峰時擠壓胸肌中縫。",
+
+  "啞鈴上斜飛鳥": "01 坐在上斜凳上，雙手持啞鈴舉至上胸上方，掌心相對，手肘微彎。\n\n02 緩慢將啞鈴向兩側斜下方打開，感受上胸肌群的深度舒張與牽拉。\n\n03 感覺上胸收縮發力，將啞鈴向中心斜上方帶回，專注於上胸中縫的擠壓感。",
+
+  "器械上斜飛鳥": "01 坐在上斜飛鳥機上，背部貼緊靠墊，雙手握住把手，手臂微彎。\n\n02 緩慢控制握把向兩側張開，感受上胸肌群在固定軌道下的舒張。\n\n03 感覺上胸收縮，將握把向中心擠壓併攏，利用機器穩定性專注於上胸發力。",
+
+  "上斜器械胸推": "01 坐在上斜推胸機上，調整座椅使握把位於上胸高度，雙腳踩穩。\n\n02 緩慢控制握把回放，感受上胸肌群在傾斜角度下的深度舒張。\n\n03 感覺上胸收縮，用力將握把向前上方推起，頂峰時保持胸肌張力。",
+
+  "雙槓撐體輔助": "01 雙膝跪在輔助墊上，雙手握住雙槓，身體微前傾以將重心移向胸部。\n\n02 緩慢彎曲手肘下降身體，直到感受胸肌下緣有明顯的牽拉感與舒張。\n\n03 感覺胸肌下緣收縮發力，利用機器輔助將身體撐回起始位置。",
+
+  "器械平板胸推": "01 平躺於器械推胸機上，雙手握住握把，調整位置使握把位於胸部中線。\n\n02 緩慢控制重量下降，感受胸大肌整體的受壓與舒張。\n\n03 感覺胸肌強力收縮，將握把向上推起，專注於胸肌整體的發力感。",
+
   // 背部 (Back)
   "引體向上": "01 雙手略寬於肩握住單槓，身體自然垂懸，核心收緊，穩定軀幹不晃動。\n\n02 緩慢下降身體回到垂懸狀態，控制下落速度，感受背闊肌兩側的拉伸與舒張。\n\n03 感覺背部肌群收縮時，帶動手肘向下拉，將身體向上拉起直到下巴超過單槓高度。",
 
@@ -223,6 +247,12 @@ const EXERCISE_METHODS: Record<string, string> = {
   "寬握水平划船": "01 使用寬握把手，坐穩後背部挺直，雙手略寬於肩握把，手肘抬高與肩膀接近水平。\n\n02 緩慢回放重量，讓把手帶動雙臂前伸，感受到後三角肌與中背部肌群的舒張。\n\n03 感覺後三角肌收縮，將把手向胸部方向拉，手肘向兩側張開並向後擠壓，強化後背厚度。",
 
   "滑輪反握下拉": "01 雙手反握（掌心朝己）滑輪把手，坐穩並鎖定大腿，上半身微後傾以穩定重心。\n\n02 緩慢將把手送回上方，控制肌肉放鬆的速度，感受到背闊肌垂直向上的舒張。\n\n03 感覺背部收縮，帶動手肘垂直向下夾緊，將把手下拉至鎖骨位置並擠壓背肌。",
+
+  "器械下拉": "01 坐在機器上，雙手握住把手，調整座椅高度使雙臂能充分向上延伸。\n\n02 緩慢放回重量向上移動，控制背部受力，感受到背闊肌的延伸與舒張。\n\n03 感覺背部收縮發力，將把手下拉至胸前，專注於手肘向下夾緊並感受背闊肌的收縮。",
+
+  "直臂下拉": "01 面對滑輪機站立，雙手握住直桿或繩索，手臂伸直，身體微前傾。\n\n02 緩慢讓把手回升，控制背部張力，感受到背闊肌的拉伸與舒張。\n\n03 感覺背闊肌收縮發力，保持手臂伸直（或微彎固定），將把手向下拉至大腿處。",
+
+  "啞鈴上斜划船": "01 俯臥在上斜長凳上（約 30-45 度），雙手持啞鈴自然垂下，掌心相對。\n\n02 緩慢控制啞鈴下降，延伸肩胛骨，感受中背部肌群的深度舒張。\n\n03 感覺背肌收縮發力，帶動手肘向後上方拉起啞鈴，專注於肩胛骨向中線靠攏的擠壓感受。",
 
   // 肩部 (Shoulders)
   "啞鈴肩推": "01 坐姿或站立，背部挺直，雙手持啞鈴舉至耳朵兩側高度，掌心朝前。\n\n02 緩慢下降啞鈴，手肘保持與地面垂直，感受到肩部三角肌的舒張。\n\n03 感覺三角肌收縮發力，將啞鈴垂直向上推起，注意手肘不完全鎖死。",

@@ -1,8 +1,9 @@
 import React, { useState, useMemo } from 'react';
-import { WorkoutSession, MuscleGroup, ExerciseEntry } from '../types';
+import { WorkoutSession, MuscleGroup, ExerciseEntry, SetEntry } from '../types';
 import { getMuscleGroupDisplay } from '../utils/fitnessMath';
-import { Activity, BarChart3, Trash2, CalendarDays, Timer, Save } from 'lucide-react';
+import { Activity, BarChart3, Trash2, CalendarDays, Timer, Save, Check } from 'lucide-react';
 import { isSameDay, format } from 'date-fns';
+import { ExerciseSmallGif } from './ExerciseSmallGif';
 import startOfWeek from 'date-fns/startOfWeek';
 import startOfMonth from 'date-fns/startOfMonth';
 import startOfYear from 'date-fns/startOfYear';
@@ -87,18 +88,24 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
     return results;
   }, [history, analysisPeriod]);
 
+  const multiplier = analysisPeriod === 'month' ? 4 : 1;
+  const thresholds = {
+    light: 10 * multiplier,
+    moderate: 15 * multiplier,
+  };
+
   const getHeatColor = (setCount: number) => {
     if (setCount === 0) return '#E2E8F0'; 
-    if (setCount <= 10) return '#82CC00';  // 輕量
-    if (setCount <= 15) return '#FACC15';  // 適中
+    if (setCount <= thresholds.light) return '#82CC00';  // 輕量
+    if (setCount <= thresholds.moderate) return '#FACC15';  // 適中
     return '#FF3B30';                      // 力竭
   };
 
   const getLoadStatus = (setCount: number) => {
     if (setCount === 0) return { label: '休息恢復', color: 'text-slate-300' };
-    if (setCount <= 10) return { label: '輕量(1-10組)', color: 'text-[#82CC00]' };
-    if (setCount <= 15) return { label: '適中(11-15組)', color: 'text-yellow-500' };
-    return { label: '力竭(16+組)', color: 'text-red-500' };
+    if (setCount <= thresholds.light) return { label: `輕量(1-${thresholds.light}組)`, color: 'text-[#82CC00]' };
+    if (setCount <= thresholds.moderate) return { label: `適中(${thresholds.light + 1}-${thresholds.moderate}組)`, color: 'text-yellow-500' };
+    return { label: `力竭(${thresholds.moderate + 1}+組)`, color: 'text-red-500' };
   };
 
   return (
@@ -161,17 +168,42 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
                          <Trash2 className="w-4 h-4" />
                        </button>
                     </div>
-                    <div className="space-y-3">
+                    <div className="space-y-6">
                       {session.exercises.map(ex => (
-                        <div key={ex.id} style={{ backgroundColor: lightTheme.card }} className="flex justify-between items-center p-5 rounded-3xl border border-black/5 shadow-sm">
-                          <div className="overflow-hidden">
-                            <span style={{ color: lightTheme.text }} className="text-base font-black italic uppercase tracking-tight truncate block pr-2">{ex.name}</span>
-                            <div className="text-[9px] font-bold text-slate-300 uppercase mt-1">{ex.sets.length} 組</div>
+                        <div key={ex.id} style={{ backgroundColor: lightTheme.card }} className="p-6 rounded-[32px] border border-black/5 shadow-sm space-y-6">
+                          <div className="flex items-center gap-4">
+                            <div className="w-16 h-16 rounded-xl overflow-hidden bg-slate-100 shrink-0 flex items-center justify-center border border-black/5">
+                              <ExerciseSmallGif name={ex.name} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <span style={{ color: lightTheme.text }} className="text-xl font-black italic uppercase tracking-tight leading-tight py-1 block">{ex.name}</span>
+                              <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">
+                                {getMuscleGroupDisplay(ex.muscleGroup).cn} • {ex.sets.length} 組
+                              </div>
+                            </div>
                           </div>
-                          <div className="text-right shrink-0 ml-4">
-                            <span style={{ color: '#82CC00' }} className="text-lg font-black italic pr-0.5">{ex.sets[0]?.weight}kg</span>
-                            <span className="mx-1 text-slate-200 font-black italic">×</span>
-                            <span style={{ color: lightTheme.text }} className="text-lg font-black italic">{ex.sets[0]?.reps}</span>
+                          
+                          <div className="grid grid-cols-1 gap-2">
+                            {ex.sets.map((set, sIdx) => (
+                              <div key={set.id} className="flex items-center justify-between py-2.5 px-4 bg-white/50 rounded-2xl border border-black/[0.03]">
+                                <div className="flex items-center gap-3">
+                                  <span className="text-[10px] font-black text-slate-300 italic w-4">#{sIdx + 1}</span>
+                                  <div className="flex items-center gap-1">
+                                    <span style={{ color: lightTheme.text }} className="text-base font-black italic">{set.weight}</span>
+                                    <span className="text-[9px] font-black text-slate-300 uppercase italic">kg</span>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-4">
+                                  <div className="flex items-center gap-1">
+                                    <span style={{ color: lightTheme.text }} className="text-base font-black italic">{set.reps}</span>
+                                    <span className="text-[9px] font-black text-slate-300 uppercase italic">reps</span>
+                                  </div>
+                                  <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${set.completed ? 'bg-[#CCFF00] text-black' : 'bg-slate-100 text-slate-200'}`}>
+                                    <Check className="w-3.5 h-3.5 stroke-[4]" />
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
                           </div>
                         </div>
                       ))}
@@ -215,7 +247,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
         <div className="grid grid-cols-1 gap-6">
            {allMuscleGroups.map(muscle => {
              const setTotal = analysisData[muscle] || 0;
-             const progressPercentage = Math.min(100, (setTotal / 20) * 100);
+             const progressPercentage = Math.min(100, (setTotal / (20 * multiplier)) * 100);
              const barColor = getHeatColor(setTotal);
              const loadStatus = getLoadStatus(setTotal);
              
@@ -248,18 +280,18 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
         </div>
 
         {/* 負荷強度圖例 - 依照使用者要求調整格式 */}
-        <div className="flex flex-wrap items-center gap-x-6 gap-y-3 pt-4 border-t border-black/5">
-           <div className="flex items-center gap-2">
-              <div className="w-3.5 h-3.5 rounded bg-[#82CC00] shadow-sm" />
-              <span className="text-[10px] font-black uppercase text-slate-400 tracking-tighter">輕量(1-10組)</span>
+        <div className="flex items-center justify-between pt-4 border-t border-black/5">
+           <div className="flex items-center gap-1">
+              <div className="w-3 h-3 rounded-sm bg-[#82CC00] shadow-sm" />
+              <span className="text-[9px] font-black uppercase text-slate-400 tracking-tighter">輕量(1-{thresholds.light}組)</span>
            </div>
-           <div className="flex items-center gap-2">
-              <div className="w-3.5 h-3.5 rounded bg-[#FACC15] shadow-sm" />
-              <span className="text-[10px] font-black uppercase text-slate-400 tracking-tighter">適中(11-15組)</span>
+           <div className="flex items-center gap-1">
+              <div className="w-3 h-3 rounded-sm bg-[#FACC15] shadow-sm" />
+              <span className="text-[9px] font-black uppercase text-slate-400 tracking-tighter">適中({thresholds.light + 1}-{thresholds.moderate}組)</span>
            </div>
-           <div className="flex items-center gap-2">
-              <div className="w-3.5 h-3.5 rounded bg-[#FF3B30] shadow-sm" />
-              <span className="text-[10px] font-black uppercase text-slate-400 tracking-tighter">力竭(16+組)</span>
+           <div className="flex items-center gap-1">
+              <div className="w-3 h-3 rounded-sm bg-[#FF3B30] shadow-sm" />
+              <span className="text-[9px] font-black uppercase text-slate-400 tracking-tighter">力竭({thresholds.moderate + 1}+組)</span>
            </div>
         </div>
       </div>

@@ -1,6 +1,7 @@
 import React, { useState, useContext, useMemo, useEffect } from 'react';
 import { AppContext } from '../App';
 import { RoutineTemplate, MuscleGroup, ExerciseEntry, SetEntry, WorkoutSession } from '../types';
+import { ExerciseSmallGif } from './ExerciseSmallGif';
 import { getMuscleGroup, getMuscleGroupDisplay, fetchExerciseGif, getExerciseMethod } from '../utils/fitnessMath';
 import { ORGANIZED_EXERCISES, EXERCISE_DATABASE } from './WorkoutView';
 import { 
@@ -16,6 +17,16 @@ import { lightTheme } from '../themeStyles';
 const getHardcodedGif = (n: string) => {
   if (n === '槓鈴臀推') return 'https://www.docteur-fitness.com/wp-content/uploads/2021/12/hips-thrust.gif';
   if (n === '水平腿推機') return 'https://i.pinimg.com/originals/81/0f/96/810f969dcadba4d95912efa62e75ba61.gif';
+  if (n === '平板繩索飛鳥') return 'https://modusx.de/wp-content/uploads/cable-crossover-liegend.gif';
+  if (n === '啞鈴平板飛鳥') return 'https://fitliferegime.com/wp-content/uploads/2023/06/Dumbbell-Fly.gif';
+  if (n === '啞鈴上斜飛鳥') return 'https://fitliferegime.com/wp-content/uploads/2023/06/Incline-Dumbbell-Fly.gif';
+  if (n === '器械上斜飛鳥') return 'https://liftmanual.com/wp-content/uploads/2023/04/lever-incline-fly.webp';
+  if (n === '上斜器械胸推') return 'https://liftmanual.com/wp-content/uploads/2023/04/lever-incline-chest-press.gif';
+  if (n === '雙槓撐體輔助') return 'https://www.docteur-fitness.com/wp-content/uploads/2022/04/dips-assiste-machine.gif';
+  if (n === '器械平板胸推') return 'https://apilyfta.com/static/GymvisualPNG/10411101-Lever-Lying-Chest-Press-(plate-loaded)_Chest_small.png';
+  if (n === '器械下拉') return 'https://i.pinimg.com/originals/8c/de/6c/8cde6c7cab8d14552f7eb07871f649a4.gif';
+  if (n === '直臂下拉') return 'https://modusx.de/wp-content/uploads/ueberzuege-kabel-ruecken.gif';
+  if (n === '啞鈴上斜划船') return 'https://www.inspireusafoundation.org/wp-content/uploads/2022/10/dumbbell-incline-row.gif';
   return null;
 };
 
@@ -47,11 +58,14 @@ const ExerciseGifDisplay: React.FC<{ name: string }> = ({ name }) => {
           alt={name} 
           className="w-full h-auto object-cover rounded-[15px] block"
           onLoad={() => setIsLoading(false)}
+          referrerPolicy="no-referrer"
         />
       )}
     </div>
   );
 };
+
+// 移除本地定義的 ExerciseSmallGif
 
 interface IntegratedWorkoutViewProps {
   routine: RoutineTemplate;
@@ -160,7 +174,7 @@ const IntegratedWorkoutView: React.FC<IntegratedWorkoutViewProps> = ({
           <ArrowLeft className="w-6 h-6 stroke-[3]" />
         </button>
         <div className="flex-1 overflow-hidden">
-          <h2 style={{ color: lightTheme.text }} className="text-xl font-black italic tracking-tighter uppercase truncate">{routine.name}</h2>
+          <h2 style={{ color: lightTheme.text }} className="text-xl font-black italic tracking-tighter uppercase leading-tight py-1">{routine.name}</h2>
           <p className="text-[10px] font-black text-[#82CC00] uppercase tracking-widest mt-0.5">整合訓練模式</p>
         </div>
       </div>
@@ -169,12 +183,13 @@ const IntegratedWorkoutView: React.FC<IntegratedWorkoutViewProps> = ({
         {sessionExercises.map((ex, exIdx) => (
           <div key={ex.id} className="space-y-8">
             <div className="flex items-center gap-4 px-1">
-               <div style={{ backgroundColor: lightTheme.card }} className="w-12 h-12 rounded-2xl flex items-center justify-center text-black font-black text-xl italic border border-black/5">#{exIdx + 1}</div>
-               <h3 style={{ color: lightTheme.text }} className="text-2xl font-black italic uppercase tracking-tighter">{ex.name}</h3>
-            </div>
-
-            <div className="w-full relative px-1">
-              <ExerciseGifDisplay name={ex.name} />
+               <div style={{ backgroundColor: lightTheme.card }} className="w-12 h-12 rounded-2xl flex items-center justify-center text-black font-black text-xl italic border border-black/5 shrink-0">#{exIdx + 1}</div>
+               <div className="flex-1 min-w-0 flex items-center gap-3">
+                 <div className="w-16 h-16 rounded-xl overflow-hidden bg-slate-100 shrink-0 flex items-center justify-center border border-black/5">
+                   <ExerciseSmallGif name={ex.name} />
+                 </div>
+                 <h3 style={{ color: lightTheme.text }} className="text-2xl font-black italic uppercase tracking-tighter leading-tight py-1">{ex.name}</h3>
+               </div>
             </div>
 
             <div style={{ backgroundColor: lightTheme.card }} className="mx-1 p-6 rounded-[28px] border border-black/5 space-y-3.5 shadow-sm">
@@ -432,7 +447,7 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
               </div>
             ) : (
               <div className="flex items-center gap-2.5">
-                <h2 style={{ color: lightTheme.text }} className="text-xl font-black italic tracking-tighter uppercase truncate">{previewRoutine.name}</h2>
+                <h2 style={{ color: lightTheme.text }} className="text-xl font-black italic tracking-tighter uppercase leading-tight py-1">{previewRoutine.name}</h2>
                 {isCustom && <button onClick={() => { setTempName(previewRoutine.name); setIsEditingName(true); }} className="p-2 bg-slate-100 rounded-lg text-slate-400"><Edit2 className="w-4 h-4" /></button>}
               </div>
             )}
@@ -442,12 +457,15 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
         
         <div className="space-y-3.5">
           {previewRoutine.exercises.map((ex, idx) => (
-            <div key={ex.id} style={{ backgroundColor: lightTheme.card }} className="rounded-[32px] p-6 border border-black/5 flex items-center justify-between group shadow-sm">
-              <div className="flex items-center gap-4">
-                <span className="text-xs font-black italic text-slate-300 w-4">{idx + 1}</span>
-                <div>
-                  <h4 style={{ color: lightTheme.text }} className="font-black text-lg italic uppercase tracking-tight pr-2">{ex.name}</h4>
-                  <div className="flex items-center gap-3 mt-1.5">
+            <div key={ex.id} style={{ backgroundColor: lightTheme.card }} className="rounded-[32px] p-4 border border-black/5 flex items-center justify-between group shadow-sm">
+              <div className="flex items-center gap-4 flex-1 min-w-0">
+                <span className="text-xs font-black italic text-slate-300 w-4 shrink-0">{idx + 1}</span>
+                <div className="w-14 h-14 rounded-xl overflow-hidden bg-slate-100 shrink-0 flex items-center justify-center border border-black/5">
+                  <ExerciseSmallGif name={ex.name} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 style={{ color: lightTheme.text }} className="font-black text-lg italic uppercase tracking-tight pr-2 leading-tight py-0.5">{ex.name}</h4>
+                  <div className="flex items-center gap-3 mt-1">
                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{getMuscleGroupDisplay(ex.muscleGroup).cn}</span>
                     <div className="w-1 h-1 rounded-full bg-slate-200" />
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">{ex.defaultSets} 組 | {ex.defaultReps} 次</span>
@@ -455,7 +473,7 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
                 </div>
               </div>
               {isCustom && (
-                <button onClick={() => removeExerciseFromTemplate(ex.id)} style={{ backgroundColor: lightTheme.bg }} className="w-10 h-10 rounded-xl flex items-center justify-center text-slate-200 active:text-red-500 border border-black/5 shadow-inner"><Trash2 className="w-4 h-4" /></button>
+                <button onClick={() => removeExerciseFromTemplate(ex.id)} style={{ backgroundColor: lightTheme.bg }} className="w-10 h-10 rounded-xl flex items-center justify-center text-slate-200 active:text-red-500 border border-black/5 shadow-inner ml-2"><Trash2 className="w-4 h-4" /></button>
               )}
             </div>
           ))}
@@ -484,12 +502,16 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
               <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} className="relative w-full max-w-md bg-white rounded-t-[48px] p-8 pb-14 border-t border-black/5 shadow-2xl safe-bottom max-h-[95vh] overflow-hidden flex flex-col">
                 <div className="w-14 h-1.5 bg-slate-200 rounded-full mx-auto mb-8 shrink-0" />
                 <div className="flex justify-between items-center mb-6 shrink-0">
-                  <div className="flex items-center gap-3 overflow-hidden">
+                  <div className="flex items-center gap-2 overflow-hidden flex-1">
                     {selectedExName ? (
-                      <button onClick={() => setSelectedExName(null)} style={{ color: '#82CC00' }} className="flex items-center gap-2 py-2">
-                        <ChevronLeft className="w-7 h-7 stroke-[3]" />
-                        <span className="text-xs font-black uppercase tracking-widest">返回搜尋</span>
-                      </button>
+                      <>
+                        <button onClick={() => setSelectedExName(null)} className="p-2 -ml-2 active:scale-90 transition-all shrink-0">
+                          <ChevronLeft className="w-8 h-8 text-[#82CC00] stroke-[4]" />
+                        </button>
+                        <h2 style={{ color: lightTheme.text }} className="text-xl font-black italic uppercase leading-tight py-1">
+                          {selectedExName}
+                        </h2>
+                      </>
                     ) : (
                       <h3 style={{ color: lightTheme.text }} className="text-2xl font-black italic uppercase pr-2">選取項目</h3>
                     )}
@@ -527,13 +549,13 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
                       )}
 
                       <div className="flex-1 overflow-y-auto no-scrollbar space-y-4 pb-12">
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 gap-3">
                           {searchTerm.trim() && !isExactMatch && (
                             <motion.button 
                               whileTap={{ scale: 0.95 }} 
                               onClick={() => setSelectedExName(searchTerm.trim())} 
                               style={{ backgroundColor: lightTheme.card }}
-                              className="col-span-2 p-5 rounded-[24px] border border-black/5 flex items-center justify-between group shadow-sm"
+                              className="p-5 rounded-[24px] border border-black/5 flex items-center justify-between group shadow-sm"
                             >
                               <div className="flex items-center gap-4">
                                 <div style={{ backgroundColor: lightTheme.accent }} className="w-10 h-10 rounded-xl flex items-center justify-center text-black">
@@ -541,7 +563,7 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
                                 </div>
                                 <div className="text-left overflow-hidden">
                                   <div className="text-[11px] font-black uppercase tracking-widest leading-none text-slate-400">建立自訂動作</div>
-                                  <div style={{ color: lightTheme.text }} className="text-base font-black italic uppercase truncate max-w-[200px] mt-1.5 pr-2">{searchTerm}</div>
+                                  <div style={{ color: lightTheme.text }} className="text-base font-black italic uppercase leading-tight mt-1.5 pr-2">{searchTerm}</div>
                                 </div>
                               </div>
                               <ChevronRight className="w-5 h-5 text-[#82CC00] stroke-[3]" />
@@ -549,11 +571,21 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
                           )}
 
                           {filteredExercises.map(exName => (
-                            <button key={exName} onClick={() => setSelectedExName(exName)} style={{ backgroundColor: lightTheme.card }} className="p-5 rounded-[24px] text-left border border-black/5 flex flex-col justify-center min-h-[86px] active:border-black/20 group transition-all shadow-sm">
-                              <div style={{ color: lightTheme.text }} className="text-[14px] font-black italic uppercase leading-tight truncate pr-1">{exName}</div>
-                              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2 flex items-center justify-between">
-                                {getMuscleGroupDisplay(getMuscleGroup(exName)).cn}
-                                <Plus className="w-3.5 h-3.5 text-[#82CC00] stroke-[3] opacity-0 group-active:opacity-100 transition-opacity" />
+                            <button 
+                              key={exName} 
+                              onClick={() => setSelectedExName(exName)} 
+                              style={{ backgroundColor: lightTheme.card }} 
+                              className="p-3 rounded-[24px] text-left border border-black/5 flex items-center gap-4 active:border-black/20 group transition-all shadow-sm"
+                            >
+                              <div className="w-16 h-16 rounded-xl overflow-hidden bg-slate-100 shrink-0 flex items-center justify-center border border-black/5">
+                                <ExerciseSmallGif name={exName} />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div style={{ color: lightTheme.text }} className="text-[14px] font-black italic uppercase leading-tight py-0.5 pr-1">{exName}</div>
+                                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1.5 flex items-center justify-between">
+                                  {getMuscleGroupDisplay(getMuscleGroup(exName)).cn}
+                                  <Plus className="w-3.5 h-3.5 text-[#82CC00] stroke-[3] opacity-0 group-active:opacity-100 transition-opacity" />
+                                </div>
                               </div>
                             </button>
                           ))}
@@ -562,8 +594,6 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
                     </>
                   ) : (
                     <div className="flex-1 overflow-y-auto no-scrollbar space-y-8 pb-32">
-                      <h2 style={{ color: lightTheme.text }} className="text-2xl font-black italic uppercase truncate px-1">{selectedExName}</h2>
-
                       <div className="w-full relative px-1">
                         <ExerciseGifDisplay name={selectedExName} />
                       </div>
@@ -840,7 +870,7 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
         {customRoutines.map(r => (
           <button key={r.id} onClick={() => setPreviewRoutine(r)} style={{ backgroundColor: lightTheme.card }} className="w-full rounded-[32px] p-7 border border-black/5 active:scale-[0.98] transition-all flex justify-between items-center text-left group shadow-sm">
             <div>
-              <h3 style={{ color: lightTheme.text }} className="text-xl font-black italic uppercase tracking-tight">{r.name}</h3>
+              <h3 style={{ color: lightTheme.text }} className="text-xl font-black italic uppercase tracking-tight leading-tight py-1">{r.name}</h3>
               <div className="flex items-center gap-3 mt-2.5">
                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{r.exercises.length} EXERCISES</span>
                 <div className="w-1 h-1 rounded-full bg-slate-200" />
@@ -863,7 +893,7 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
           <div key={system.id} style={{ backgroundColor: lightTheme.card }} className="rounded-[48px] p-8 border border-black/5 space-y-6 relative overflow-hidden shadow-sm">
             <div className="flex justify-between items-start">
               <div className="flex-1 pr-4">
-                <h3 style={{ color: lightTheme.text }} className="text-xl font-black italic uppercase tracking-tighter">{system.title}</h3>
+                <h3 style={{ color: lightTheme.text }} className="text-xl font-black italic uppercase tracking-tighter leading-tight py-1">{system.title}</h3>
                 <p className="text-xs text-slate-400 mt-2 leading-relaxed">{system.description}</p>
               </div>
               <span className="shrink-0 px-3 py-1 bg-black text-white text-[9px] font-black uppercase tracking-widest rounded-lg border border-black/10">{system.tag}</span>
@@ -874,8 +904,8 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
                  <button key={r.id} onClick={() => setPreviewRoutine(r as any)} style={{ backgroundColor: lightTheme.bg }} className="flex items-center justify-between p-6 border border-black/5 rounded-[28px] hover:border-black/20 active:scale-[0.98] transition-all text-left group shadow-sm">
                    <div className="flex items-center gap-5 overflow-hidden">
                       <div style={{ backgroundColor: lightTheme.card }} className="w-10 h-10 rounded-xl flex items-center justify-center text-[11px] font-black text-black shrink-0 border border-black/5">D{idx + 1}</div>
-                      <div className="overflow-hidden">
-                        <div style={{ color: lightTheme.text }} className="text-base font-black italic uppercase truncate pr-2">{r.name}</div>
+                      <div className="overflow-hidden flex-1">
+                        <div style={{ color: lightTheme.text }} className="text-base font-black italic uppercase leading-tight py-1 pr-2">{r.name}</div>
                         <div className="text-[9px] font-bold text-slate-300 uppercase tracking-widest mt-1">{r.exercises.length} 個動作</div>
                       </div>
                    </div>
