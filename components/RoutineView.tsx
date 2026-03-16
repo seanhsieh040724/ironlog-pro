@@ -842,46 +842,48 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
         <h2 style={{ color: lightTheme.text }} className="text-2xl font-black italic tracking-tighter uppercase flex items-center gap-4">
           <LayoutGrid className="w-7 h-7" /> 訓練課表
         </h2>
+      </div>
+
+      <div className="space-y-6">
+        <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.4em] ml-2">我的自訂課表</p>
+        
         <button 
           onClick={() => setIsCreating(true)} 
           style={{ backgroundColor: lightTheme.accent }}
-          className="px-6 py-3 text-black text-[11px] font-black rounded-xl uppercase active:scale-95 transition-all shadow-md"
+          className="w-full py-5 text-black text-base font-black rounded-2xl uppercase italic active:scale-95 transition-all shadow-lg flex items-center justify-center gap-3"
         >
-          + 建立自訂
+          <Plus className="w-6 h-6 stroke-[3]" /> 建立我的課表
         </button>
-      </div>
 
-      <AnimatePresence>
-        {isCreating && (
-          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} style={{ backgroundColor: lightTheme.card }} className="rounded-[40px] p-8 border border-black/5 shadow-xl space-y-7 overflow-hidden">
-            <input autoFocus placeholder="課表名稱..." value={newRoutineName} onChange={e => setNewRoutineName(e.target.value)} style={{ color: lightTheme.text }} className="w-full bg-transparent border-b-2 border-black/10 py-4 text-3xl font-black italic uppercase outline-none focus:border-black" />
-            <div className="flex gap-4">
-              <button onClick={createRoutine} style={{ backgroundColor: lightTheme.accent }} className="flex-1 text-black font-black py-5 rounded-2xl uppercase italic text-base active:scale-95 shadow-md">確認建立</button>
-              <button onClick={() => setIsCreating(false)} className="px-10 bg-white text-slate-400 font-bold py-5 rounded-2xl uppercase text-xs active:scale-90 border border-black/5 shadow-sm">取消</button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <div className="space-y-4">
-        {customRoutines.length > 0 && (
-          <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.4em] ml-2">我的自訂課表</p>
-        )}
-        {customRoutines.map(r => (
-          <button key={r.id} onClick={() => setPreviewRoutine(r)} style={{ backgroundColor: lightTheme.card }} className="w-full rounded-[32px] p-7 border border-black/5 active:scale-[0.98] transition-all flex justify-between items-center text-left group shadow-sm">
-            <div>
-              <h3 style={{ color: lightTheme.text }} className="text-xl font-black italic uppercase tracking-tight leading-tight py-1">{r.name}</h3>
-              <div className="flex items-center gap-3 mt-2.5">
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{r.exercises.length} EXERCISES</span>
-                <div className="w-1 h-1 rounded-full bg-slate-200" />
-                <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">自訂</span>
+        <AnimatePresence>
+          {isCreating && (
+            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} style={{ backgroundColor: lightTheme.card }} className="rounded-[40px] p-8 border border-black/5 shadow-xl space-y-7 overflow-hidden">
+              <input autoFocus placeholder="課表名稱..." value={newRoutineName} onChange={e => setNewRoutineName(e.target.value)} style={{ color: lightTheme.text }} className="w-full bg-transparent border-b-2 border-black/10 py-4 text-3xl font-black italic uppercase outline-none focus:border-black" />
+              <div className="flex gap-4">
+                <button onClick={createRoutine} style={{ backgroundColor: lightTheme.accent }} className="flex-1 text-black font-black py-5 rounded-2xl uppercase italic text-base active:scale-95 shadow-md">確認建立</button>
+                <button onClick={() => setIsCreating(false)} className="px-10 bg-white text-slate-400 font-bold py-5 rounded-2xl uppercase text-xs active:scale-90 border border-black/5 shadow-sm">取消</button>
               </div>
-            </div>
-            <div style={{ backgroundColor: lightTheme.accent }} className="w-12 h-12 text-black rounded-2xl flex items-center justify-center group-active:scale-90 transition-all shadow-sm">
-              <ChevronRight className="w-6 h-6 stroke-[3]" />
-            </div>
-          </button>
-        ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <div className="space-y-4">
+          {customRoutines.map(r => (
+            <button key={r.id} onClick={() => setPreviewRoutine(r)} style={{ backgroundColor: lightTheme.card }} className="w-full rounded-[32px] p-7 border border-black/5 active:scale-[0.98] transition-all flex justify-between items-center text-left group shadow-sm">
+              <div>
+                <h3 style={{ color: lightTheme.text }} className="text-xl font-black italic uppercase tracking-tight leading-tight py-1">{r.name}</h3>
+                <div className="flex items-center gap-3 mt-2.5">
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{r.exercises.length} EXERCISES</span>
+                  <div className="w-1 h-1 rounded-full bg-slate-200" />
+                  <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">自訂</span>
+                </div>
+              </div>
+              <div style={{ backgroundColor: lightTheme.accent }} className="w-12 h-12 text-black rounded-2xl flex items-center justify-center group-active:scale-90 transition-all shadow-sm">
+                <ChevronRight className="w-6 h-6 stroke-[3]" />
+              </div>
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="space-y-10 pt-4">

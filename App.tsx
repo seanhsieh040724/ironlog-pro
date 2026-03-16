@@ -157,10 +157,14 @@ const App: React.FC = () => {
                 </div>
                 <div>
                   <h1 style={{ color: lightTheme.text }} className="text-2xl font-black italic uppercase tracking-tighter leading-none">
-                    {format(new Date(), 'MMMM dd')}
+                    {(() => {
+                      const d = new Date();
+                      const weekDays = ['週日', '週一', '週二', '週三', '週四', '週五', '週六'];
+                      return `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()} ${weekDays[d.getDay()]}`;
+                    })()}
                   </h1>
                   <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em] mt-1.5">
-                    {format(new Date(), 'EEEE')} / TODAY'S MISSION
+                    TODAY'S WORKOUT
                   </p>
                 </div>
               </div>
