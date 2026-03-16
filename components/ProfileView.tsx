@@ -164,9 +164,10 @@ export const ProfileView: React.FC = () => {
            
            <button 
              onClick={handleSaveMetrics} 
-             className={`w-10 h-10 rounded-xl transition-all flex items-center justify-center ${isMetricsSaved ? 'bg-emerald-500 text-white' : 'bg-black text-white active:scale-95 shadow-md'}`}
+             className={`px-4 py-2 rounded-xl font-black uppercase italic transition-all flex items-center gap-2 text-[12px] border border-[#82CC00]/20 ${isMetricsSaved ? 'bg-emerald-500 text-white border-emerald-500' : 'bg-white text-[#82CC00] active:scale-95 shadow-sm'}`}
            >
-             {isMetricsSaved ? <CheckCircle2 className="w-5 h-5" /> : <Save className="w-5 h-5" style={{ color: lightTheme.accent }} />}
+             {isMetricsSaved ? <CheckCircle2 className="w-4 h-4" /> : <Save className="w-4 h-4" />}
+             {isMetricsSaved ? '已儲存' : '儲存'}
            </button>
         </div>
         
@@ -225,9 +226,10 @@ export const ProfileView: React.FC = () => {
             </div>
             <button 
               onClick={handleSaveGoal} 
-              className={`w-10 h-10 rounded-xl transition-all flex items-center justify-center ${isGoalSaved ? 'bg-emerald-500 text-white' : 'bg-black text-white active:scale-95 shadow-md'}`}
+              className={`px-4 py-2 rounded-xl font-black uppercase italic transition-all flex items-center gap-2 text-[12px] border border-[#82CC00]/20 ${isGoalSaved ? 'bg-emerald-500 text-white border-emerald-500' : 'bg-white text-[#82CC00] active:scale-95 shadow-sm'}`}
             >
-              {isGoalSaved ? <CheckCircle2 className="w-5 h-5" /> : <Save className="w-5 h-5" style={{ color: lightTheme.accent }} />}
+              {isGoalSaved ? <CheckCircle2 className="w-4 h-4" /> : <Save className="w-4 h-4" />}
+              {isGoalSaved ? '已儲存' : '儲存'}
             </button>
          </div>
 
