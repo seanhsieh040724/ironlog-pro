@@ -7,7 +7,7 @@ import {
   Flame, Edit3, CheckCircle2, Save, Beef, Soup, 
   Droplets, Waves, GlassWater, 
   Cake, Maximize2, Weight as WeightIcon, UserCheck, Bike, 
-  Mail, Apple, Chrome, X, Camera
+  Mail, Apple, Chrome, X, Camera, Facebook
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { lightTheme } from '../themeStyles';
@@ -337,19 +337,19 @@ export const ProfileView: React.FC = () => {
                 <div className="w-full space-y-4">
                   <LoginButton 
                     variant="apple"
-                    icon={<img src="https://i.postimg.cc/ZqbJ2P68/apple-icon-27.png" alt="Apple" className="w-5 h-5 object-contain" referrerPolicy="no-referrer" />} 
+                    icon={<Apple className="w-5 h-5" />} 
                     label="使用 Apple 登入" 
                     onClick={() => { alert('Apple 登入功能正在串接中...'); setShowLoginModal(false); }}
                   />
                   <LoginButton 
                     variant="google"
-                    icon={<img src="https://i.postimg.cc/NMLBfgJv/Google-G-logo-svg.png" alt="Google" className="w-5 h-5 object-contain" referrerPolicy="no-referrer" />} 
+                    icon={<Mail className="w-5 h-5" />} 
                     label="使用 Google 登入" 
                     onClick={() => { alert('Google 登入功能正在串接中...'); setShowLoginModal(false); }}
                   />
                   <LoginButton 
                     variant="facebook"
-                    icon={<img src="https://i.postimg.cc/027ZjFBV/2023-Facebook-icon-svg.png" alt="Facebook" className="w-5 h-5 object-contain" referrerPolicy="no-referrer" />} 
+                    icon={<Facebook className="w-5 h-5" />} 
                     label="使用 Facebook 登入" 
                     onClick={() => { alert('Facebook 登入功能正在串接中...'); setShowLoginModal(false); }}
                   />

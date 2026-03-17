@@ -171,13 +171,11 @@ const App: React.FC = () => {
               className="relative"
             >
               {/* iOS Style App Icon */}
-              <div className="w-32 h-32 bg-white rounded-[28px] flex items-center justify-center shadow-[0_20px_40px_rgba(0,0,0,0.1)] border border-black/5 relative overflow-hidden">
-                <img 
-                  src="https://i.postimg.cc/P5H3QSkC/Gemini-Generated-Image-38bzpo38bzpo38bz.png" 
-                  alt="App Icon" 
-                  className="w-full h-full object-cover"
-                  referrerPolicy="no-referrer"
-                />
+              <div className="w-32 h-32 bg-black rounded-[28px] flex items-center justify-center shadow-[0_20px_40px_rgba(0,0,0,0.1)] border border-black/5 relative overflow-hidden">
+                <div className="flex flex-col items-center">
+                  <span className="text-4xl font-black italic text-[#82CC00] tracking-tighter">IRON</span>
+                  <span className="text-xl font-black italic text-white tracking-widest -mt-2">LOG</span>
+                </div>
                 <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent pointer-events-none" />
               </div>
               
