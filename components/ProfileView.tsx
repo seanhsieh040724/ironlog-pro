@@ -128,10 +128,10 @@ export const ProfileView: React.FC = () => {
                     value={userName}
                     onChange={(e) => {setUserName(e.target.value); localStorage.setItem('ironlog_user_name', e.target.value);}}
                     onBlur={() => setIsEditingName(false)}
-                    className="bg-transparent border-b border-black text-sm font-black italic text-black outline-none w-full uppercase"
+                    className="bg-transparent border-b border-black text-base font-black italic text-black outline-none w-full uppercase"
                   />
                 ) : (
-                  <h3 onClick={() => setIsEditingName(true)} style={{ color: lightTheme.text }} className="text-sm font-black italic uppercase tracking-tighter truncate pr-2">
+                  <h3 onClick={() => setIsEditingName(true)} style={{ color: lightTheme.text }} className="text-base font-black italic uppercase tracking-tighter truncate pr-2">
                     {userName || '使用者名稱'}
                   </h3>
                 )}
@@ -142,7 +142,7 @@ export const ProfileView: React.FC = () => {
                 onClick={() => setShowLoginModal(true)}
                 className="active:scale-95 transition-all"
               >
-                <p className="text-[11px] font-black uppercase tracking-widest leading-none text-[#82CC00]">登入 ＞</p>
+                <p className="text-base font-black uppercase tracking-widest leading-none text-[#82CC00]">登入 ＞</p>
               </button>
             </div>
          </div>
