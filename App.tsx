@@ -39,10 +39,16 @@ const App: React.FC = () => {
   const [customRoutines, setCustomRoutines] = useState<RoutineTemplate[]>([]);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [isLoaded, setIsLoaded] = useState(false);
+  const [showSplash, setShowSplash] = useState(true);
 
   const [restTimer, setRestTimer] = useState({ active: false, seconds: 90 });
 
   useEffect(() => {
+    // 模擬載入與過場動畫時間
+    const timer = setTimeout(() => {
+      setShowSplash(false);
+    }, 2500);
+
     const savedHistory = localStorage.getItem('ironlog_v3_history');
     if (savedHistory) setHistory(JSON.parse(savedHistory));
     
@@ -146,101 +152,175 @@ const App: React.FC = () => {
 
   return (
     <AppContext.Provider value={contextValue}>
-      <div style={ContainerStyle} className="flex flex-col max-w-md mx-auto relative overflow-hidden">
-        <main className="flex-1 pb-32 px-5 pt-12 overflow-y-auto no-scrollbar">
-          {/* 頂部固定日期標示 */}
-          {activeTab === 'workout' && (
-            <div className="flex items-center justify-between mb-8 px-1">
-              <div className="flex items-center gap-4">
-                <div style={{ backgroundColor: lightTheme.card }} className="w-12 h-12 rounded-2xl flex items-center justify-center border border-black/5 shadow-sm shrink-0">
-                  <Calendar className="w-6 h-6 text-black" />
-                </div>
-                <div>
-                  <h1 style={{ color: lightTheme.text }} className="text-2xl font-black italic uppercase tracking-tighter leading-none">
-                    {(() => {
-                      const d = new Date();
-                      const weekDays = ['週日', '週一', '週二', '週三', '週四', '週五', '週六'];
-                      return `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()} ${weekDays[d.getDay()]}`;
-                    })()}
-                  </h1>
-                  <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em] mt-1.5">
-                    TODAY'S WORKOUT
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <AnimatePresence mode="wait">
+      <AnimatePresence mode="wait">
+        {showSplash ? (
+          <motion.div
+            key="splash"
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0, scale: 1.1, filter: 'blur(10px)' }}
+            transition={{ duration: 0.8, ease: [0.43, 0.13, 0.23, 0.96] }}
+            className="fixed inset-0 z-[1000] flex flex-col items-center justify-center bg-white"
+          >
             <motion.div
-              key={activeTab}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.2 }}
+              initial={{ scale: 0.8, opacity: 0, rotate: -20 }}
+              animate={{ scale: 1, opacity: 1, rotate: 0 }}
+              transition={{ 
+                duration: 1, 
+                ease: "easeOut",
+                type: "spring",
+                stiffness: 100
+              }}
+              className="relative"
             >
+              <div className="w-32 h-32 bg-[#CCFF00] rounded-[40px] flex items-center justify-center shadow-[0_20px_50px_rgba(204,255,0,0.3)] border border-black/5">
+                <Dumbbell className="w-16 h-16 text-black stroke-[2.5]" />
+              </div>
+              <motion.div 
+                animate={{ 
+                  scale: [1, 1.2, 1],
+                  opacity: [0.3, 0.6, 0.3]
+                }}
+                transition={{ 
+                  duration: 2, 
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+                className="absolute inset-0 bg-[#CCFF00] rounded-[40px] -z-10 blur-2xl"
+              />
+            </motion.div>
+            
+            <motion.div
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.5, duration: 0.8 }}
+              className="mt-10 text-center"
+            >
+              <h1 className="text-5xl font-black italic tracking-tighter text-black uppercase leading-none">
+                IRON<span className="text-[#82CC00]">LOG</span>
+              </h1>
+              <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.5em] mt-4">
+                Forge Your Strength
+              </p>
+            </motion.div>
+
+            <motion.div 
+              initial={{ width: 0 }}
+              animate={{ width: 120 }}
+              transition={{ delay: 0.8, duration: 1.2, ease: "easeInOut" }}
+              className="h-1 bg-black/5 rounded-full mt-12 overflow-hidden"
+            >
+              <motion.div 
+                animate={{ x: [-120, 120] }}
+                transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                className="w-1/2 h-full bg-[#82CC00]"
+              />
+            </motion.div>
+          </motion.div>
+        ) : (
+          <motion.div 
+            key="main-app"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+            style={ContainerStyle} 
+            className="flex flex-col max-w-md mx-auto relative overflow-hidden"
+          >
+            <main className="flex-1 pb-32 px-5 pt-12 overflow-y-auto no-scrollbar">
+              {/* 頂部固定日期標示 */}
               {activeTab === 'workout' && (
-                <WorkoutView 
-                  session={currentSession} 
-                  onUpdate={setCurrentSession}
-                  onFinish={handleSaveWorkout}
-                />
-              )}
-              {activeTab === 'history' && (
-                <div className="space-y-6">
-                  <div style={{ backgroundColor: lightTheme.card }} className="rounded-[32px] border border-black/5 shadow-sm">
-                    <CalendarStrip 
-                      selectedDate={selectedDate} 
-                      onDateSelect={setSelectedDate} 
-                      workoutDates={history.map(s => new Date(s.startTime))} 
-                    />
+                <div className="flex items-center justify-between mb-8 px-1">
+                  <div className="flex items-center gap-4">
+                    <div style={{ backgroundColor: lightTheme.card }} className="w-12 h-12 rounded-2xl flex items-center justify-center border border-black/5 shadow-sm shrink-0">
+                      <Calendar className="w-6 h-6 text-black" />
+                    </div>
+                    <div>
+                      <h1 style={{ color: lightTheme.text }} className="text-2xl font-black italic uppercase tracking-tighter leading-none">
+                        {(() => {
+                          const d = new Date();
+                          const weekDays = ['週日', '週一', '週二', '週三', '週四', '週五', '週六'];
+                          return `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()} ${weekDays[d.getDay()]}`;
+                        })()}
+                      </h1>
+                      <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em] mt-1.5">
+                        TODAY'S WORKOUT
+                      </p>
+                    </div>
                   </div>
-                  <HistoryView 
-                    history={history} 
-                    selectedDate={selectedDate} 
-                    onUpdateHistory={setHistory} 
-                    onSaveAsRoutine={handleSaveAsRoutine}
-                  />
                 </div>
               )}
-              {activeTab === 'routines' && <RoutineView onStartRoutine={(template) => {
-                const newSess: WorkoutSession = {
-                  id: crypto.randomUUID(),
-                  startTime: Date.now(),
-                  title: template.name,
-                  exercises: template.exercises.map(te => ({
-                    id: crypto.randomUUID(),
-                    name: te.name,
-                    muscleGroup: te.muscleGroup,
-                    sets: Array.from({ length: te.defaultSets || 4 }).map((_, idx) => ({
+
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeTab}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  {activeTab === 'workout' && (
+                    <WorkoutView 
+                      session={currentSession} 
+                      onUpdate={setCurrentSession}
+                      onFinish={handleSaveWorkout}
+                    />
+                  )}
+                  {activeTab === 'history' && (
+                    <div className="space-y-6">
+                      <div style={{ backgroundColor: lightTheme.card }} className="rounded-[32px] border border-black/5 shadow-sm">
+                        <CalendarStrip 
+                          selectedDate={selectedDate} 
+                          onDateSelect={setSelectedDate} 
+                          workoutDates={history.map(s => new Date(s.startTime))} 
+                        />
+                      </div>
+                      <HistoryView 
+                        history={history} 
+                        selectedDate={selectedDate} 
+                        onUpdateHistory={setHistory} 
+                        onSaveAsRoutine={handleSaveAsRoutine}
+                      />
+                    </div>
+                  )}
+                  {activeTab === 'routines' && <RoutineView onStartRoutine={(template) => {
+                    const newSess: WorkoutSession = {
                       id: crypto.randomUUID(),
-                      weight: idx === 0 ? te.defaultWeight : 0, 
-                      reps: te.defaultReps,
-                      completed: false
-                    }))
-                  }))
-                };
-                setCurrentSession(newSess);
-                setActiveTab('workout');
-              }} />}
-              {activeTab === 'profile' && <ProfileView />}
-            </motion.div>
-          </AnimatePresence>
-        </main>
+                      startTime: Date.now(),
+                      title: template.name,
+                      exercises: template.exercises.map(te => ({
+                        id: crypto.randomUUID(),
+                        name: te.name,
+                        muscleGroup: te.muscleGroup,
+                        sets: Array.from({ length: te.defaultSets || 4 }).map((_, idx) => ({
+                          id: crypto.randomUUID(),
+                          weight: idx === 0 ? te.defaultWeight : 0, 
+                          reps: te.defaultReps,
+                          completed: false
+                        }))
+                      }))
+                    };
+                    setCurrentSession(newSess);
+                    setActiveTab('workout');
+                  }} />}
+                  {activeTab === 'profile' && <ProfileView />}
+                </motion.div>
+              </AnimatePresence>
+            </main>
 
-        <nav style={{ backgroundColor: 'rgba(255, 255, 255, 0.9)', backdropFilter: 'blur(20px)' }} className="fixed bottom-0 left-0 right-0 max-w-md mx-auto border-t border-black/5 safe-bottom z-50 px-8 py-5 flex justify-between items-center rounded-t-[40px] shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
-          <TabButton active={activeTab === 'workout'} onClick={() => setActiveTab('workout')} icon={<Dumbbell />} label="訓練" />
-          <TabButton active={activeTab === 'history'} onClick={() => setActiveTab('history')} icon={<History />} label="記錄" />
-          <TabButton active={activeTab === 'routines'} onClick={() => setActiveTab('routines')} icon={<LayoutGrid />} label="課表" />
-          <TabButton active={activeTab === 'profile'} onClick={() => setActiveTab('profile')} icon={<User />} label="個人" />
-        </nav>
+            <nav style={{ backgroundColor: 'rgba(255, 255, 255, 0.9)', backdropFilter: 'blur(20px)' }} className="fixed bottom-0 left-0 right-0 max-w-md mx-auto border-t border-black/5 safe-bottom z-50 px-8 py-5 flex justify-between items-center rounded-t-[40px] shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
+              <TabButton active={activeTab === 'workout'} onClick={() => setActiveTab('workout')} icon={<Dumbbell />} label="訓練" />
+              <TabButton active={activeTab === 'history'} onClick={() => setActiveTab('history')} icon={<History />} label="記錄" />
+              <TabButton active={activeTab === 'routines'} onClick={() => setActiveTab('routines')} icon={<LayoutGrid />} label="課表" />
+              <TabButton active={activeTab === 'profile'} onClick={() => setActiveTab('profile')} icon={<User />} label="個人" />
+            </nav>
 
-        <RestTimer 
-          active={restTimer.active} 
-          seconds={restTimer.seconds} 
-          onClose={() => setRestTimer(prev => ({ ...prev, active: false }))} 
-        />
-      </div>
+            <RestTimer 
+              active={restTimer.active} 
+              seconds={restTimer.seconds} 
+              onClose={() => setRestTimer(prev => ({ ...prev, active: false }))} 
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </AppContext.Provider>
   );
 };
