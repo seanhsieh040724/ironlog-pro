@@ -96,7 +96,7 @@ export const ProfileView: React.FC = () => {
       <div style={{ backgroundColor: lightTheme.card }} className="rounded-[40px] p-7 border border-black/5 relative overflow-hidden shadow-sm">
          <div className="relative z-10 flex items-center gap-6">
             <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
-              <div style={{ backgroundColor: lightTheme.bg }} className="w-20 h-20 rounded-[28px] overflow-hidden border-2 border-black/5 flex items-center justify-center shadow-inner relative">
+              <div style={{ backgroundColor: '#E5E5E7' }} className="w-20 h-20 rounded-[28px] overflow-hidden border-2 border-black/5 flex items-center justify-center shadow-inner relative">
                 {profileImage ? (
                   <img src={profileImage} alt="Profile" className="w-full h-full object-cover" />
                 ) : (
@@ -128,10 +128,10 @@ export const ProfileView: React.FC = () => {
                     value={userName}
                     onChange={(e) => {setUserName(e.target.value); localStorage.setItem('ironlog_user_name', e.target.value);}}
                     onBlur={() => setIsEditingName(false)}
-                    className="bg-transparent border-b border-black text-xl font-black italic text-black outline-none w-full uppercase"
+                    className="bg-transparent border-b border-black text-sm font-black italic text-black outline-none w-full uppercase"
                   />
                 ) : (
-                  <h3 onClick={() => setIsEditingName(true)} style={{ color: lightTheme.text }} className="text-2xl font-black italic uppercase tracking-tighter truncate pr-2">
+                  <h3 onClick={() => setIsEditingName(true)} style={{ color: lightTheme.text }} className="text-sm font-black italic uppercase tracking-tighter truncate pr-2">
                     {userName || '使用者名稱'}
                   </h3>
                 )}
@@ -140,10 +140,9 @@ export const ProfileView: React.FC = () => {
               
               <button 
                 onClick={() => setShowLoginModal(true)}
-                className="inline-flex items-center gap-2 px-4 py-1.5 bg-black text-white rounded-full hover:bg-black/80 transition-all active:scale-95 shadow-md group"
+                className="active:scale-95 transition-all"
               >
-                <div className="w-1.5 h-1.5 rounded-full bg-[#82CC00] animate-pulse" />
-                <p className="text-[11px] font-black uppercase tracking-widest leading-none">登入</p>
+                <p className="text-[11px] font-black uppercase tracking-widest leading-none text-[#82CC00]">登入 ＞</p>
               </button>
             </div>
          </div>
@@ -308,10 +307,6 @@ export const ProfileView: React.FC = () => {
          </div>
       </div>
 
-      <button onClick={() => { if(confirm('確定要清除所有本地數據？')) { localStorage.clear(); window.location.reload(); }}} className="w-full py-6 border border-red-100 rounded-[32px] text-red-200 text-[11px] font-black uppercase tracking-widest flex items-center justify-center gap-2.5 active:bg-red-50 transition-all">
-        <Trash2 className="w-5 h-5" /> 清除所有本地數據
-      </button>
-
       {/* 登入模態視窗 - iOS 風格優化 */}
       <AnimatePresence>
         {showLoginModal && (
@@ -341,22 +336,22 @@ export const ProfileView: React.FC = () => {
 
                 <div className="w-full space-y-4">
                   <LoginButton 
-                    variant="google"
-                    icon={<Chrome className="w-6 h-6" />} 
-                    label="使用 Gmail 登入" 
-                    onClick={() => { alert('Gmail 登入功能正在串接中...'); setShowLoginModal(false); }}
-                  />
-                  <LoginButton 
                     variant="apple"
-                    icon={<Apple className="w-6 h-6 fill-white" />} 
+                    icon={<img src="https://i.postimg.cc/ZqbJ2P68/apple-icon-27.png" alt="Apple" className="w-5 h-5 object-contain" referrerPolicy="no-referrer" />} 
                     label="使用 Apple 登入" 
                     onClick={() => { alert('Apple 登入功能正在串接中...'); setShowLoginModal(false); }}
                   />
                   <LoginButton 
-                    variant="email"
-                    icon={<Mail className="w-6 h-6" />} 
-                    label="使用 電子郵件 登入" 
-                    onClick={() => { alert('郵件登入功能正在串接中...'); setShowLoginModal(false); }}
+                    variant="google"
+                    icon={<img src="https://i.postimg.cc/NMLBfgJv/Google-G-logo-svg.png" alt="Google" className="w-5 h-5 object-contain" referrerPolicy="no-referrer" />} 
+                    label="使用 Google 登入" 
+                    onClick={() => { alert('Google 登入功能正在串接中...'); setShowLoginModal(false); }}
+                  />
+                  <LoginButton 
+                    variant="facebook"
+                    icon={<img src="https://i.postimg.cc/027ZjFBV/2023-Facebook-icon-svg.png" alt="Facebook" className="w-5 h-5 object-contain" referrerPolicy="no-referrer" />} 
+                    label="使用 Facebook 登入" 
+                    onClick={() => { alert('Facebook 登入功能正在串接中...'); setShowLoginModal(false); }}
                   />
                 </div>
 
@@ -374,20 +369,20 @@ export const ProfileView: React.FC = () => {
 
 const LoginButton = ({ variant, icon, label, onClick }: any) => {
   const styles = {
-    apple: "bg-black text-white border-black",
+    apple: "bg-white text-black border-slate-200",
     google: "bg-white text-black border-slate-200",
-    email: "bg-[#007AFF] text-white border-[#007AFF]"
+    facebook: "bg-[#1877F2] text-white border-[#1877F2]"
   };
 
   return (
     <button 
       onClick={onClick}
-      className={`w-full py-4 px-6 rounded-2xl flex items-center gap-4 active:scale-[0.98] transition-all shadow-sm border ${styles[variant as keyof typeof styles]}`}
+      className={`w-full py-3.5 px-6 rounded-2xl flex items-center gap-4 active:scale-[0.98] transition-all shadow-sm border ${styles[variant as keyof typeof styles]}`}
     >
       <div className="shrink-0">
         {icon}
       </div>
-      <span className="flex-1 text-[13px] font-black uppercase tracking-widest text-center pr-6">
+      <span className="flex-1 text-[11px] font-black uppercase tracking-widest text-center pr-6">
         {label}
       </span>
     </button>
@@ -423,7 +418,7 @@ const InputBox = ({ icon, label, val, unit, onChange }: any) => (
         type="number" 
         placeholder="--"
         style={{ color: lightTheme.text }}
-        className="bg-transparent text-2xl font-black italic outline-none w-full" 
+        className="bg-transparent text-2xl font-black italic outline-none w-full placeholder:text-slate-400" 
         value={val === 0 ? '' : val} 
         onChange={e => onChange(e.target.value)} 
       />
