@@ -171,9 +171,14 @@ const App: React.FC = () => {
               className="relative"
             >
               {/* iOS Style App Icon */}
-              <div className="w-32 h-32 bg-gradient-to-br from-[#CCFF00] to-[#82CC00] rounded-[28px] flex items-center justify-center shadow-[0_20px_40px_rgba(0,0,0,0.1)] border border-white/20 relative overflow-hidden">
-                <Dumbbell className="w-16 h-16 text-black stroke-[2.5] relative z-10" />
-                <div className="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent pointer-events-none" />
+              <div className="w-32 h-32 bg-white rounded-[28px] flex items-center justify-center shadow-[0_20px_40px_rgba(0,0,0,0.1)] border border-black/5 relative overflow-hidden">
+                <img 
+                  src="https://i.postimg.cc/P5H3QSkC/Gemini-Generated-Image-38bzpo38bzpo38bz.png" 
+                  alt="App Icon" 
+                  className="w-full h-full object-cover"
+                  referrerPolicy="no-referrer"
+                />
+                <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent pointer-events-none" />
               </div>
               
               <motion.div 
