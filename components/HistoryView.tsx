@@ -4,9 +4,9 @@ import { getMuscleGroupDisplay } from '../utils/fitnessMath';
 import { Activity, BarChart3, Trash2, CalendarDays, Timer, Save, Check } from 'lucide-react';
 import { isSameDay, format } from 'date-fns';
 import { ExerciseSmallGif } from './ExerciseSmallGif';
-import startOfWeek from 'date-fns/startOfWeek';
-import startOfMonth from 'date-fns/startOfMonth';
-import startOfYear from 'date-fns/startOfYear';
+import { startOfWeek } from 'date-fns/startOfWeek';
+import { startOfMonth } from 'date-fns/startOfMonth';
+import { startOfYear } from 'date-fns/startOfYear';
 import { motion, AnimatePresence } from 'framer-motion';
 import { lightTheme } from '../themeStyles';
 

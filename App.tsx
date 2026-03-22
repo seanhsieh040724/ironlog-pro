@@ -235,10 +235,10 @@ const App: React.FC = () => {
             style={ContainerStyle} 
             className="flex flex-col max-w-md mx-auto relative overflow-hidden"
           >
-            <main className="flex-1 pb-32 px-5 pt-12 overflow-y-auto no-scrollbar">
+            <main className="flex-1 pb-32 px-5 pt-16 overflow-y-auto no-scrollbar">
               {/* 頂部固定日期標示 */}
               {activeTab === 'workout' && (
-                <div className="flex items-center justify-between mb-8 px-1">
+                <div className="flex items-center justify-between mt-4 mb-8 px-1">
                   <div className="flex items-center gap-4">
                     <div style={{ backgroundColor: lightTheme.card }} className="w-12 h-12 rounded-2xl flex items-center justify-center border border-black/5 shadow-sm shrink-0">
                       <Calendar className="w-6 h-6 text-black" />
