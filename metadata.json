@@ -4,13 +4,13 @@
   "description": "極簡、高效、充滿激勵的健身追蹤 PWA。鋼鐵般的意志，數位化的記錄。",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#000000",
-  "theme_color": "#000000",
+  "background_color": "#FFFFFF",
+  "theme_color": "#FFFFFF",
   "icons": [
     {
-      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='black'/></svg>",
-      "sizes": "any",
-      "type": "image/svg+xml",
+      "src": "https://i.postimg.cc/P5H3QSkC/Gemini-Generated-Image-38bzpo38bzpo38bz.png",
+      "sizes": "512x512",
+      "type": "image/png",
       "purpose": "any maskable"
     }
   ],
