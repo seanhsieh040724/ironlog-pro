@@ -72,7 +72,7 @@ export const AnalyticsView: React.FC<{ history: WorkoutSession[] }> = ({ history
       legend: { display: false },
       tooltip: {
         backgroundColor: '#111',
-        titleFont: { weight: 'bold' },
+        titleFont: { weight: 'bold' as const },
         padding: 12,
         cornerRadius: 12,
       }

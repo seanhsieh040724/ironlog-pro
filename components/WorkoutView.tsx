@@ -56,6 +56,24 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
   const currentDetailEx = useMemo(() => session?.exercises.find(e => e.id === activeExerciseId), [session, activeExerciseId]);
 
   useEffect(() => {
+    if (activeExerciseId) {
+      // 當進入任何動作詳情時，確保畫面穩定地停在最上方（顯示 GIF 區域）
+      const scrollToTop = () => {
+        const mainElement = document.querySelector('main');
+        if (mainElement) {
+          mainElement.scrollTop = 0;
+        }
+        window.scrollTo(0, 0);
+      };
+
+      scrollToTop();
+      // 額外在短時間後再執行一次，確保在動畫或 DOM 更新完成後仍能保持在頂部
+      const timer = setTimeout(scrollToTop, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [activeExerciseId]);
+
+  useEffect(() => {
     if (currentDetailEx) {
       setIsGifLoading(true);
       fetchExerciseGif(currentDetailEx.name).then(url => {

@@ -7,9 +7,9 @@ import {
   Flame, Edit3, CheckCircle2, Save, Beef, Soup, 
   Droplets, Waves, GlassWater, 
   Cake, Maximize2, Weight as WeightIcon, UserCheck, Bike, 
-  Mail, Apple, Chrome, X, Camera, Facebook
+  Camera
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { lightTheme } from '../themeStyles';
 
 export const ProfileView: React.FC = () => {
@@ -19,7 +19,6 @@ export const ProfileView: React.FC = () => {
   const [profileImage, setProfileImage] = useState<string | null>(localStorage.getItem('ironlog_user_avatar'));
   const [userName, setUserName] = useState<string>(localStorage.getItem('ironlog_user_name') || '');
   const [isEditingName, setIsEditingName] = useState(false);
-  const [showLoginModal, setShowLoginModal] = useState(false);
   
   const bodyMetrics = context?.bodyMetrics || [];
   const globalGoal: UserGoal = context?.goal || { type: 'maintain', targetWeight: 0, startWeight: 0, activityLevel: 1.55 };
@@ -120,30 +119,28 @@ export const ProfileView: React.FC = () => {
               }} />
             </div>
 
-            <div className="flex-1 space-y-1.5 overflow-hidden">
-              <div className="flex items-center gap-2">
+            <div className="flex-1 overflow-hidden">
+              <div className="flex items-center gap-3">
                 {isEditingName ? (
                   <input 
                     autoFocus
                     value={userName}
+                    placeholder="點擊以修改名稱"
                     onChange={(e) => {setUserName(e.target.value); localStorage.setItem('ironlog_user_name', e.target.value);}}
                     onBlur={() => setIsEditingName(false)}
-                    className="bg-transparent border-b border-black text-base font-black italic text-black outline-none w-full uppercase"
+                    className="bg-transparent border-b border-black text-3xl font-black italic text-black outline-none w-full uppercase placeholder:opacity-50"
                   />
                 ) : (
-                  <h3 onClick={() => setIsEditingName(true)} style={{ color: lightTheme.text }} className="text-base font-black italic uppercase tracking-tighter truncate pr-2">
-                    {userName || '使用者名稱'}
+                  <h3 
+                    onClick={() => setIsEditingName(true)} 
+                    style={{ color: lightTheme.text }} 
+                    className={`text-3xl font-black italic uppercase tracking-tighter truncate pr-2 ${!userName ? 'opacity-50' : ''}`}
+                  >
+                    {userName || '點擊以修改名稱'}
                   </h3>
                 )}
-                <Edit3 className="w-4 h-4 text-slate-300 shrink-0" />
+                <Edit3 className="w-6 h-6 text-black shrink-0" />
               </div>
-              
-              <button 
-                onClick={() => setShowLoginModal(true)}
-                className="active:scale-95 transition-all"
-              >
-                <p className="text-base font-black uppercase tracking-widest leading-none text-[#82CC00]">登入 ＞</p>
-              </button>
             </div>
          </div>
       </div>
@@ -307,85 +304,7 @@ export const ProfileView: React.FC = () => {
          </div>
       </div>
 
-      {/* 登入模態視窗 - iOS 風格優化 */}
-      <AnimatePresence>
-        {showLoginModal && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/40 backdrop-blur-md">
-            <motion.div 
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              style={{ backgroundColor: lightTheme.bg }}
-              className="w-full max-w-sm rounded-[44px] p-8 border border-black/5 shadow-2xl relative"
-            >
-              <button 
-                onClick={() => setShowLoginModal(false)}
-                className="absolute top-6 right-6 p-2 bg-slate-100 rounded-full text-slate-400 active:scale-90 transition-transform"
-              >
-                <X className="w-5 h-5" />
-              </button>
-
-              <div className="flex flex-col items-center text-center space-y-8 mt-4">
-                <div style={{ backgroundColor: lightTheme.accent }} className="w-16 h-16 rounded-2xl flex items-center justify-center text-black shadow-lg">
-                  <UserCheck className="w-8 h-8" />
-                </div>
-                
-                <div>
-                  <h3 style={{ color: lightTheme.text }} className="text-xl font-black italic uppercase tracking-tighter">使用以下帳號繼續</h3>
-                </div>
-
-                <div className="w-full space-y-4">
-                  <LoginButton 
-                    variant="apple"
-                    icon={<Apple className="w-5 h-5" />} 
-                    label="使用 Apple 登入" 
-                    onClick={() => { alert('Apple 登入功能正在串接中...'); setShowLoginModal(false); }}
-                  />
-                  <LoginButton 
-                    variant="google"
-                    icon={<Mail className="w-5 h-5" />} 
-                    label="使用 Google 登入" 
-                    onClick={() => { alert('Google 登入功能正在串接中...'); setShowLoginModal(false); }}
-                  />
-                  <LoginButton 
-                    variant="facebook"
-                    icon={<Facebook className="w-5 h-5" />} 
-                    label="使用 Facebook 登入" 
-                    onClick={() => { alert('Facebook 登入功能正在串接中...'); setShowLoginModal(false); }}
-                  />
-                </div>
-
-                <p className="text-[9px] text-slate-300 font-medium px-4 leading-relaxed">
-                  點擊登入即表示您同意我們的服務條款與隱私政策
-                </p>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
     </div>
-  );
-};
-
-const LoginButton = ({ variant, icon, label, onClick }: any) => {
-  const styles = {
-    apple: "bg-white text-black border-slate-200",
-    google: "bg-white text-black border-slate-200",
-    facebook: "bg-[#1877F2] text-white border-[#1877F2]"
-  };
-
-  return (
-    <button 
-      onClick={onClick}
-      className={`w-full py-3.5 px-6 rounded-2xl flex items-center gap-4 active:scale-[0.98] transition-all shadow-sm border ${styles[variant as keyof typeof styles]}`}
-    >
-      <div className="shrink-0">
-        {icon}
-      </div>
-      <span className="flex-1 text-[11px] font-black uppercase tracking-widest text-center pr-6">
-        {label}
-      </span>
-    </button>
   );
 };
 
