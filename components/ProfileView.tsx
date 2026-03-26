@@ -128,18 +128,18 @@ export const ProfileView: React.FC = () => {
                     placeholder="點擊以修改名稱"
                     onChange={(e) => {setUserName(e.target.value); localStorage.setItem('ironlog_user_name', e.target.value);}}
                     onBlur={() => setIsEditingName(false)}
-                    className="bg-transparent border-b border-black text-3xl font-black italic text-black outline-none w-full uppercase placeholder:opacity-50"
+                    className="bg-transparent border-b border-black text-xl font-black italic text-black outline-none w-full uppercase placeholder:opacity-50"
                   />
                 ) : (
                   <h3 
                     onClick={() => setIsEditingName(true)} 
                     style={{ color: lightTheme.text }} 
-                    className={`text-3xl font-black italic uppercase tracking-tighter truncate pr-2 ${!userName ? 'opacity-50' : ''}`}
+                    className={`text-xl font-black italic uppercase tracking-tighter truncate pr-2 ${!userName ? 'opacity-50' : ''}`}
                   >
                     {userName || '點擊以修改名稱'}
                   </h3>
                 )}
-                <Edit3 className="w-6 h-6 text-black shrink-0" />
+                <Edit3 className="w-5 h-5 text-black shrink-0" />
               </div>
             </div>
          </div>
