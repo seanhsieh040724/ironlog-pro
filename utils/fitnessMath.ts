@@ -135,6 +135,8 @@ const EXERCISE_MEDIA_REGISTRY: Record<string, string> = {
   "滑輪直桿彎舉": "https://www.docteur-fitness.com/wp-content/uploads/2021/10/curl-biceps-poulie-basse.gif",
   "反手槓鈴彎舉": "https://www.docteur-fitness.com/wp-content/uploads/2022/04/curl-inverse-barre.gif",
   "二頭肌器械彎舉": "https://www.docteur-fitness.com/wp-content/uploads/2022/01/curl-pupitre-machine-prechargee.gif",
+  "坐姿上斜啞鈴二頭彎舉": "https://images2.imgbox.com/10/61/MnRSbHQM_o.gif",
+  "坐姿啞鈴錘式彎舉": "https://images2.imgbox.com/36/9a/qhrweGoV_o.gif",
   "滑輪繩索下壓": "https://www.aesthetics-blog.com/wp-content/uploads/2023/04/12271301-Cable-Standing-One-Arm-Tricep-Pushdown-Overhand-Grip_Upper-Arms_720.gif",
   "窄握槓鈴臥推": "https://www.aesthetics-blog.com/wp-content/uploads/2021/10/00301301-Barbell-Close-Grip-Bench-Press_Upper-Arms_720.gif",
   "仰臥槓鈴臂屈伸": "https://www.aesthetics-blog.com/wp-content/uploads/2019/08/00601301-Barbell-Lying-Triceps-Extension-Skull-Crusher_Triceps-SFIX_720.gif",
@@ -330,6 +332,10 @@ const EXERCISE_METHODS: Record<string, string> = {
   "滑輪直桿彎舉": "01 面對滑輪機握住直桿，雙手反握，手肘固定在身體兩側，維持穩定站姿。\n\n02 緩慢讓直桿隨繩索回放下降，控制背部與肩部不動，感受二頭肌在恆定張力下的舒張。\n\n03 感覺二頭肌收縮發力，將直桿向上拉向胸前，利用繩索持續的阻力強化收縮感。",
 
   "二頭肌器械彎舉": "01 坐在機器上，調整座椅高度使腋下貼合墊子，雙手握住把手，手肘與軸心齊平。\n\n02 緩慢放回把手，控制重量下降的節奏，感受二頭肌在固定軌道上的完整舒張。\n\n03 感覺二頭肌孤立收縮，將把手向上拉起，專注於動作頂點的肌肉峰值擠壓。",
+
+  "坐姿上斜啞鈴二頭彎舉": "01 將長凳調整至上斜角度（約 45-60 度），雙手各持啞鈴坐下，背部緊貼凳面，雙臂自然下垂。\n\n02 保持上臂固定，緩慢將啞鈴向上彎舉，同時旋轉手腕使掌心朝上，感受二頭肌長頭的強烈收縮。\n\n03 緩慢控制啞鈴下降回到起始位置，感受二頭肌在拉伸狀態下的受力與舒張。",
+
+  "坐姿啞鈴錘式彎舉": "01 坐在長凳上，背部挺直，雙手各持一啞鈴垂於體側，掌心相對（對掌位）。\n\n02 保持上臂固定，像揮動錘子般將啞鈴向上舉起，直到啞鈴接近肩部位置。\n\n03 緩慢控制啞鈴下降回到起始位置，專注於肱橈肌與二頭肌長頭的發力。",
 
   "滑輪直桿過頭臂屈伸": "01 背對滑輪機，雙手握住直桿舉過頭頂，雙臂向前伸展，身體呈微前傾姿勢。\n\n02 緩慢彎曲手肘將直桿收向腦後，控制繩索張力，感受到三頭肌外側與長頭的拉伸與舒張。\n\n03 感覺三頭肌強力收縮，將直桿向前上方推至手臂伸直，強化手臂後側線條。",
 
