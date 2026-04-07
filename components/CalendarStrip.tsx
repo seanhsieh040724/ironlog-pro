@@ -47,6 +47,19 @@ export const CalendarStrip: React.FC<CalendarStripProps> = ({ selectedDate, onDa
 
   const weekdays = ['一', '二', '三', '四', '五', '六', '日'];
 
+  const swipeConfidenceThreshold = 10000;
+  const swipePower = (offset: number, velocity: number) => {
+    return Math.abs(offset) * velocity;
+  };
+
+  const handleDateSelect = (day: Date) => {
+    if (!isSameMonth(day, viewDate)) {
+      setDirection(day.getTime() > viewDate.getTime() ? 1 : -1);
+      setViewDate(startOfMonth(day));
+    }
+    onDateSelect(day);
+  };
+
   return (
     <div className="p-4 sm:p-5 select-none relative z-10">
       <div className="flex items-center justify-between mb-6 sm:mb-8 px-1">
@@ -59,7 +72,7 @@ export const CalendarStrip: React.FC<CalendarStripProps> = ({ selectedDate, onDa
               {format(viewDate, 'yyyy MMM', { locale: zhTW })}
             </h3>
             <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest mt-1 truncate">
-              SWIPE TO CHANGE MONTH
+              左右滑動切換月份
             </p>
           </div>
         </div>
@@ -77,44 +90,85 @@ export const CalendarStrip: React.FC<CalendarStripProps> = ({ selectedDate, onDa
       </div>
 
       <div className="relative overflow-hidden min-h-[240px] touch-pan-y">
-        <div className="grid grid-cols-7 gap-1 sm:gap-1.5">
-          {days.map((day) => {
-            const isSelected = isSameDay(day, selectedDate);
-            const isToday = isDateToday(day);
-            const hasWorkout = workoutDates.some(wd => isSameDay(wd, day));
-            const isCurrentMonth = isSameMonth(day, viewDate);
-            
-            return (
-              <button
-                key={day.toString()}
-                onClick={() => onDateSelect(day)}
-                className={`
-                  relative aspect-square rounded-xl flex flex-col items-center justify-center transition-all duration-200
-                  ${!isCurrentMonth ? 'opacity-20 scale-90' : 'opacity-100'}
-                  ${isSelected 
-                    ? 'bg-black text-white font-black shadow-md z-10 scale-105' 
-                    : hasWorkout
-                      ? 'bg-[#CCFF00] text-black font-bold'
-                      : isToday 
-                        ? 'bg-slate-100 text-black' 
-                        : 'hover:bg-slate-50 text-slate-400'
-                  }
-                `}
-              >
-                <span className={`text-sm sm:text-base ${isSelected ? 'scale-110' : ''}`}>
-                  {format(day, 'd')}
-                </span>
-                
-                {isToday && (
-                  <div className={`
-                    absolute bottom-2 w-1.5 h-1.5 rounded-full 
-                    ${isSelected ? 'bg-white' : 'bg-black'}
-                  `} />
-                )}
-              </button>
-            );
-          })}
-        </div>
+        <AnimatePresence initial={false} custom={direction} mode="popLayout">
+          <motion.div
+            key={viewDate.toString()}
+            custom={direction}
+            variants={{
+              enter: (direction: number) => ({
+                x: direction > 0 ? 100 : -100,
+                opacity: 0
+              }),
+              center: {
+                zIndex: 1,
+                x: 0,
+                opacity: 1
+              },
+              exit: (direction: number) => ({
+                zIndex: 0,
+                x: direction < 0 ? 100 : -100,
+                opacity: 0
+              })
+            }}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{
+              x: { type: "spring", stiffness: 300, damping: 30 },
+              opacity: { duration: 0.2 }
+            }}
+            drag="x"
+            dragConstraints={{ left: 0, right: 0 }}
+            dragElastic={1}
+            onDragEnd={(e, { offset, velocity }) => {
+              const swipe = swipePower(offset.x, velocity.x);
+
+              if (swipe < -swipeConfidenceThreshold) {
+                nextMonth();
+              } else if (swipe > swipeConfidenceThreshold) {
+                prevMonth();
+              }
+            }}
+            className="grid grid-cols-7 gap-1 sm:gap-1.5 cursor-grab active:cursor-grabbing"
+          >
+            {days.map((day) => {
+              const isSelected = isSameDay(day, selectedDate);
+              const isToday = isDateToday(day);
+              const hasWorkout = workoutDates.some(wd => isSameDay(wd, day));
+              const isCurrentMonth = isSameMonth(day, viewDate);
+              
+              return (
+                <button
+                  key={day.toString()}
+                  onClick={() => handleDateSelect(day)}
+                  className={`
+                    relative aspect-square rounded-xl flex flex-col items-center justify-center transition-all duration-200
+                    ${!isCurrentMonth ? 'opacity-20 scale-90' : 'opacity-100'}
+                    ${isSelected 
+                      ? 'bg-black text-white font-black shadow-md z-10 scale-105' 
+                      : hasWorkout
+                        ? 'bg-[#CCFF00] text-black font-bold'
+                        : isToday 
+                          ? 'bg-slate-100 text-black' 
+                          : 'hover:bg-slate-50 text-slate-400'
+                    }
+                  `}
+                >
+                  <span className={`text-sm sm:text-base ${isSelected ? 'scale-110' : ''}`}>
+                    {format(day, 'd')}
+                  </span>
+                  
+                  {isToday && (
+                    <div className={`
+                      absolute bottom-2 w-1.5 h-1.5 rounded-full 
+                      ${isSelected ? 'bg-white' : 'bg-black'}
+                    `} />
+                  )}
+                </button>
+              );
+            })}
+          </motion.div>
+        </AnimatePresence>
       </div>
     </div>
   );
