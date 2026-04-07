@@ -71,3 +71,15 @@ export interface Achievement {
 }
 
 export type AppTab = 'workout' | 'routines' | 'history' | 'profile';
+
+declare global {
+  interface Window {
+    webkit?: {
+      messageHandlers?: {
+        notificationHandler?: {
+          postMessage: (message: any) => void;
+        };
+      };
+    };
+  }
+}

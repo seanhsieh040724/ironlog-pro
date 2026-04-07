@@ -74,6 +74,10 @@ const App: React.FC = () => {
       }
     }
 
+    if (window.webkit?.messageHandlers?.notificationHandler) {
+      window.webkit.messageHandlers.notificationHandler.postMessage({ action: 'requestPermission' });
+    }
+
     setIsLoaded(true);
   }, []);
 

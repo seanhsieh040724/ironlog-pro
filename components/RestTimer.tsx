@@ -16,6 +16,25 @@ export const RestTimer: React.FC<RestTimerProps> = ({ active, seconds: initialSe
   const notificationSentRef = useRef<boolean>(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
+  const scheduleNativeNotification = useCallback((delay: number) => {
+    if (window.webkit?.messageHandlers?.notificationHandler) {
+      window.webkit.messageHandlers.notificationHandler.postMessage({
+        action: 'schedule',
+        title: 'IronLog: 休息結束！',
+        body: '該開始下一組訓練了。鋼鐵般的意志，不能停下！',
+        delay: delay
+      });
+    }
+  }, []);
+
+  const cancelNativeNotification = useCallback(() => {
+    if (window.webkit?.messageHandlers?.notificationHandler) {
+      window.webkit.messageHandlers.notificationHandler.postMessage({
+        action: 'cancel'
+      });
+    }
+  }, []);
+
   useEffect(() => {
     audioRef.current = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
     audioRef.current.load();
@@ -38,8 +57,16 @@ export const RestTimer: React.FC<RestTimerProps> = ({ active, seconds: initialSe
   }, [onClose]);
 
   useEffect(() => {
-    if (!active) { targetTimeRef.current = null; notificationSentRef.current = false; return; }
-    if (targetTimeRef.current === null) targetTimeRef.current = Date.now() + (configSeconds * 1000);
+    if (!active) { 
+      targetTimeRef.current = null; 
+      notificationSentRef.current = false; 
+      cancelNativeNotification();
+      return; 
+    }
+    if (targetTimeRef.current === null) {
+      targetTimeRef.current = Date.now() + (configSeconds * 1000);
+      scheduleNativeNotification(configSeconds);
+    }
     const updateTimer = () => {
       if (!targetTimeRef.current) return;
       const now = Date.now();
@@ -65,6 +92,8 @@ export const RestTimer: React.FC<RestTimerProps> = ({ active, seconds: initialSe
     targetTimeRef.current = Date.now() + (s * 1000);
     notificationSentRef.current = false;
     setTimeLeft(s);
+    cancelNativeNotification();
+    scheduleNativeNotification(s);
   };
 
   return (
@@ -88,16 +117,22 @@ export const RestTimer: React.FC<RestTimerProps> = ({ active, seconds: initialSe
           </div>
           
           <div className="flex space-x-3 w-full">
-             <button onClick={() => { targetTimeRef.current = Date.now() + (configSeconds * 1000); notificationSentRef.current = false; setTimeLeft(configSeconds); }} style={{ backgroundColor: '#000000' }} className="flex-1 border border-black/5 py-4 rounded-2xl flex items-center justify-center text-white active:scale-95 transition-all shadow-sm">
+             <button onClick={() => { 
+               targetTimeRef.current = Date.now() + (configSeconds * 1000); 
+               notificationSentRef.current = false; 
+               setTimeLeft(configSeconds); 
+               cancelNativeNotification();
+               scheduleNativeNotification(configSeconds);
+             }} style={{ backgroundColor: '#000000' }} className="flex-1 border border-black/5 py-4 rounded-2xl flex items-center justify-center text-white active:scale-95 transition-all shadow-sm">
                <RotateCcw className="w-5 h-5" />
              </button>
-             <button onClick={onClose} style={{ backgroundColor: lightTheme.accent }} className="flex-[2] text-black font-black py-4 rounded-2xl active:scale-95 transition-all uppercase tracking-tighter flex items-center justify-center gap-2 shadow-lg shadow-[#CCFF00]/10">
+             <button onClick={() => { cancelNativeNotification(); onClose(); }} style={{ backgroundColor: lightTheme.accent }} className="flex-[2] text-black font-black py-4 rounded-2xl active:scale-95 transition-all uppercase tracking-tighter flex items-center justify-center gap-2 shadow-lg shadow-[#CCFF00]/10">
                <Zap className="w-4 h-4 fill-current" />
                <span>我準備好了</span>
              </button>
           </div>
         </div>
-        <button onClick={onClose} className="absolute top-6 right-6 text-slate-200 hover:text-slate-400 p-2 transition-colors">
+        <button onClick={() => { cancelNativeNotification(); onClose(); }} className="absolute top-6 right-6 text-slate-200 hover:text-slate-400 p-2 transition-colors">
           <X className="w-5 h-5" />
         </button>
       </motion.div>
