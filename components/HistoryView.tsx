@@ -44,24 +44,25 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
     };
   }, [filteredHistory]);
 
+  const [confirmDelete, setConfirmDelete] = useState<{ sessionId: string, exerciseId: string } | null>(null);
+
   const handleDeleteSession = (sessionId: string) => {
     if (window.confirm('確定要永久刪除這筆訓練紀錄嗎？此動作無法復原。')) {
       onUpdateHistory(prev => prev.filter(s => s.id !== sessionId));
     }
   };
 
-  const handleDeleteExercise = (sessionId: string, exerciseId: string) => {
-    if (window.confirm('確定要刪除這個動作紀錄嗎？')) {
-      onUpdateHistory(prev => {
-        return prev.map(session => {
-          if (session.id !== sessionId) return session;
-          return {
-            ...session,
-            exercises: session.exercises.filter(ex => ex.id !== exerciseId)
-          };
-        }).filter(session => session.exercises.length > 0);
-      });
-    }
+  const executeDeleteExercise = (sessionId: string, exerciseId: string) => {
+    onUpdateHistory(prev => {
+      return prev.map(session => {
+        if (session.id !== sessionId) return session;
+        return {
+          ...session,
+          exercises: session.exercises.filter(ex => ex.id !== exerciseId)
+        };
+      }).filter(session => session.exercises.length > 0);
+    });
+    setConfirmDelete(null);
   };
 
   const handleSaveDayAsRoutine = () => {
@@ -184,15 +185,43 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
                     </div>
                     <div className="space-y-6">
                       {session.exercises.map(ex => (
-                        <div key={ex.id} style={{ backgroundColor: lightTheme.card }} className="p-6 rounded-[32px] border border-black/5 shadow-sm space-y-6 relative group">
+                        <div key={ex.id} style={{ backgroundColor: lightTheme.card }} className="p-6 rounded-[32px] border border-black/5 shadow-sm space-y-6 relative overflow-hidden group">
+                          {/* 刪除確認遮罩 */}
+                          <AnimatePresence>
+                            {confirmDelete?.exerciseId === ex.id && (
+                              <motion.div 
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                className="absolute inset-0 z-[110] bg-red-500/95 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center"
+                              >
+                                <p className="text-white font-black italic text-lg mb-4 uppercase tracking-tighter">確定要刪除此動作？</p>
+                                <div className="flex gap-3 w-full">
+                                  <button 
+                                    onClick={() => executeDeleteExercise(session.id, ex.id)}
+                                    className="flex-1 bg-white text-red-500 py-3 rounded-2xl font-black uppercase text-xs active:scale-95 transition-all"
+                                  >
+                                    確認刪除
+                                  </button>
+                                  <button 
+                                    onClick={() => setConfirmDelete(null)}
+                                    className="flex-1 bg-black/20 text-white py-3 rounded-2xl font-black uppercase text-xs active:scale-95 transition-all"
+                                  >
+                                    取消
+                                  </button>
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+
                           <button 
                             type="button"
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
-                              handleDeleteExercise(session.id, ex.id);
+                              setConfirmDelete({ sessionId: session.id, exerciseId: ex.id });
                             }}
-                            className="absolute top-4 right-4 p-2 text-red-500/20 hover:text-red-500 active:scale-75 transition-all z-[100] cursor-pointer"
+                            className="absolute top-3 right-3 w-12 h-12 flex items-center justify-center text-red-500/40 hover:text-red-500 active:scale-75 transition-all z-[100] cursor-pointer bg-red-50 rounded-full border border-red-100/50"
                             title="刪除此動作"
                           >
                             <Trash2 className="w-5 h-5" />
