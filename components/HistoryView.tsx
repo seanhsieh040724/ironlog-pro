@@ -50,6 +50,18 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
     }
   };
 
+  const handleDeleteExercise = (sessionId: string, exerciseId: string) => {
+    if (window.confirm('確定要刪除這個動作紀錄嗎？')) {
+      onUpdateHistory(prev => prev.map(s => {
+        if (s.id !== sessionId) return s;
+        return {
+          ...s,
+          exercises: s.exercises.filter(ex => ex.id !== exerciseId)
+        };
+      }).filter(s => s.exercises.length > 0));
+    }
+  };
+
   const handleSaveDayAsRoutine = () => {
     if (!dailyStats) return;
     
@@ -181,6 +193,12 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
                                 {getMuscleGroupDisplay(ex.muscleGroup).cn} • {ex.sets.length} 組
                               </div>
                             </div>
+                            <button 
+                              onClick={() => handleDeleteExercise(session.id, ex.id)}
+                              className="text-slate-200 hover:text-red-400 active:scale-90 transition-all p-2"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
                           </div>
                           
                           <div className="grid grid-cols-1 gap-2">

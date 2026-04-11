@@ -333,7 +333,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                             }) 
                           });
                         }} 
-                        style={{ color: lightTheme.text }}
+                        style={{ color: '#000000' }}
                         className="w-16 bg-slate-100 rounded-xl py-3 text-center text-xl font-black outline-none border border-black/5 focus:border-black/20 transition-all shadow-inner" 
                       />
                       <span className="text-[10px] font-black text-slate-300 italic uppercase shrink-0">kg</span>
@@ -345,7 +345,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                         value={set.reps || ''} 
                         placeholder="0" 
                         onChange={(e) => onUpdate({ ...session, exercises: session.exercises.map(ex => ex.id === currentDetailEx!.id ? { ...ex, sets: ex.sets.map(s => s.id === set.id ? { ...s, reps: Number(e.target.value) } : s) } : ex) })} 
-                        style={{ color: lightTheme.text }}
+                        style={{ color: '#000000' }}
                         className="w-16 bg-slate-100 rounded-xl py-3 text-center text-xl font-black outline-none border border-black/5 focus:border-black/20 transition-all shadow-inner" 
                       />
                       <span className="text-[10px] font-black text-slate-300 italic uppercase shrink-0">rep</span>
