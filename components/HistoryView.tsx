@@ -51,21 +51,15 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
   };
 
   const handleDeleteExercise = (sessionId: string, exerciseId: string) => {
-    console.log('Attempting to delete exercise:', exerciseId, 'from session:', sessionId);
     if (window.confirm('確定要刪除這個動作紀錄嗎？')) {
       onUpdateHistory(prev => {
-        console.log('Previous history state:', prev);
-        const newHistory = prev.map(s => {
-          if (s.id !== sessionId) return s;
-          const updatedExercises = s.exercises.filter(ex => ex.id !== exerciseId);
-          console.log('Updated exercises for session', sessionId, ':', updatedExercises);
+        return prev.map(session => {
+          if (session.id !== sessionId) return session;
           return {
-            ...s,
-            exercises: updatedExercises
+            ...session,
+            exercises: session.exercises.filter(ex => ex.id !== exerciseId)
           };
-        }).filter(s => s.exercises.length > 0);
-        console.log('New history state:', newHistory);
-        return newHistory;
+        }).filter(session => session.exercises.length > 0);
       });
     }
   };
@@ -202,13 +196,16 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
                               </div>
                             </div>
                             <button 
+                              type="button"
                               onClick={(e) => {
+                                e.preventDefault();
                                 e.stopPropagation();
                                 handleDeleteExercise(session.id, ex.id);
                               }}
-                              className="text-slate-200 hover:text-red-400 active:scale-90 transition-all p-2 relative z-20"
+                              className="p-4 -mr-4 text-red-400/30 hover:text-red-500 active:scale-75 transition-all relative z-50 cursor-pointer"
+                              title="刪除此動作"
                             >
-                              <Trash2 className="w-4 h-4" />
+                              <Trash2 className="w-5 h-5" />
                             </button>
                           </div>
                           
