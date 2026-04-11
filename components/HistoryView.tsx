@@ -51,15 +51,20 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
   };
 
   const handleDeleteExercise = (sessionId: string, exerciseId: string) => {
+    console.log('Attempting to delete exercise:', exerciseId, 'from session:', sessionId);
     if (window.confirm('確定要刪除這個動作紀錄嗎？')) {
       onUpdateHistory(prev => {
+        console.log('Previous history state:', prev);
         const newHistory = prev.map(s => {
           if (s.id !== sessionId) return s;
+          const updatedExercises = s.exercises.filter(ex => ex.id !== exerciseId);
+          console.log('Updated exercises for session', sessionId, ':', updatedExercises);
           return {
             ...s,
-            exercises: s.exercises.filter(ex => ex.id !== exerciseId)
+            exercises: updatedExercises
           };
         }).filter(s => s.exercises.length > 0);
+        console.log('New history state:', newHistory);
         return newHistory;
       });
     }
@@ -197,8 +202,11 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
                               </div>
                             </div>
                             <button 
-                              onClick={() => handleDeleteExercise(session.id, ex.id)}
-                              className="text-slate-200 hover:text-red-400 active:scale-90 transition-all p-2"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteExercise(session.id, ex.id);
+                              }}
+                              className="text-slate-200 hover:text-red-400 active:scale-90 transition-all p-2 relative z-20"
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
