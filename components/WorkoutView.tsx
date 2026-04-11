@@ -307,7 +307,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                         <MinusCircle className="w-5 h-5" />
                       </button>
                     </div>
-                    <div className="col-span-1 text-base font-black italic text-slate-300 text-center">
+                    <div className="col-span-1 text-base font-black italic text-black text-center">
                       {index + 1}
                     </div>
                     
@@ -336,7 +336,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                         style={{ color: '#000000' }}
                         className="w-16 bg-slate-100 rounded-xl py-3 text-center text-xl font-black outline-none border border-black/5 focus:border-black/20 transition-all shadow-inner" 
                       />
-                      <span className="text-[10px] font-black text-slate-300 italic uppercase shrink-0">kg</span>
+                      <span className="text-[10px] font-black text-black italic uppercase shrink-0">kg</span>
                     </div>
 
                     <div className="col-span-4 flex items-center justify-center gap-2">
@@ -348,7 +348,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                         style={{ color: '#000000' }}
                         className="w-16 bg-slate-100 rounded-xl py-3 text-center text-xl font-black outline-none border border-black/5 focus:border-black/20 transition-all shadow-inner" 
                       />
-                      <span className="text-[10px] font-black text-slate-300 italic uppercase shrink-0">rep</span>
+                      <span className="text-[10px] font-black text-black italic uppercase shrink-0">rep</span>
                     </div>
 
                     <div className="col-span-2 flex justify-end">

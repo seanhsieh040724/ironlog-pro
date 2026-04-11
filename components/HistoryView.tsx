@@ -208,13 +208,13 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
                                   <span className="text-[10px] font-black text-slate-300 italic w-4">#{sIdx + 1}</span>
                                   <div className="flex items-center gap-1">
                                     <span style={{ color: lightTheme.text }} className="text-base font-black italic">{set.weight}</span>
-                                    <span className="text-[9px] font-black text-slate-300 uppercase italic">kg</span>
+                                    <span className="text-[9px] font-black text-black uppercase italic">kg</span>
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-4">
                                   <div className="flex items-center gap-1">
                                     <span style={{ color: lightTheme.text }} className="text-base font-black italic">{set.reps}</span>
-                                    <span className="text-[9px] font-black text-slate-300 uppercase italic">reps</span>
+                                    <span className="text-[9px] font-black text-black uppercase italic">reps</span>
                                   </div>
                                   <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${set.completed ? 'bg-[#CCFF00] text-black' : 'bg-slate-100 text-slate-200'}`}>
                                     <Check className="w-3.5 h-3.5 stroke-[4]" />
