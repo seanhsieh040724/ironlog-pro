@@ -16,13 +16,11 @@ export const RestTimer: React.FC<RestTimerProps> = ({ active, seconds: initialSe
   const notificationSentRef = useRef<boolean>(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  const scheduleNativeNotification = useCallback((delay: number) => {
+  const scheduleNativeNotification = useCallback((seconds: number) => {
     if (window.webkit?.messageHandlers?.notificationHandler) {
       window.webkit.messageHandlers.notificationHandler.postMessage({
         action: 'schedule',
-        title: 'IronLog: 休息結束！',
-        body: '該開始下一組訓練了。鋼鐵般的意志，不能停下！',
-        delay: delay
+        seconds: seconds
       });
     }
   }, []);
