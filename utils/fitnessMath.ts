@@ -137,6 +137,7 @@ const EXERCISE_MEDIA_REGISTRY: Record<string, string> = {
   "二頭肌器械彎舉": "https://www.docteur-fitness.com/wp-content/uploads/2022/01/curl-pupitre-machine-prechargee.gif",
   "坐姿上斜啞鈴二頭彎舉": "https://images2.imgbox.com/10/61/MnRSbHQM_o.gif",
   "坐姿啞鈴錘式彎舉": "https://images2.imgbox.com/36/9a/qhrweGoV_o.gif",
+  "站姿繩索錘式彎舉": "https://images2.imgbox.com/d2/24/f0Nsdujm_o.gif",
   "滑輪繩索下壓": "https://www.aesthetics-blog.com/wp-content/uploads/2023/04/12271301-Cable-Standing-One-Arm-Tricep-Pushdown-Overhand-Grip_Upper-Arms_720.gif",
   "窄握槓鈴臥推": "https://www.aesthetics-blog.com/wp-content/uploads/2021/10/00301301-Barbell-Close-Grip-Bench-Press_Upper-Arms_720.gif",
   "仰臥槓鈴臂屈伸": "https://www.aesthetics-blog.com/wp-content/uploads/2019/08/00601301-Barbell-Lying-Triceps-Extension-Skull-Crusher_Triceps-SFIX_720.gif",
@@ -336,6 +337,8 @@ const EXERCISE_METHODS: Record<string, string> = {
   "坐姿上斜啞鈴二頭彎舉": "01 將長凳調整至上斜角度（約 45-60 度），雙手各持啞鈴坐下，背部緊貼凳面，雙臂自然下垂。\n\n02 保持上臂固定，緩慢將啞鈴向上彎舉，同時旋轉手腕使掌心朝上，感受二頭肌長頭的強烈收縮。\n\n03 緩慢控制啞鈴下降回到起始位置，感受二頭肌在拉伸狀態下的受力與舒張。",
 
   "坐姿啞鈴錘式彎舉": "01 坐在長凳上，背部挺直，雙手各持一啞鈴垂於體側，掌心相對（對掌位）。\n\n02 保持上臂固定，像揮動錘子般將啞鈴向上舉起，直到啞鈴接近肩部位置。\n\n03 緩慢控制啞鈴下降回到起始位置，專注於肱橈肌與二頭肌長頭的發力。",
+  
+  "站姿繩索錘式彎舉": "01 面對滑輪機站立，雙手握住繩索把手，掌心相對，手肘固定在身體兩側。\n\n02 保持背部挺直，利用二頭肌與前臂力量將繩索向上拉起，直到手部接近肩膀。\n\n03 緩慢控制重量回放，感受肌肉在拉伸狀態下的張力，專注於手臂側面線條。",
 
   "滑輪直桿過頭臂屈伸": "01 背對滑輪機，雙手握住直桿舉過頭頂，雙臂向前伸展，身體呈微前傾姿勢。\n\n02 緩慢彎曲手肘將直桿收向腦後，控制繩索張力，感受到三頭肌外側與長頭的拉伸與舒張。\n\n03 感覺三頭肌強力收縮，將直桿向前上方推至手臂伸直，強化手臂後側線條。",
 
