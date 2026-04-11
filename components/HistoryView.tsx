@@ -184,7 +184,20 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
                     </div>
                     <div className="space-y-6">
                       {session.exercises.map(ex => (
-                        <div key={ex.id} style={{ backgroundColor: lightTheme.card }} className="p-6 rounded-[32px] border border-black/5 shadow-sm space-y-6">
+                        <div key={ex.id} style={{ backgroundColor: lightTheme.card }} className="p-6 rounded-[32px] border border-black/5 shadow-sm space-y-6 relative group">
+                          <button 
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleDeleteExercise(session.id, ex.id);
+                            }}
+                            className="absolute top-4 right-4 p-2 text-red-500/20 hover:text-red-500 active:scale-75 transition-all z-[100] cursor-pointer"
+                            title="刪除此動作"
+                          >
+                            <Trash2 className="w-5 h-5" />
+                          </button>
+                          
                           <div className="flex items-center gap-4">
                             <div className="w-16 h-16 rounded-xl overflow-hidden bg-slate-100 shrink-0 flex items-center justify-center border border-black/5">
                               <ExerciseSmallGif name={ex.name} />
@@ -195,18 +208,6 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
                                 {getMuscleGroupDisplay(ex.muscleGroup).cn} • {ex.sets.length} 組
                               </div>
                             </div>
-                            <button 
-                              type="button"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                handleDeleteExercise(session.id, ex.id);
-                              }}
-                              className="p-4 -mr-4 text-red-400/30 hover:text-red-500 active:scale-75 transition-all relative z-50 cursor-pointer"
-                              title="刪除此動作"
-                            >
-                              <Trash2 className="w-5 h-5" />
-                            </button>
                           </div>
                           
                           <div className="grid grid-cols-1 gap-2">
