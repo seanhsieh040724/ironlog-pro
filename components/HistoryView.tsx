@@ -52,13 +52,16 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
 
   const handleDeleteExercise = (sessionId: string, exerciseId: string) => {
     if (window.confirm('確定要刪除這個動作紀錄嗎？')) {
-      onUpdateHistory(prev => prev.map(s => {
-        if (s.id !== sessionId) return s;
-        return {
-          ...s,
-          exercises: s.exercises.filter(ex => ex.id !== exerciseId)
-        };
-      }).filter(s => s.exercises.length > 0));
+      onUpdateHistory(prev => {
+        const newHistory = prev.map(s => {
+          if (s.id !== sessionId) return s;
+          return {
+            ...s,
+            exercises: s.exercises.filter(ex => ex.id !== exerciseId)
+          };
+        }).filter(s => s.exercises.length > 0);
+        return newHistory;
+      });
     }
   };
 
