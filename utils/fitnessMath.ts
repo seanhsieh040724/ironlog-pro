@@ -171,7 +171,7 @@ const EXERCISE_MEDIA_REGISTRY: Record<string, string> = {
   "相撲硬舉": "https://www.docteur-fitness.com/wp-content/uploads/2021/10/souleve-de-terre-sumo.gif",
   "六角槓硬舉": "https://www.docteur-fitness.com/wp-content/uploads/2021/10/souleve-de-terre-a-la-trap-bar.gif",
   "器械腿外展": "https://static.wixstatic.com/media/2edbed_2c54524226684ddea7f4e2e08a472a3a~mv2.gif",
-  "器械腿內收": "https://fitliferegime.com/wp-content/uploads/2024/04/Lever-Seated-Adduction.gif",
+  "器械腿內收": "https://images2.imgbox.com/c3/78/EkU9jm9Y_o.gif",
   "仰臥起坐": "https://www.docteur-fitness.com/wp-content/uploads/2000/07/crunch-au-sol-exercice-musculation.gif",
   "羅馬椅抬腿": "https://www.docteur-fitness.com/wp-content/uploads/2022/04/releve-jambes-chaise-romaine-abdominaux.gif",
   "棒式": "https://www.docteur-fitness.com/wp-content/uploads/2022/05/planche-abdos.gif",
