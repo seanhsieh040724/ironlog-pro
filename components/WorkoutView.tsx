@@ -348,7 +348,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                         <span className="text-[10px] font-black text-black italic uppercase shrink-0">kg</span>
                       </div>
                       {lastPerformedExercise && lastPerformedExercise.sets[index] && (
-                        <div className="text-[9px] font-black text-slate-300 italic uppercase tracking-wider">
+                        <div className="text-[9px] font-black text-black italic uppercase tracking-wider">
                           上次: {lastPerformedExercise.sets[index].weight}kg
                         </div>
                       )}
