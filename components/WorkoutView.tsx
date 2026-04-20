@@ -323,8 +323,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                             exercises: session.exercises.map(ex => {
                               if (ex.id === currentDetailEx!.id) {
                                 const newSets = ex.sets.map((s, i) => {
-                                  if (s.id === set.id) return { ...s, weight: newWeight };
-                                  if (index === 0) return { ...s, weight: newWeight };
+                                  if (i >= index) return { ...s, weight: newWeight };
                                   return s;
                                 });
                                 return { ...ex, sets: newSets };
