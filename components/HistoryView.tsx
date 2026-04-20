@@ -130,7 +130,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
           <div className="flex items-center gap-3 text-slate-400">
              <CalendarDays className="w-5 h-5 text-black" />
              <h2 style={{ color: lightTheme.text }} className="text-base font-black italic tracking-tighter uppercase pr-2">
-               訓練日報 <span className="text-slate-300">/ {format(selectedDate, 'MM.dd')}</span>
+               訓練日報 <span className="text-black">/ {format(selectedDate, 'MM.dd')}</span>
              </h2>
           </div>
         </div>

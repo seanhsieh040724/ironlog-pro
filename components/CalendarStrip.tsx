@@ -85,7 +85,7 @@ export const CalendarStrip: React.FC<CalendarStripProps> = ({ selectedDate, onDa
 
       <div className="grid grid-cols-7 gap-1 mb-2">
         {weekdays.map(d => (
-          <div key={d} className="text-center text-[10px] font-black text-slate-200 uppercase py-1.5">{d}</div>
+          <div key={d} className="text-center text-[10px] font-black text-black uppercase py-1.5">{d}</div>
         ))}
       </div>
 
