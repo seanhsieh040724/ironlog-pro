@@ -55,6 +55,15 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
 
   const currentDetailEx = useMemo(() => session?.exercises.find(e => e.id === activeExerciseId), [session, activeExerciseId]);
 
+  const lastPerformedExercise = useMemo(() => {
+    if (!currentDetailEx || !context?.history) return null;
+    // 找出歷史紀錄中該動作最近的一次（排除當前 session，雖然 history 通常不含當前）
+    return context.history
+      .filter(s => s.exercises.some(e => e.name === currentDetailEx.name))
+      .sort((a, b) => b.startTime - a.startTime)[0]
+      ?.exercises.find(e => e.name === currentDetailEx.name);
+  }, [currentDetailEx?.name, context?.history]);
+
   useEffect(() => {
     if (activeExerciseId) {
       // 當進入任何動作詳情時，確保畫面穩定地停在最上方（顯示 GIF 區域）
@@ -311,31 +320,38 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                       {index + 1}
                     </div>
                     
-                    <div className="col-span-4 flex items-center justify-center gap-2">
-                      <input 
-                        type="number" 
-                        value={set.weight || ''} 
-                        placeholder="0" 
-                        onChange={(e) => {
-                          const newWeight = Number(e.target.value);
-                          onUpdate({ 
-                            ...session, 
-                            exercises: session.exercises.map(ex => {
-                              if (ex.id === currentDetailEx!.id) {
-                                const newSets = ex.sets.map((s, i) => {
-                                  if (i >= index) return { ...s, weight: newWeight };
-                                  return s;
-                                });
-                                return { ...ex, sets: newSets };
-                              }
-                              return ex;
-                            }) 
-                          });
-                        }} 
-                        style={{ color: '#000000' }}
-                        className="w-16 bg-slate-100 rounded-xl py-3 text-center text-xl font-black outline-none border border-black/5 focus:border-black/20 transition-all shadow-inner" 
-                      />
-                      <span className="text-[10px] font-black text-black italic uppercase shrink-0">kg</span>
+                    <div className="col-span-4 flex flex-col items-center justify-center gap-1">
+                      <div className="flex items-center justify-center gap-2">
+                        <input 
+                          type="number" 
+                          value={set.weight || ''} 
+                          placeholder="0" 
+                          onChange={(e) => {
+                            const newWeight = Number(e.target.value);
+                            onUpdate({ 
+                              ...session, 
+                              exercises: session.exercises.map(ex => {
+                                if (ex.id === currentDetailEx!.id) {
+                                  const newSets = ex.sets.map((s, i) => {
+                                    if (i >= index) return { ...s, weight: newWeight };
+                                    return s;
+                                  });
+                                  return { ...ex, sets: newSets };
+                                }
+                                return ex;
+                              }) 
+                            });
+                          }} 
+                          style={{ color: '#000000' }}
+                          className="w-16 bg-slate-100 rounded-xl py-3 text-center text-xl font-black outline-none border border-black/5 focus:border-black/20 transition-all shadow-inner" 
+                        />
+                        <span className="text-[10px] font-black text-black italic uppercase shrink-0">kg</span>
+                      </div>
+                      {lastPerformedExercise && lastPerformedExercise.sets[index] && (
+                        <div className="text-[9px] font-black text-slate-300 italic uppercase tracking-wider">
+                          上次: {lastPerformedExercise.sets[index].weight}kg
+                        </div>
+                      )}
                     </div>
 
                     <div className="col-span-4 flex items-center justify-center gap-2">

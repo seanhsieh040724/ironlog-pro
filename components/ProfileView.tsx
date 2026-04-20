@@ -7,10 +7,12 @@ import {
   Flame, Edit3, CheckCircle2, Save, Beef, Soup, 
   Droplets, Waves, GlassWater, 
   Cake, Maximize2, Weight as WeightIcon, UserCheck, Bike, 
-  Camera
+  Camera, Sparkles, AlertCircle, Loader2
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { lightTheme } from '../themeStyles';
+import { generateDietarySuggestions } from '../services/aiService';
+import Markdown from 'react-markdown';
 
 export const ProfileView: React.FC = () => {
   const context = useContext(AppContext);
@@ -36,6 +38,8 @@ export const ProfileView: React.FC = () => {
   
   const [isMetricsSaved, setIsMetricsSaved] = useState(false);
   const [isGoalSaved, setIsGoalSaved] = useState(false);
+  const [isAiLoading, setIsAiLoading] = useState(false);
+  const [showAiPlan, setShowAiPlan] = useState(false);
 
   useEffect(() => {
     setTempMetrics(latest);
@@ -56,8 +60,12 @@ export const ProfileView: React.FC = () => {
   }, [tempMetrics, tempGoal]);
 
   const macros = useMemo(() => {
-    return calculateMacros(suggestedCalories, tempMetrics.weight, tempGoal.type);
-  }, [suggestedCalories, tempMetrics.weight, tempGoal.type]);
+    return calculateMacros(suggestedCalories, tempMetrics.weight, tempGoal.type, {
+      protein: tempGoal.proteinRatio,
+      carbs: tempGoal.carbRatio,
+      fats: tempGoal.fatRatio
+    });
+  }, [suggestedCalories, tempMetrics.weight, tempGoal.type, tempGoal.proteinRatio, tempGoal.carbRatio, tempGoal.fatRatio]);
 
   const waterIntake = useMemo(() => {
     return calculateWaterIntake(tempMetrics.weight);
@@ -77,6 +85,18 @@ export const ProfileView: React.FC = () => {
     localStorage.setItem('ironlog_v3_goal', JSON.stringify(tempGoal));
     setIsGoalSaved(true);
     setTimeout(() => setIsGoalSaved(false), 2000);
+  };
+
+  const handleAiAnalysis = async () => {
+    if (isAiLoading) return;
+    setIsAiLoading(true);
+    setShowAiPlan(true);
+    const plan = await generateDietarySuggestions(tempMetrics, tempGoal);
+    const updatedGoal = { ...tempGoal, dietaryPlan: plan };
+    setTempGoal(updatedGoal);
+    setGlobalGoal(updatedGoal);
+    localStorage.setItem('ironlog_v3_goal', JSON.stringify(updatedGoal));
+    setIsAiLoading(false);
   };
 
   const activityOptions = [
@@ -270,8 +290,60 @@ export const ProfileView: React.FC = () => {
                    ))}
                  </div>
                </div>
+
+               <div style={{ backgroundColor: lightTheme.card }} className="p-6 rounded-[32px] border border-black/5 shadow-inner">
+                 <div className="flex items-center justify-between mb-4 px-1">
+                    <div className="flex items-center gap-2.5 opacity-40">
+                       <Beef className="text-rose-400 w-3.5 h-3.5" />
+                       <span className="text-[10px] font-black uppercase tracking-widest">巨量營養比例設定</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span className={`text-[9px] font-black uppercase tracking-widest ${((tempGoal.proteinRatio || 0) + (tempGoal.carbRatio || 0) + (tempGoal.fatRatio || 0)) === 100 ? 'text-emerald-500' : 'text-rose-400'}`}>
+                        總計: {((tempGoal.proteinRatio || 0) + (tempGoal.carbRatio || 0) + (tempGoal.fatRatio || 0)) === 0 ? '預設' : ((tempGoal.proteinRatio || 0) + (tempGoal.carbRatio || 0) + (tempGoal.fatRatio || 0)) + '%'}
+                      </span>
+                      {tempGoal.proteinRatio !== undefined && ((tempGoal.proteinRatio || 0) + (tempGoal.carbRatio || 0) + (tempGoal.fatRatio || 0)) !== 100 && (
+                        <AlertCircle className="w-3 h-3 text-rose-400" />
+                      )}
+                    </div>
+                 </div>
+                 <div className="grid grid-cols-3 gap-3">
+                   <div className="space-y-1.5">
+                     <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block text-center">蛋白質 %</span>
+                     <input 
+                       type="number" 
+                       value={tempGoal.proteinRatio || ''} 
+                       onChange={e => setTempGoal({ ...tempGoal, proteinRatio: Number(e.target.value) })}
+                       className="w-full bg-white border border-black/5 rounded-xl py-2.5 text-center text-sm font-black italic shadow-sm outline-none focus:border-rose-400/50"
+                       placeholder="--"
+                     />
+                   </div>
+                   <div className="space-y-1.5">
+                     <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block text-center">碳水 %</span>
+                     <input 
+                       type="number" 
+                       value={tempGoal.carbRatio || ''} 
+                       onChange={e => setTempGoal({ ...tempGoal, carbRatio: Number(e.target.value) })}
+                       className="w-full bg-white border border-black/5 rounded-xl py-2.5 text-center text-sm font-black italic shadow-sm outline-none focus:border-amber-400/50"
+                       placeholder="--"
+                     />
+                   </div>
+                   <div className="space-y-1.5">
+                     <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block text-center">脂肪 %</span>
+                     <input 
+                       type="number" 
+                       value={tempGoal.fatRatio || ''} 
+                       onChange={e => setTempGoal({ ...tempGoal, fatRatio: Number(e.target.value) })}
+                       className="w-full bg-white border border-black/5 rounded-xl py-2.5 text-center text-sm font-black italic shadow-sm outline-none focus:border-indigo-400/50"
+                       placeholder="--"
+                     />
+                   </div>
+                 </div>
+                 <p className="text-[8px] font-medium text-slate-400 mt-4 leading-relaxed italic text-center">
+                   * 若不設定比例，系統將根據目標 (減脂/增肌/維持) 提供預設建議。
+                 </p>
+               </div>
             </div>
-            
+
             <div style={{ backgroundColor: '#FFF9E6' }} className="px-6 py-6 rounded-[32px] border border-black/5 flex flex-col gap-2 shadow-inner">
               <div className="flex items-center gap-2 mb-1">
                 <Flame className="w-4 h-4 text-orange-400" />
@@ -300,6 +372,61 @@ export const ProfileView: React.FC = () => {
                   </div>
                </div>
                <Waves className="text-sky-200 w-8 h-8 opacity-50" />
+            </div>
+
+            <div className="pt-2">
+               <button 
+                 onClick={handleAiAnalysis}
+                 disabled={isAiLoading}
+                 style={{ backgroundColor: '#000000', color: '#FFFFFF' }}
+                 className="w-full h-14 rounded-2xl font-black uppercase italic text-sm flex items-center justify-center gap-3 active:scale-[0.98] transition-all shadow-xl disabled:opacity-50"
+               >
+                 {isAiLoading ? (
+                   <Loader2 className="w-5 h-5 animate-spin text-[#CCFF00]" />
+                 ) : (
+                   <Sparkles className="w-5 h-5 text-[#CCFF00]" />
+                 )}
+                 {isAiLoading ? 'AI 分析中...' : '獲取個人專屬飲食建議'}
+               </button>
+
+               <AnimatePresence>
+                 {(showAiPlan || tempGoal.dietaryPlan) && (
+                   <motion.div
+                     initial={{ opacity: 0, y: 20 }}
+                     animate={{ opacity: 1, y: 0 }}
+                     className="mt-6 p-7 rounded-[32px] bg-white border border-black/5 shadow-xl relative overflow-hidden"
+                   >
+                     <div className="flex items-center justify-between mb-6">
+                       <div className="flex items-center gap-3">
+                         <div className="w-9 h-9 rounded-xl bg-black flex items-center justify-center text-[#CCFF00]">
+                           <Sparkles className="w-5 h-5" />
+                         </div>
+                         <h4 className="text-sm font-black italic uppercase">個人專屬營養藍圖</h4>
+                       </div>
+                       <button onClick={() => setShowAiPlan(false)} className="text-[10px] font-black text-slate-300 uppercase underline">隱藏</button>
+                     </div>
+                     
+                     <div className="prose prose-sm max-w-none text-slate-600 leading-relaxed font-medium markdown-body">
+                        {isAiLoading ? (
+                          <div className="flex flex-col items-center py-12 gap-4">
+                             <div className="w-12 h-1 bg-slate-100 rounded-full overflow-hidden">
+                                <motion.div 
+                                  animate={{ x: [-50, 50] }}
+                                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                                  className="w-full h-full bg-[#CCFF00]"
+                                />
+                             </div>
+                             <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">正在為您制定專屬計畫...</p>
+                          </div>
+                        ) : (
+                          <div className="markdown-content">
+                            <Markdown>{tempGoal.dietaryPlan}</Markdown>
+                          </div>
+                        )}
+                     </div>
+                   </motion.div>
+                 )}
+               </AnimatePresence>
             </div>
          </div>
       </div>

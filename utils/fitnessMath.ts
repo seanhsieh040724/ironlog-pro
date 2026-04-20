@@ -33,9 +33,17 @@ export const calculateSuggestedCalories = (
   return Math.round(tdee);
 };
 
-export const calculateMacros = (calories: number, weight: number, goal: string) => {
+export const calculateMacros = (calories: number, weight: number, goal: string, customRatios?: { protein?: number, carbs?: number, fats?: number }) => {
   if (calories <= 0) return { protein: 0, carbs: 0, fats: 0 };
   
+  // 如果有手動比例設定
+  if (customRatios && customRatios.protein !== undefined && customRatios.carbs !== undefined && customRatios.fats !== undefined) {
+    const pGrams = Math.round((calories * (customRatios.protein / 100)) / 4);
+    const cGrams = Math.round((calories * (customRatios.carbs / 100)) / 4);
+    const fGrams = Math.round((calories * (customRatios.fats / 100)) / 9);
+    return { protein: pGrams, carbs: cGrams, fats: fGrams };
+  }
+
   // 蛋白質建議：健身人群通常為 1.8g - 2.2g per kg
   const pGrams = Math.round(weight * 2);
   const pCal = pGrams * 4;
