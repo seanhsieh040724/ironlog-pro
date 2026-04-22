@@ -320,35 +320,34 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                       {index + 1}
                     </div>
                     
-                    <div className="col-span-4 flex flex-col items-center justify-center gap-1">
-                      <div className="flex items-center justify-center gap-2">
-                        <input 
-                          type="number" 
-                          value={set.weight || ''} 
-                          placeholder="0" 
-                          onChange={(e) => {
-                            const newWeight = Number(e.target.value);
-                            onUpdate({ 
-                              ...session, 
-                              exercises: session.exercises.map(ex => {
-                                if (ex.id === currentDetailEx!.id) {
-                                  const newSets = ex.sets.map((s, i) => {
-                                    if (i >= index) return { ...s, weight: newWeight };
-                                    return s;
-                                  });
-                                  return { ...ex, sets: newSets };
-                                }
-                                return ex;
-                              }) 
-                            });
-                          }} 
-                          style={{ color: '#000000' }}
-                          className="w-16 bg-slate-100 rounded-xl py-3 text-center text-xl font-black outline-none border border-black/5 focus:border-black/20 transition-all shadow-inner" 
-                        />
-                        <span className="text-[10px] font-black text-black italic uppercase shrink-0">kg</span>
-                      </div>
+                    <div className="col-span-4 flex items-center justify-center gap-2 relative">
+                      <input 
+                        type="number" 
+                        value={set.weight || ''} 
+                        placeholder="0" 
+                        onChange={(e) => {
+                          const newWeight = Number(e.target.value);
+                          onUpdate({ 
+                            ...session, 
+                            exercises: session.exercises.map(ex => {
+                              if (ex.id === currentDetailEx!.id) {
+                                const newSets = ex.sets.map((s, i) => {
+                                  if (i >= index) return { ...s, weight: newWeight };
+                                  return s;
+                                });
+                                return { ...ex, sets: newSets };
+                              }
+                              return ex;
+                            }) 
+                          });
+                        }} 
+                        style={{ color: '#000000' }}
+                        className="w-16 bg-slate-100 rounded-xl py-3 text-center text-xl font-black outline-none border border-black/5 focus:border-black/20 transition-all shadow-inner" 
+                      />
+                      <span className="text-[10px] font-black text-black italic uppercase shrink-0">kg</span>
+                      
                       {lastPerformedExercise && lastPerformedExercise.sets[index] && (
-                        <div className="text-[9px] font-black text-black italic uppercase tracking-wider">
+                        <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 text-[9px] font-black text-black italic uppercase tracking-wider whitespace-nowrap">
                           上次: {lastPerformedExercise.sets[index].weight}kg
                         </div>
                       )}
