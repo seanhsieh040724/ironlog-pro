@@ -23,7 +23,7 @@ export const ContainerStyle = {
 // 運動卡片/容器樣式
 export const CardStyle = {
   backgroundColor: lightTheme.card,
-  borderRadius: '28px',
+  borderRadius: '1.75rem',
   border: `1px solid ${lightTheme.border}`,
   padding: '1.5rem',
   boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.05)'
@@ -46,10 +46,10 @@ export const AccentTextStyle = {
 // 輸入框基礎樣式
 export const InputStyle = {
   backgroundColor: 'rgba(0, 0, 0, 0.03)',
-  borderRadius: '16px',
+  borderRadius: '1rem',
   border: `1px solid ${lightTheme.border}`,
   color: lightTheme.text,
-  padding: '12px 16px',
+  padding: '0.75rem 1rem',
   outline: 'none'
 };
 
@@ -57,17 +57,17 @@ export const InputStyle = {
 export const AccentButtonStyle = {
   backgroundColor: lightTheme.accent,
   color: '#000000',
-  borderRadius: '20px',
+  borderRadius: '1.25rem',
   fontWeight: '900',
   textTransform: 'uppercase' as const,
-  boxShadow: '0 10px 15px -3px rgba(204, 255, 0, 0.1)'
+  boxShadow: '0 0.625rem 0.9375rem -0.1875rem rgba(204, 255, 0, 0.1)'
 };
 
 // 黑色操作按鈕樣式
 export const ActionButtonStyle = {
   backgroundColor: '#000000',
   color: '#FFFFFF',
-  borderRadius: '20px',
+  borderRadius: '1.25rem',
   fontWeight: '900',
   textTransform: 'uppercase' as const
 };
