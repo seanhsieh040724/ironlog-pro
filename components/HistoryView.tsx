@@ -1,14 +1,14 @@
 import React, { useState, useMemo } from 'react';
 import { WorkoutSession, MuscleGroup, ExerciseEntry, SetEntry } from '../types';
 import { getMuscleGroupDisplay } from '../utils/fitnessMath';
-import { Activity, BarChart3, Trash2, CalendarDays, Timer, Save, Check } from 'lucide-react';
-import { isSameDay, format } from 'date-fns';
+import { Activity, BarChart3, Trash2, CalendarDays, Timer, Save, Check, ChevronLeft, ChevronRight, Clock } from 'lucide-react';
+import { isSameDay, format, startOfWeek, endOfWeek, eachDayOfInterval, subWeeks, addWeeks } from 'date-fns';
 import { ExerciseSmallGif } from './ExerciseSmallGif';
-import { startOfWeek } from 'date-fns/startOfWeek';
 import { startOfMonth } from 'date-fns/startOfMonth';
 import { startOfYear } from 'date-fns/startOfYear';
 import { motion, AnimatePresence } from 'framer-motion';
 import { lightTheme } from '../themeStyles';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
 interface HistoryViewProps {
   history: WorkoutSession[];
@@ -19,6 +19,38 @@ interface HistoryViewProps {
 
 export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate, onUpdateHistory, onSaveAsRoutine }) => {
   const [analysisPeriod, setAnalysisPeriod] = useState<'week' | 'month' | 'year'>('week');
+  const [chartWeekOffset, setChartWeekOffset] = useState(0);
+
+  const chartWeekStart = useMemo(() => {
+    return startOfWeek(addWeeks(new Date(), chartWeekOffset), { weekStartsOn: 1 });
+  }, [chartWeekOffset]);
+
+  const weeklyActivityData = useMemo(() => {
+    const start = chartWeekStart;
+    const end = endOfWeek(start, { weekStartsOn: 1 });
+    const days = eachDayOfInterval({ start, end });
+
+    return days.map(day => {
+      const daySessions = history.filter(s => isSameDay(new Date(s.startTime), day));
+      let dayMinutes = 0;
+      daySessions.forEach(s => {
+        const beginTime = s.timerStartedAt || s.startTime;
+        const doneTime = s.endTime || s.startTime;
+        dayMinutes += Math.max(0, Math.round((doneTime - beginTime) / 60000));
+      });
+
+      const dayNames = ['日', '一', '二', '三', '四', '五', '六'];
+      const dayIndex = day.getDay();
+
+      return {
+        name: dayNames[dayIndex],
+        date: format(day, 'MM/dd'),
+        minutes: dayMinutes,
+        isCurrent: isSameDay(day, new Date()),
+        isToday: isSameDay(day, selectedDate)
+      };
+    });
+  }, [history, chartWeekStart, selectedDate]);
 
   const filteredHistory = useMemo(() => 
     history.filter(s => isSameDay(new Date(s.startTime), selectedDate)),
@@ -349,6 +381,104 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
               <div className="w-3 h-3 rounded-sm bg-[#FF3B30] shadow-sm" />
               <span className="text-[9px] font-black uppercase text-slate-400 tracking-tighter">力竭({thresholds.moderate + 1}+組)</span>
            </div>
+        </div>
+      </div>
+
+      {/* 每週運動時間圖表 */}
+      <div style={{ backgroundColor: lightTheme.bg }} className="rounded-[44px] p-8 border border-black/5 space-y-9 shadow-xl overflow-hidden mt-6">
+        <div className="flex justify-between items-center">
+           <div className="flex items-center gap-4">
+              <div style={{ backgroundColor: lightTheme.card }} className="w-12 h-12 border border-black/5 rounded-xl flex items-center justify-center shadow-inner">
+                <Clock className="w-6 h-6 text-black" />
+              </div>
+              <div>
+                <h3 className="text-base font-black italic uppercase tracking-tighter pr-2 text-black">每週訓練時數</h3>
+                <p className="text-[9px] font-black text-black opacity-50 uppercase tracking-widest mt-1">
+                  {format(chartWeekStart, 'yyyy.MM.dd')} - {format(endOfWeek(chartWeekStart, { weekStartsOn: 1 }), 'MM.dd')}
+                </p>
+              </div>
+           </div>
+           <div className="flex gap-2">
+              <button 
+                onClick={() => setChartWeekOffset(prev => prev - 1)}
+                className="w-10 h-10 rounded-xl bg-slate-50 border border-black/5 flex items-center justify-center text-slate-400 active:scale-95 transition-all shadow-sm"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              <button 
+                onClick={() => setChartWeekOffset(0)}
+                className={`px-3 h-10 rounded-xl border border-black/5 text-[10px] font-black uppercase tracking-widest transition-all shadow-sm ${chartWeekOffset === 0 ? 'bg-black text-white' : 'bg-white text-slate-400'}`}
+              >
+                本週
+              </button>
+              <button 
+                onClick={() => setChartWeekOffset(prev => prev + 1)}
+                className="w-10 h-10 rounded-xl bg-slate-50 border border-black/5 flex items-center justify-center text-slate-400 active:scale-95 transition-all shadow-sm"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
+           </div>
+        </div>
+
+        <div className="h-64 w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart 
+              data={weeklyActivityData} 
+              margin={{ top: 20, right: 10, left: -10, bottom: 10 }}
+              barGap={0}
+            >
+              <CartesianGrid vertical={false} stroke="#F1F5F9" strokeDasharray="3 3" />
+              <XAxis 
+                dataKey="name" 
+                axisLine={{ stroke: '#E2E8F0', strokeWidth: 1 }}
+                tickLine={false}
+                tick={{ fontSize: 10, fontWeight: 900, fill: '#000000' }}
+                dy={10}
+              />
+              <YAxis 
+                axisLine={{ stroke: '#E2E8F0', strokeWidth: 1 }}
+                tickLine={false}
+                tick={{ fontSize: 10, fontWeight: 900, fill: '#000000' }}
+                dx={-5}
+              />
+              <Tooltip 
+                cursor={{ fill: 'rgba(0,0,0,0.02)' }}
+                content={({ active, payload }) => {
+                  if (active && payload && payload.length) {
+                    return (
+                      <div className="bg-black text-white px-3 py-2 rounded-xl text-[10px] font-black shadow-xl border border-white/10">
+                        <p>{payload[0].payload.date}</p>
+                        <p className="text-[#CCFF00]">{payload[0].value} 分鐘</p>
+                      </div>
+                    );
+                  }
+                  return null;
+                }}
+              />
+              <Bar 
+                dataKey="minutes" 
+                radius={[8, 8, 8, 8]}
+                barSize={32}
+              >
+                {weeklyActivityData.map((entry, index) => (
+                  <Cell 
+                    key={`cell-${index}`} 
+                    fill={entry.isToday ? '#000000' : '#CCFF00'} 
+                  />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
+        <div className="grid grid-cols-7 gap-0 pl-[45px] pr-2">
+           {weeklyActivityData.map((day, idx) => (
+             <div key={idx} className="flex flex-col items-center">
+               <div className={`text-[8px] font-black uppercase text-black ${day.isToday ? 'opacity-100' : 'opacity-40'}`}>
+                 {day.minutes}m
+               </div>
+             </div>
+           ))}
         </div>
       </div>
     </div>
