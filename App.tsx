@@ -203,17 +203,15 @@ const App: React.FC = () => {
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.6, duration: 0.8 }}
-              className="mt-12 text-center space-y-4"
+              className="mt-12 flex flex-col items-center"
             >
-              <h1 className="text-3xl font-black tracking-tight text-black leading-none">
-                開始今天的訓練吧!
-              </h1>
-              <div className="flex items-center justify-center gap-2 mt-4">
-                <div className="w-1.5 h-1.5 rounded-full bg-black" />
-                <p className="text-3xl font-black text-black uppercase tracking-tight">
+              <div className="inline-flex flex-col items-stretch gap-6">
+                <h1 className="text-3xl font-black tracking-tight text-black leading-none text-center">
+                  開始今天的訓練吧!
+                </h1>
+                <p className="text-3xl font-black text-black uppercase tracking-tight text-center leading-none">
                   耶巴蒂 LightWeight!
                 </p>
-                <div className="w-1.5 h-1.5 rounded-full bg-black" />
               </div>
             </motion.div>
 

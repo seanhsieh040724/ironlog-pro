@@ -392,8 +392,8 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
                 <Clock className="w-5 h-5 text-black" />
               </div>
               <div>
-                <h3 className="text-lg font-black italic uppercase tracking-tighter pr-2 text-black">每週訓練時數</h3>
-                <p className="text-[11px] font-black text-black opacity-50 uppercase tracking-widest mt-0.5">
+                <h3 className="text-base font-black italic uppercase tracking-tighter pr-2 text-black">每週訓練時數</h3>
+                <p className="text-[10px] font-black text-black opacity-50 uppercase tracking-widest mt-0.5">
                   {format(chartWeekStart, 'yyyy.MM.dd')} - {format(endOfWeek(chartWeekStart, { weekStartsOn: 1 }), 'MM.dd')}
                 </p>
               </div>
