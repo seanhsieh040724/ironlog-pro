@@ -71,7 +71,7 @@ export const CalendarStrip: React.FC<CalendarStripProps> = ({ selectedDate, onDa
             <h3 style={{ color: lightTheme.text }} className="text-xl sm:text-2xl font-black italic uppercase tracking-tighter leading-none truncate whitespace-nowrap">
               {format(viewDate, 'yyyy MMM', { locale: zhTW })}
             </h3>
-            <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest mt-1 truncate">
+            <p className="text-[9px] font-black text-black uppercase tracking-widest mt-1 truncate">
               左右滑動切換月份
             </p>
           </div>

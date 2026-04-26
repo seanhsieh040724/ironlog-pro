@@ -149,7 +149,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
   };
 
   const getLoadStatus = (setCount: number) => {
-    if (setCount === 0) return { label: '休息恢復', color: 'text-slate-300' };
+    if (setCount === 0) return { label: '休息恢復', color: 'text-black' };
     if (setCount <= thresholds.light) return { label: `輕量(1-${thresholds.light}組)`, color: 'text-[#82CC00]' };
     if (setCount <= thresholds.moderate) return { label: `適中(${thresholds.light + 1}-${thresholds.moderate}組)`, color: 'text-yellow-500' };
     return { label: `力竭(${thresholds.moderate + 1}+組)`, color: 'text-red-500' };
@@ -178,7 +178,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
               <div style={{ backgroundColor: lightTheme.bg }} className="w-16 h-16 rounded-full flex items-center justify-center mb-5 text-slate-100 shadow-inner">
                 <Activity className="w-8 h-8" />
               </div>
-              <p className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-300">這天沒有訓練紀錄</p>
+              <p className="text-[11px] font-black uppercase tracking-[0.3em] text-black">這天沒有訓練紀錄</p>
             </motion.div>
           ) : (
             <motion.div 
@@ -320,7 +320,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
               </div>
               <div>
                 <h3 style={{ color: lightTheme.text }} className="text-base font-black italic uppercase tracking-tighter pr-2">訓練容量分布</h3>
-                <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest mt-1">累積負荷分析</p>
+                <p className="text-[9px] font-black text-black uppercase tracking-widest mt-1">累積負荷分析</p>
               </div>
            </div>
            <div style={{ backgroundColor: lightTheme.card }} className="flex p-1.5 rounded-2xl border border-black/5 shadow-inner">
@@ -343,7 +343,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
                <div key={muscle} className="space-y-3">
                   <div className="flex justify-between items-end px-1">
                      <div className="space-y-1">
-                        <span className="text-xs font-black uppercase text-slate-400 block">{getMuscleGroupDisplay(muscle).cn}</span>
+                        <span className="text-xs font-black uppercase text-black block">{getMuscleGroupDisplay(muscle).cn}</span>
                         <div className={`text-[10px] font-black uppercase flex items-center gap-1.5 ${loadStatus.color}`}>
                            <div className="w-1.5 h-1.5 rounded-full bg-current opacity-40" />
                            {loadStatus.label}
@@ -351,7 +351,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
                      </div>
                      <div className="text-right">
                         <span className={setTotal > 0 ? "text-xl font-black italic text-black" : "text-slate-200 font-black italic text-lg"}>{setTotal}</span>
-                        <span className="text-[9px] font-black text-slate-300 uppercase ml-1.5">Sets</span>
+                        <span className="text-[9px] font-black text-black uppercase ml-1.5">Sets</span>
                      </div>
                   </div>
                   <div style={{ backgroundColor: lightTheme.card }} className="h-3.5 w-full rounded-full overflow-hidden border border-black/5 shadow-inner p-0.5">
@@ -388,12 +388,12 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
       <div style={{ backgroundColor: lightTheme.bg }} className="rounded-[44px] p-8 border border-black/5 space-y-9 shadow-xl overflow-hidden mt-6">
         <div className="flex justify-between items-center">
            <div className="flex items-center gap-4">
-              <div style={{ backgroundColor: lightTheme.card }} className="w-12 h-12 border border-black/5 rounded-xl flex items-center justify-center shadow-inner">
-                <Clock className="w-6 h-6 text-black" />
+              <div style={{ backgroundColor: lightTheme.card }} className="w-10 h-10 border border-black/5 rounded-xl flex items-center justify-center shadow-inner">
+                <Clock className="w-5 h-5 text-black" />
               </div>
               <div>
-                <h3 className="text-base font-black italic uppercase tracking-tighter pr-2 text-black">每週訓練時數</h3>
-                <p className="text-[9px] font-black text-black opacity-50 uppercase tracking-widest mt-1">
+                <h3 className="text-sm font-black italic uppercase tracking-tighter pr-2 text-black">每週訓練時數</h3>
+                <p className="text-[8px] font-black text-black opacity-50 uppercase tracking-widest mt-0.5">
                   {format(chartWeekStart, 'yyyy.MM.dd')} - {format(endOfWeek(chartWeekStart, { weekStartsOn: 1 }), 'MM.dd')}
                 </p>
               </div>
