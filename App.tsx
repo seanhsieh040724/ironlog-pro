@@ -203,17 +203,17 @@ const App: React.FC = () => {
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.6, duration: 0.8 }}
-              className="mt-12 text-center"
+              className="mt-12 text-center space-y-4"
             >
-              <h1 className="text-4xl font-black tracking-tight text-black leading-none">
+              <h1 className="text-3xl font-black tracking-tight text-black leading-none">
                 開始今天的訓練吧!
               </h1>
               <div className="flex items-center justify-center gap-2 mt-4">
-                <div className="w-1 h-1 rounded-full bg-[#82CC00]" />
-                <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.4em]">
-                  IRONLOG
+                <div className="w-1.5 h-1.5 rounded-full bg-black" />
+                <p className="text-3xl font-black text-black uppercase tracking-tight">
+                  耶巴蒂 LightWeight!
                 </p>
-                <div className="w-1 h-1 rounded-full bg-[#82CC00]" />
+                <div className="w-1.5 h-1.5 rounded-full bg-black" />
               </div>
             </motion.div>
 
