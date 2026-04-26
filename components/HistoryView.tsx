@@ -343,8 +343,8 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
                <div key={muscle} className="space-y-3">
                   <div className="flex justify-between items-end px-1">
                      <div className="space-y-1">
-                        <span className="text-xs font-black uppercase text-black block">{getMuscleGroupDisplay(muscle).cn}</span>
-                        <div className={`text-[10px] font-black uppercase flex items-center gap-1.5 ${loadStatus.color}`}>
+                        <span className="text-lg font-black uppercase text-black block">{getMuscleGroupDisplay(muscle).cn}</span>
+                        <div className={`text-lg font-black uppercase flex items-center gap-1.5 ${loadStatus.color}`}>
                            <div className="w-1.5 h-1.5 rounded-full bg-current opacity-40" />
                            {loadStatus.label}
                         </div>
@@ -371,15 +371,15 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
         <div className="flex items-center justify-between pt-4 border-t border-black/5">
            <div className="flex items-center gap-1">
               <div className="w-3 h-3 rounded-sm bg-[#82CC00] shadow-sm" />
-              <span className="text-[10px] font-black uppercase text-slate-400 tracking-tighter">輕量(1-{thresholds.light}組)</span>
+              <span className="text-lg font-black uppercase text-slate-400 tracking-tighter">輕量(1-{thresholds.light}組)</span>
            </div>
            <div className="flex items-center gap-1">
               <div className="w-3 h-3 rounded-sm bg-[#FACC15] shadow-sm" />
-              <span className="text-[10px] font-black uppercase text-slate-400 tracking-tighter">適中({thresholds.light + 1}-{thresholds.moderate}組)</span>
+              <span className="text-lg font-black uppercase text-slate-400 tracking-tighter">適中({thresholds.light + 1}-{thresholds.moderate}組)</span>
            </div>
            <div className="flex items-center gap-1">
               <div className="w-3 h-3 rounded-sm bg-[#FF3B30] shadow-sm" />
-              <span className="text-[10px] font-black uppercase text-slate-400 tracking-tighter">力竭({thresholds.moderate + 1}+組)</span>
+              <span className="text-lg font-black uppercase text-slate-400 tracking-tighter">力竭({thresholds.moderate + 1}+組)</span>
            </div>
         </div>
       </div>
