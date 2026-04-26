@@ -68,10 +68,10 @@ export const CalendarStrip: React.FC<CalendarStripProps> = ({ selectedDate, onDa
             <CalendarIcon className="w-5 h-5 text-black" />
           </div>
           <div className="overflow-hidden">
-            <h3 style={{ color: lightTheme.text }} className="text-xl sm:text-2xl font-black italic uppercase tracking-tighter leading-none truncate whitespace-nowrap">
+            <h3 style={{ color: lightTheme.text }} className="text-2xl sm:text-3xl font-black italic uppercase tracking-tighter leading-none truncate whitespace-nowrap">
               {format(viewDate, 'yyyy MMM', { locale: zhTW })}
             </h3>
-            <p className="text-[9px] font-black text-black uppercase tracking-widest mt-1 truncate">
+            <p className="text-[11px] font-black text-black uppercase tracking-widest mt-1 truncate">
               左右滑動切換月份
             </p>
           </div>
@@ -85,7 +85,7 @@ export const CalendarStrip: React.FC<CalendarStripProps> = ({ selectedDate, onDa
 
       <div className="grid grid-cols-7 gap-1 mb-2">
         {weekdays.map(d => (
-          <div key={d} className="text-center text-[10px] font-black text-black uppercase py-1.5">{d}</div>
+          <div key={d} className="text-center text-[12px] font-black text-black uppercase py-1.5">{d}</div>
         ))}
       </div>
 
@@ -154,7 +154,7 @@ export const CalendarStrip: React.FC<CalendarStripProps> = ({ selectedDate, onDa
                     }
                   `}
                 >
-                  <span className={`text-sm sm:text-base ${isSelected ? 'scale-110' : ''}`}>
+                  <span className={`text-lg sm:text-xl ${isSelected ? 'scale-110' : ''}`}>
                     {format(day, 'd')}
                   </span>
                   

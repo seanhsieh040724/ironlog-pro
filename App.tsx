@@ -205,12 +205,12 @@ const App: React.FC = () => {
               transition={{ delay: 0.6, duration: 0.8 }}
               className="mt-12 text-center"
             >
-              <h1 className="text-3xl font-black tracking-tight text-black leading-none">
+              <h1 className="text-4xl font-black tracking-tight text-black leading-none">
                 開始今天的訓練吧!
               </h1>
               <div className="flex items-center justify-center gap-2 mt-4">
                 <div className="w-1 h-1 rounded-full bg-[#82CC00]" />
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em]">
+                <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.4em]">
                   IRONLOG
                 </p>
                 <div className="w-1 h-1 rounded-full bg-[#82CC00]" />
@@ -248,14 +248,14 @@ const App: React.FC = () => {
                       <Calendar className="w-6 h-6 text-black" />
                     </div>
                     <div>
-                      <h1 style={{ color: lightTheme.text }} className="text-2xl font-black italic uppercase tracking-tighter leading-none">
+                      <h1 style={{ color: lightTheme.text }} className="text-3xl font-black italic uppercase tracking-tighter leading-none">
                         {(() => {
                           const d = new Date();
                           const weekDays = ['週日', '週一', '週二', '週三', '週四', '週五', '週六'];
                           return `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()} ${weekDays[d.getDay()]}`;
                         })()}
                       </h1>
-                      <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em] mt-1.5">
+                      <p className="text-[11px] font-black text-slate-300 uppercase tracking-[0.2em] mt-1.5">
                         TODAY'S WORKOUT
                       </p>
                     </div>
@@ -344,7 +344,7 @@ const TabButton = ({ active, onClick, icon, label }: any) => (
     <div className={`p-2.5 rounded-2xl transition-all ${active ? 'bg-[#CCFF00]/10 shadow-[0_0_20px_rgba(204,255,0,0.1)]' : ''}`}>
       {React.cloneElement(icon, { className: `w-6 h-6 ${active ? 'stroke-[2.5]' : 'stroke-2'}` })}
     </div>
-    <span className="text-[11px] font-black uppercase tracking-widest">{label}</span>
+    <span className="text-[12px] font-black uppercase tracking-widest">{label}</span>
   </button>
 );
 

@@ -101,14 +101,14 @@ export const RestTimer: React.FC<RestTimerProps> = ({ active, seconds: initialSe
           <div style={{ backgroundColor: lightTheme.card }} className="p-3 rounded-2xl mb-4 border border-black/5 shadow-inner">
             <Timer className={`w-8 h-8 text-black ${timeLeft > 0 ? 'animate-pulse' : ''}`} />
           </div>
-          <h3 className="text-[10px] font-black uppercase tracking-widest mb-1 text-slate-300">組間休息中</h3>
-          <div style={{ color: lightTheme.text }} className="text-6xl font-black font-mono italic mb-8 transition-colors">
+          <h3 className="text-[11px] font-black uppercase tracking-widest mb-1 text-slate-300">組間休息中</h3>
+          <div style={{ color: lightTheme.text }} className="text-7xl font-black font-mono italic mb-8 transition-colors">
             {formatTime(timeLeft)}
           </div>
           
           <div className="grid grid-cols-4 gap-2 w-full mb-8">
             {[60, 90, 120, 180].map(s => (
-              <button key={s} onClick={() => handleQuickSelect(s)} className={`py-2 rounded-xl text-[10px] font-black transition-all border ${configSeconds === s ? 'bg-black text-white border-black' : 'bg-slate-50 text-slate-400 border-black/5 shadow-inner'}`}>
+              <button key={s} onClick={() => handleQuickSelect(s)} className={`py-2 rounded-xl text-[11px] font-black transition-all border ${configSeconds === s ? 'bg-black text-white border-black' : 'bg-slate-50 text-slate-400 border-black/5 shadow-inner'}`}>
                 {s}S
               </button>
             ))}

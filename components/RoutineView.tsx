@@ -49,7 +49,7 @@ const ExerciseGifDisplay: React.FC<{ name: string }> = ({ name }) => {
       {isLoading && !getHardcodedGif(name) && (
         <div style={{ backgroundColor: lightTheme.card }} className="absolute inset-0 flex flex-col items-center justify-center gap-4 z-10">
           <Loader2 className="w-8 h-8 animate-spin text-black" />
-          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">準備中...</p>
+          <p className="text-[11px] font-black uppercase tracking-widest text-slate-400">準備中...</p>
         </div>
       )}
       {displaySrc && (
@@ -174,8 +174,8 @@ const IntegratedWorkoutView: React.FC<IntegratedWorkoutViewProps> = ({
           <ArrowLeft className="w-6 h-6 stroke-[3]" />
         </button>
         <div className="flex-1 overflow-hidden">
-          <h2 style={{ color: lightTheme.text }} className="text-xl font-black italic tracking-tighter uppercase leading-tight py-1">{routine.name}</h2>
-          <p className="text-[10px] font-black text-[#82CC00] uppercase tracking-widest mt-0.5">整合訓練模式</p>
+          <h2 style={{ color: lightTheme.text }} className="text-2xl font-black italic tracking-tighter uppercase leading-tight py-1">{routine.name}</h2>
+          <p className="text-[11px] font-black text-[#82CC00] uppercase tracking-widest mt-0.5">整合訓練模式</p>
         </div>
       </div>
 
@@ -195,9 +195,9 @@ const IntegratedWorkoutView: React.FC<IntegratedWorkoutViewProps> = ({
             <div style={{ backgroundColor: lightTheme.card }} className="mx-1 p-6 rounded-[28px] border border-black/5 space-y-3.5 shadow-sm">
               <div className="flex items-center gap-2.5 text-black">
                 <BookOpen className="w-5 h-5" />
-                <h3 className="text-[11px] font-black uppercase tracking-widest">運動方法</h3>
+                <h3 className="text-[12px] font-black uppercase tracking-widest">運動方法</h3>
               </div>
-              <p className="text-sm font-medium text-slate-500 leading-relaxed italic whitespace-pre-line">
+              <p className="text-base font-medium text-slate-500 leading-relaxed italic whitespace-pre-line">
                 {getExerciseMethod(ex.name)}
               </p>
             </div>
@@ -236,7 +236,7 @@ const IntegratedWorkoutView: React.FC<IntegratedWorkoutViewProps> = ({
                         <MinusCircle className="w-5 h-5" />
                       </button>
                     </div>
-                    <div className="col-span-1 text-base font-black italic text-slate-300 text-center">{sIdx + 1}</div>
+                    <div className="col-span-1 text-lg font-black italic text-slate-300 text-center">{sIdx + 1}</div>
                     
                     <div className="col-span-4 flex items-center justify-center gap-2">
                       <input 
@@ -245,9 +245,9 @@ const IntegratedWorkoutView: React.FC<IntegratedWorkoutViewProps> = ({
                         placeholder="0" 
                         onChange={e => updateSetData(exIdx, set.id, { weight: Number(e.target.value) }, sIdx)} 
                         style={{ color: lightTheme.text }}
-                        className="w-16 bg-slate-100 rounded-xl py-3 text-center text-xl font-black outline-none border border-black/5 focus:border-black/20 transition-all shadow-inner" 
+                        className="w-16 bg-slate-100 rounded-xl py-3 text-center text-2xl font-black outline-none border border-black/5 focus:border-black/20 transition-all shadow-inner" 
                       />
-                      <span className="text-[10px] font-black text-slate-300 italic uppercase shrink-0">kg</span>
+                      <span className="text-[11px] font-black text-slate-300 italic uppercase shrink-0">kg</span>
                     </div>
 
                     <div className="col-span-4 flex items-center justify-center gap-2">
@@ -257,9 +257,9 @@ const IntegratedWorkoutView: React.FC<IntegratedWorkoutViewProps> = ({
                         placeholder="0" 
                         onChange={e => updateSetData(exIdx, set.id, { reps: Number(e.target.value) }, sIdx)} 
                         style={{ color: lightTheme.text }}
-                        className="w-16 bg-slate-100 rounded-xl py-3 text-center text-xl font-black outline-none border border-black/5 focus:border-black/20 transition-all shadow-inner" 
+                        className="w-16 bg-slate-100 rounded-xl py-3 text-center text-2xl font-black outline-none border border-black/5 focus:border-black/20 transition-all shadow-inner" 
                       />
-                      <span className="text-[10px] font-black text-slate-300 italic uppercase shrink-0">rep</span>
+                      <span className="text-[11px] font-black text-slate-300 italic uppercase shrink-0">rep</span>
                     </div>
 
                     <div className="col-span-2 flex justify-end">
@@ -464,11 +464,11 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
                   <ExerciseSmallGif name={ex.name} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h4 style={{ color: lightTheme.text }} className="font-black text-lg italic uppercase tracking-tight pr-2 leading-tight py-0.5">{ex.name}</h4>
+                  <h4 style={{ color: lightTheme.text }} className="font-black text-xl italic uppercase tracking-tight pr-2 leading-tight py-0.5">{ex.name}</h4>
                   <div className="flex items-center gap-3 mt-1">
-                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{getMuscleGroupDisplay(ex.muscleGroup).cn}</span>
+                    <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest">{getMuscleGroupDisplay(ex.muscleGroup).cn}</span>
                     <div className="w-1 h-1 rounded-full bg-slate-200" />
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">{ex.defaultSets} 組 | {ex.defaultReps} 次</span>
+                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em]">{ex.defaultSets} 組 | {ex.defaultReps} 次</span>
                   </div>
                 </div>
               </div>
@@ -480,7 +480,7 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
         </div>
 
         {isCustom && (
-          <button onClick={() => { setIsAddingExercise(true); setSearchTerm(''); }} style={{ backgroundColor: lightTheme.accent }} className="w-full py-5 border border-black/5 rounded-3xl text-[11px] font-black uppercase text-black flex items-center justify-center gap-2.5 active:scale-95 transition-all shadow-md">
+          <button onClick={() => { setIsAddingExercise(true); setSearchTerm(''); }} style={{ backgroundColor: lightTheme.accent }} className="w-full py-5 border border-black/5 rounded-3xl text-[12px] font-black uppercase text-black flex items-center justify-center gap-2.5 active:scale-95 transition-all shadow-md">
             <Plus className="w-4 h-4 stroke-[3]" /> 新增動作項目
           </button>
         )}
@@ -528,7 +528,7 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
                           placeholder="搜尋動作庫..." 
                           value={searchTerm} 
                           onChange={e => setSearchTerm(e.target.value)} 
-                          className="bg-transparent w-full text-base font-black italic outline-none placeholder:text-slate-300" 
+                          className="bg-transparent w-full text-lg font-black italic outline-none placeholder:text-slate-300" 
                           style={{ color: lightTheme.text }}
                         />
                       </div>
@@ -539,7 +539,7 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
                             <button 
                               key={cat} 
                               onClick={() => setActiveCategory(cat)} 
-                              className={`shrink-0 px-5 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all border ${activeCategory === cat ? 'bg-black text-white border-black' : 'bg-slate-50 text-slate-400 border-black/5'}`}
+                              className={`shrink-0 px-5 py-2.5 rounded-xl text-[12px] font-black uppercase tracking-widest transition-all border ${activeCategory === cat ? 'bg-black text-white border-black' : 'bg-slate-50 text-slate-400 border-black/5'}`}
                               style={activeCategory === cat ? { backgroundColor: '#000000', color: '#FFFFFF' } : {}}
                             >
                               {getMuscleGroupDisplay(cat as MuscleGroup).cn}
@@ -562,8 +562,8 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
                                   <PlusSquare className="w-6 h-6" />
                                 </div>
                                 <div className="text-left overflow-hidden">
-                                  <div className="text-[11px] font-black uppercase tracking-widest leading-none text-slate-400">建立自訂動作</div>
-                                  <div style={{ color: lightTheme.text }} className="text-base font-black italic uppercase leading-tight mt-1.5 pr-2">{searchTerm}</div>
+                                  <div className="text-[12px] font-black uppercase tracking-widest leading-none text-slate-400">建立自訂動作</div>
+                                  <div style={{ color: lightTheme.text }} className="text-lg font-black italic uppercase leading-tight mt-1.5 pr-2">{searchTerm}</div>
                                 </div>
                               </div>
                               <ChevronRight className="w-5 h-5 text-[#82CC00] stroke-[3]" />
@@ -581,8 +581,8 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
                                 <ExerciseSmallGif name={exName} />
                               </div>
                               <div className="flex-1 min-w-0">
-                                <div style={{ color: lightTheme.text }} className="text-[14px] font-black italic uppercase leading-tight py-0.5 pr-1">{exName}</div>
-                                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1.5 flex items-center justify-between">
+                                <div style={{ color: lightTheme.text }} className="text-[16px] font-black italic uppercase leading-tight py-0.5 pr-1">{exName}</div>
+                                <div className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mt-1.5 flex items-center justify-between">
                                   {getMuscleGroupDisplay(getMuscleGroup(exName)).cn}
                                   <Plus className="w-3.5 h-3.5 text-[#82CC00] stroke-[3] opacity-0 group-active:opacity-100 transition-opacity" />
                                 </div>
@@ -601,9 +601,9 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
                       <div style={{ backgroundColor: lightTheme.card }} className="mx-1 p-6 rounded-[28px] border border-black/5 space-y-3.5 shadow-sm">
                         <div className="flex items-center gap-2.5 text-black">
                           < BookOpen className="w-5 h-5" />
-                          <h3 className="text-[11px] font-black uppercase tracking-widest">運動方法</h3>
+                          <h3 className="text-[12px] font-black uppercase tracking-widest">運動方法</h3>
                         </div>
-                        <p className="text-sm font-medium text-slate-500 leading-relaxed italic whitespace-pre-line">
+                        <p className="text-base font-medium text-slate-500 leading-relaxed italic whitespace-pre-line">
                           {getExerciseMethod(selectedExName)}
                         </p>
                       </div>
@@ -629,7 +629,7 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
                                   <MinusCircle className="w-5 h-5" />
                                 </button>
                               </div>
-                              <div className="col-span-1 text-base font-black italic text-slate-300 text-center">{index + 1}</div>
+                              <div className="col-span-1 text-lg font-black italic text-slate-300 text-center">{index + 1}</div>
                               
                               <div className="col-span-4 flex items-center justify-center gap-2">
                                 <input 
@@ -645,9 +645,9 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
                                     }));
                                   }} 
                                   style={{ color: lightTheme.text }}
-                                  className="w-16 bg-slate-100 rounded-xl py-3 text-center text-xl font-black outline-none border border-black/5 focus:border-black/20 transition-all shadow-inner" 
+                                  className="w-16 bg-slate-100 rounded-xl py-3 text-center text-2xl font-black outline-none border border-black/5 focus:border-black/20 transition-all shadow-inner" 
                                 />
-                                <span className="text-[10px] font-black text-slate-300 italic uppercase shrink-0">kg</span>
+                                <span className="text-[11px] font-black text-slate-300 italic uppercase shrink-0">kg</span>
                               </div>
 
                               <div className="col-span-4 flex items-center justify-center gap-2">
@@ -657,9 +657,9 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
                                   placeholder="0" 
                                   onChange={e => setMockSets(mockSets.map(s => s.id === set.id ? { ...s, reps: Number(e.target.value) } : s))} 
                                   style={{ color: lightTheme.text }}
-                                  className="w-16 bg-slate-100 rounded-xl py-3 text-center text-xl font-black outline-none border border-black/5 focus:border-black/20 transition-all shadow-inner" 
+                                  className="w-16 bg-slate-100 rounded-xl py-3 text-center text-2xl font-black outline-none border border-black/5 focus:border-black/20 transition-all shadow-inner" 
                                 />
-                                <span className="text-[10px] font-black text-slate-300 italic uppercase shrink-0">rep</span>
+                                <span className="text-[11px] font-black text-slate-300 italic uppercase shrink-0">rep</span>
                               </div>
 
                               <div className="col-span-2 flex justify-end">
@@ -676,7 +676,7 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
                       </div>
 
                       <div className="fixed bottom-12 left-0 right-0 z-50 px-8">
-                        <button onClick={addExerciseToTemplate} style={{ backgroundColor: '#CCFF00', color: '#000000' }} className="w-full font-black h-16 rounded-2xl uppercase italic text-lg active:scale-95 shadow-xl flex items-center justify-center gap-4 transition-all">
+                        <button onClick={addExerciseToTemplate} style={{ backgroundColor: '#CCFF00', color: '#000000' }} className="w-full font-black h-16 rounded-2xl uppercase italic text-xl active:scale-95 shadow-xl flex items-center justify-center gap-4 transition-all">
                           <Check className="w-6 h-6 stroke-[3]" /> 確認並加入
                         </button>
                       </div>

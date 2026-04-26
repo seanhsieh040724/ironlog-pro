@@ -167,7 +167,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                   placeholder="搜尋動作庫..." 
                   value={searchTerm} 
                   onChange={e => setSearchTerm(e.target.value)} 
-                  className="bg-transparent w-full text-base font-black italic outline-none placeholder:text-slate-300" 
+                  className="bg-transparent w-full text-lg font-black italic outline-none placeholder:text-slate-300" 
                   style={{ color: lightTheme.text }}
                 />
               </div>
@@ -178,7 +178,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                     <button 
                       key={cat} 
                       onClick={() => setActiveCategory(cat)} 
-                      className={`shrink-0 px-5 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all border ${activeCategory === cat ? 'bg-black text-white border-black' : 'bg-slate-100 text-slate-400 border-black/5'}`}
+                      className={`shrink-0 px-5 py-2.5 rounded-xl text-[12px] font-black uppercase tracking-widest transition-all border ${activeCategory === cat ? 'bg-black text-white border-black' : 'bg-slate-100 text-slate-400 border-black/5'}`}
                       style={activeCategory === cat ? { backgroundColor: '#000000', color: '#FFFFFF' } : {}}
                     >
                       {getMuscleGroupDisplay(cat as MuscleGroup).cn}
@@ -200,8 +200,8 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                         <PlusSquare className="w-6 h-6" />
                       </div>
                       <div className="text-left overflow-hidden">
-                        <div className="text-[11px] font-black uppercase tracking-widest leading-none text-slate-400">建立自訂動作</div>
-                        <div style={{ color: lightTheme.text }} className="text-base font-black italic uppercase leading-tight mt-1.5 pr-2">{searchTerm}</div>
+                        <div className="text-[12px] font-black uppercase tracking-widest leading-none text-slate-400">建立自訂動作</div>
+                        <div style={{ color: lightTheme.text }} className="text-lg font-black italic uppercase leading-tight mt-1.5 pr-2">{searchTerm}</div>
                       </div>
                     </div>
                     <ChevronRight className="w-5 h-5 text-[#82CC00] stroke-[3]" />
@@ -220,10 +220,10 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                       <ExerciseSmallGif name={exName} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div style={{ color: lightTheme.text }} className="text-[14px] font-black italic uppercase leading-tight py-0.5 pr-1">
+                      <div style={{ color: lightTheme.text }} className="text-[16px] font-black italic uppercase leading-tight py-0.5 pr-1">
                         {exName}
                       </div>
-                      <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1.5 flex items-center justify-between">
+                      <div className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mt-1.5 flex items-center justify-between">
                         {getMuscleGroupDisplay(getMuscleGroup(exName)).cn}
                         <Plus className="w-3.5 h-3.5 text-[#82CC00] stroke-[3] opacity-0 group-active:opacity-100 transition-opacity" />
                       </div>
@@ -243,7 +243,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                 >
                   <ChevronLeft className="w-8 h-8 text-[#82CC00] stroke-[4]" />
                 </button>
-                <h2 style={{ color: lightTheme.text }} className="text-2xl font-black italic uppercase leading-tight py-1">
+                <h2 style={{ color: lightTheme.text }} className="text-3xl font-black italic uppercase leading-tight py-1">
                   {currentDetailEx?.name}
                 </h2>
               </div>
@@ -260,7 +260,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                 {isGifLoading && !getHardcodedGif(currentDetailEx?.name || '') ? (
                   <div className="flex flex-col items-center gap-4 py-12 text-slate-400">
                     <Loader2 className="w-9 h-9 animate-spin text-black" />
-                    <p className="text-[10px] font-black uppercase tracking-widest">載入動作中...</p>
+                    <p className="text-[11px] font-black uppercase tracking-widest">載入動作中...</p>
                   </div>
                 ) : (
                   <img 
@@ -276,9 +276,9 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
             <div style={{ backgroundColor: lightTheme.card }} className="mx-1 p-6 rounded-[28px] border border-black/5 space-y-3.5 shadow-sm">
               <div className="flex items-center gap-2.5 text-black">
                 <BookOpen className="w-5 h-5" />
-                <h3 className="text-[11px] font-black uppercase tracking-widest">運動方法</h3>
+                <h3 className="text-[12px] font-black uppercase tracking-widest">運動方法</h3>
               </div>
-              <p className="text-sm font-medium text-slate-500 leading-relaxed italic whitespace-pre-line">
+              <p className="text-base font-medium text-slate-500 leading-relaxed italic whitespace-pre-line">
                 {getExerciseMethod(currentDetailEx?.name || "")}
               </p>
             </div>
@@ -288,22 +288,22 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                 <div className="flex items-center gap-4">
                   <div className="flex items-center gap-2.5">
                     <Target className="w-5 h-5 text-black" />
-                    <h3 style={{ color: lightTheme.text }} className="text-sm font-black italic uppercase">訓練錄入</h3>
+                    <h3 style={{ color: lightTheme.text }} className="text-base font-black italic uppercase">訓練錄入</h3>
                   </div>
                   {session.timerStartedAt && (
                     <div className="flex items-center gap-1.5 px-3 py-1 bg-black/5 border border-black/10 rounded-lg">
                       <Timer className="w-3.5 h-3.5 animate-pulse" />
-                      <span className="text-[11px] font-black font-mono">{elapsedTime}</span>
+                      <span className="text-[12px] font-black font-mono">{elapsedTime}</span>
                     </div>
                   )}
                 </div>
                 <div className="flex items-center gap-3">
                   {!session.timerStartedAt && (
-                    <button onClick={startWorkoutTimer} className="flex items-center gap-1.5 text-black text-[10px] font-black uppercase">
+                    <button onClick={startWorkoutTimer} className="flex items-center gap-1.5 text-black text-[11px] font-black uppercase">
                       <Play className="w-4 h-4 fill-current" /> 開始訓練
                     </button>
                   )}
-                  <button onClick={() => onUpdate({ ...session, exercises: session.exercises.map(ex => ex.id === currentDetailEx!.id ? { ...ex, sets: [...ex.sets, { id: crypto.randomUUID(), weight: ex.sets[ex.sets.length-1]?.weight || 0, reps: ex.sets[ex.sets.length-1]?.reps || 10, completed: false }] } : ex) })} className="flex items-center gap-1.5 text-black text-[10px] font-black uppercase">
+                  <button onClick={() => onUpdate({ ...session, exercises: session.exercises.map(ex => ex.id === currentDetailEx!.id ? { ...ex, sets: [...ex.sets, { id: crypto.randomUUID(), weight: ex.sets[ex.sets.length-1]?.weight || 0, reps: ex.sets[ex.sets.length-1]?.reps || 10, completed: false }] } : ex) })} className="flex items-center gap-1.5 text-black text-[11px] font-black uppercase">
                     <PlusCircle className="w-4 h-4" /> 加一組
                   </button>
                 </div>
@@ -316,7 +316,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                         <MinusCircle className="w-5 h-5" />
                       </button>
                     </div>
-                    <div className="col-span-1 text-base font-black italic text-black text-center">
+                    <div className="col-span-1 text-lg font-black italic text-black text-center">
                       {index + 1}
                     </div>
                     
@@ -342,12 +342,12 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                           });
                         }} 
                         style={{ color: '#000000' }}
-                        className="w-16 bg-slate-100 rounded-xl py-3 text-center text-xl font-black outline-none border border-black/5 focus:border-black/20 transition-all shadow-inner" 
+                        className="w-16 bg-slate-100 rounded-xl py-3 text-center text-2xl font-black outline-none border border-black/5 focus:border-black/20 transition-all shadow-inner" 
                       />
-                      <span className="text-[10px] font-black text-black italic uppercase shrink-0">kg</span>
+                      <span className="text-[11px] font-black text-black italic uppercase shrink-0">kg</span>
                       
                       {lastPerformedExercise && lastPerformedExercise.sets[index] && (
-                        <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 text-[9px] font-black text-black italic uppercase tracking-wider whitespace-nowrap">
+                        <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 text-[10px] font-black text-black italic uppercase tracking-wider whitespace-nowrap">
                           上次: {lastPerformedExercise.sets[index].weight}kg
                         </div>
                       )}
@@ -360,9 +360,9 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                         placeholder="0" 
                         onChange={(e) => onUpdate({ ...session, exercises: session.exercises.map(ex => ex.id === currentDetailEx!.id ? { ...ex, sets: ex.sets.map(s => s.id === set.id ? { ...s, reps: Number(e.target.value) } : s) } : ex) })} 
                         style={{ color: '#000000' }}
-                        className="w-16 bg-slate-100 rounded-xl py-3 text-center text-xl font-black outline-none border border-black/5 focus:border-black/20 transition-all shadow-inner" 
+                        className="w-16 bg-slate-100 rounded-xl py-3 text-center text-2xl font-black outline-none border border-black/5 focus:border-black/20 transition-all shadow-inner" 
                       />
-                      <span className="text-[10px] font-black text-black italic uppercase shrink-0">rep</span>
+                      <span className="text-[11px] font-black text-black italic uppercase shrink-0">rep</span>
                     </div>
 
                     <div className="col-span-2 flex justify-end">
@@ -389,7 +389,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                     onFinish();
                   }} 
                   style={{ backgroundColor: '#000000', color: '#FFFFFF' }}
-                  className="w-full font-black h-14 rounded-2xl uppercase italic text-base active:scale-95 transition-all shadow-xl flex items-center justify-center gap-3 tracking-tighter"
+                  className="w-full font-black h-14 rounded-2xl uppercase italic text-lg active:scale-95 transition-all shadow-xl flex items-center justify-center gap-3 tracking-tighter"
                 >
                   <Save className="w-5 h-5 stroke-[2.5]" style={{ color: lightTheme.accent }} /> 儲存訓練
                 </button>

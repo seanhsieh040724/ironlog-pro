@@ -82,8 +82,8 @@ export const AnalyticsView: React.FC<{ history: WorkoutSession[] }> = ({ history
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="text-xl font-black italic uppercase tracking-tight mb-2">訓練進度分析</h2>
-        <p className="text-xs text-slate-500 font-bold uppercase tracking-widest">Visualizing your progress</p>
+        <h2 className="text-2xl font-black italic uppercase tracking-tight mb-2">訓練進度分析</h2>
+        <p className="text-sm text-slate-500 font-bold uppercase tracking-widest">Visualizing your progress</p>
       </div>
 
       {chartData ? (
@@ -109,7 +109,7 @@ export const AnalyticsView: React.FC<{ history: WorkoutSession[] }> = ({ history
 
 const StatCard = ({ label, value }: any) => (
   <div className="glass-card rounded-3xl p-5 border-white/5">
-    <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">{label}</div>
-    <div className="text-3xl font-black text-white italic">{value}</div>
+    <div className="text-[11px] font-black text-slate-500 uppercase tracking-widest mb-1">{label}</div>
+    <div className="text-4xl font-black text-white italic">{value}</div>
   </div>
 );

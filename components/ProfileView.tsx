@@ -148,13 +148,13 @@ export const ProfileView: React.FC = () => {
                     placeholder="點擊以修改名稱"
                     onChange={(e) => {setUserName(e.target.value); localStorage.setItem('ironlog_user_name', e.target.value);}}
                     onBlur={() => setIsEditingName(false)}
-                    className="bg-transparent border-b border-black text-xl font-black italic text-black outline-none w-full uppercase placeholder:opacity-50"
+                    className="bg-transparent border-b border-black text-2xl font-black italic text-black outline-none w-full uppercase placeholder:opacity-50"
                   />
                 ) : (
                   <h3 
                     onClick={() => setIsEditingName(true)} 
                     style={{ color: lightTheme.text }} 
-                    className={`text-xl font-black italic uppercase tracking-tighter truncate pr-2 ${!userName ? 'opacity-50' : ''}`}
+                    className={`text-2xl font-black italic uppercase tracking-tighter truncate pr-2 ${!userName ? 'opacity-50' : ''}`}
                   >
                     {userName || '點擊以修改名稱'}
                   </h3>
@@ -173,8 +173,8 @@ export const ProfileView: React.FC = () => {
                 <Activity className="w-6 h-6 text-black" />
              </div>
              <div>
-               <h3 style={{ color: lightTheme.text }} className="text-base font-black italic uppercase tracking-tighter leading-none">身體資料分析</h3>
-               <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mt-1">生理指標監測</p>
+               <h3 style={{ color: lightTheme.text }} className="text-lg font-black italic uppercase tracking-tighter leading-none">身體資料分析</h3>
+               <p className="text-[11px] font-black text-slate-300 uppercase tracking-widest mt-1">生理指標監測</p>
              </div>
            </div>
            
@@ -198,14 +198,14 @@ export const ProfileView: React.FC = () => {
             <div style={{ backgroundColor: lightTheme.card }} className="p-5 rounded-2xl border border-black/5 flex-1 shadow-inner">
               <div className="flex items-center gap-2.5 mb-2.5 opacity-40">
                 <UserCheck className="text-violet-400 w-3.5 h-3.5" />
-                <span className="text-[10px] font-black uppercase tracking-widest">性別</span>
+                <span className="text-[11px] font-black uppercase tracking-widest">性別</span>
               </div>
               <div className="flex gap-2">
                 {(['male', 'female'] as const).map(g => (
                   <button 
                     key={g}
                     onClick={() => setTempMetrics({ ...tempMetrics, gender: g })}
-                    className={`flex-1 py-2 rounded-xl text-[10px] font-black uppercase border transition-all ${
+                    className={`flex-1 py-2 rounded-xl text-[11px] font-black uppercase border transition-all ${
                       tempMetrics.gender === g 
                         ? (g === 'male' ? 'bg-blue-500 text-white border-blue-500 shadow-md' : 'bg-pink-500 text-white border-pink-500 shadow-md') 
                         : 'bg-white text-slate-300 border-black/5'
@@ -219,10 +219,10 @@ export const ProfileView: React.FC = () => {
           </div>
           
           <div style={{ backgroundColor: lightTheme.card }} className="px-6 py-5 rounded-[28px] border border-black/5 flex flex-col gap-1.5 shadow-inner">
-            <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">當前 BMI 指數</span>
+            <span className="text-[11px] font-black uppercase text-slate-400 tracking-widest">當前 BMI 指數</span>
             <div className="flex items-baseline justify-between">
-              <span style={{ color: lightTheme.text }} className="text-3xl font-black italic">{bmi || '--'}</span>
-              <span className={`text-[10px] font-black uppercase px-4 py-1.5 rounded-full border border-white bg-white shadow-sm ${bmiAnalysis.color}`}>{bmi > 0 ? bmiAnalysis.label : '未設定'}</span>
+              <span style={{ color: lightTheme.text }} className="text-4xl font-black italic">{bmi || '--'}</span>
+              <span className={`text-[11px] font-black uppercase px-4 py-1.5 rounded-full border border-white bg-white shadow-sm ${bmiAnalysis.color}`}>{bmi > 0 ? bmiAnalysis.label : '未設定'}</span>
             </div>
           </div>
         </div>
@@ -236,13 +236,13 @@ export const ProfileView: React.FC = () => {
                  <Target className="w-6 h-6 text-black" />
                </div>
                <div>
-                 <h3 style={{ color: lightTheme.text }} className="text-base font-black italic uppercase tracking-tighter leading-none">營養建議藍圖</h3>
-                 <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mt-1">目標規劃與熱量分析</p>
+                 <h3 style={{ color: lightTheme.text }} className="text-lg font-black italic uppercase tracking-tighter leading-none">營養建議藍圖</h3>
+                 <p className="text-[11px] font-black text-slate-300 uppercase tracking-widest mt-1">目標規劃與熱量分析</p>
                </div>
             </div>
             <button 
               onClick={handleSaveGoal} 
-              className={`px-4 py-2 rounded-xl font-black uppercase italic transition-all flex items-center gap-2 text-[12px] border border-[#82CC00]/20 ${isGoalSaved ? 'bg-emerald-500 text-white border-emerald-500' : 'bg-white text-[#82CC00] active:scale-95 shadow-sm'}`}
+              className={`px-4 py-2 rounded-xl font-black uppercase italic transition-all flex items-center gap-2 text-sm border border-[#82CC00]/20 ${isGoalSaved ? 'bg-emerald-500 text-white border-emerald-500' : 'bg-white text-[#82CC00] active:scale-95 shadow-sm'}`}
             >
               {isGoalSaved ? <CheckCircle2 className="w-4 h-4" /> : <Save className="w-4 h-4" />}
               {isGoalSaved ? '已儲存' : '儲存'}
@@ -367,8 +367,8 @@ export const ProfileView: React.FC = () => {
                     <GlassWater className="w-6 h-6" />
                   </div>
                   <div>
-                    <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest block mb-0.5">每日建議飲水</span>
-                    <span style={{ color: lightTheme.text }} className="text-xl font-black italic">{waterIntake || '--'} <span className="text-xs not-italic text-slate-300">ML</span></span>
+                    <span className="text-[11px] font-black uppercase text-slate-400 tracking-widest block mb-0.5">每日建議飲水</span>
+                    <span style={{ color: lightTheme.text }} className="text-2xl font-black italic">{waterIntake || '--'} <span className="text-sm not-italic text-slate-300">ML</span></span>
                   </div>
                </div>
                <Waves className="text-sky-200 w-8 h-8 opacity-50" />
@@ -401,9 +401,9 @@ export const ProfileView: React.FC = () => {
                          <div className="w-9 h-9 rounded-xl bg-black flex items-center justify-center text-[#CCFF00]">
                            <Sparkles className="w-5 h-5" />
                          </div>
-                         <h4 className="text-sm font-black italic uppercase">個人專屬營養藍圖</h4>
+                         <h4 className="text-base font-black italic uppercase">個人專屬營養藍圖</h4>
                        </div>
-                       <button onClick={() => setShowAiPlan(false)} className="text-[10px] font-black text-slate-300 uppercase underline">隱藏</button>
+                       <button onClick={() => setShowAiPlan(false)} className="text-[11px] font-black text-slate-300 uppercase underline">隱藏</button>
                      </div>
                      
                      <div className="prose prose-sm max-w-none text-slate-600 leading-relaxed font-medium markdown-body">
