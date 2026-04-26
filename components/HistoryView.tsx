@@ -189,7 +189,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
             >
               <div className="flex justify-between items-start">
                 <div className="space-y-2">
-                  <h4 style={{ color: lightTheme.text }} className="text-4xl font-black italic uppercase leading-tight pr-3">當日總訓練</h4>
+                  <h4 style={{ color: lightTheme.text }} className="text-xl font-black italic uppercase leading-tight pr-3">當日總訓練</h4>
                   <div className="flex flex-wrap items-center gap-3 mt-2">
                     <span style={{ backgroundColor: lightTheme.card, color: lightTheme.text }} className="flex items-center gap-2 border border-black/5 px-3 py-1.5 rounded-xl text-sm font-black italic shadow-inner">
                       <Timer className="w-3.5 h-3.5 text-black" /> {dailyStats.totalMinutes} 分鐘
@@ -264,7 +264,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
                               <ExerciseSmallGif name={ex.name} />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <span style={{ color: lightTheme.text }} className="text-2xl font-black italic uppercase tracking-tight leading-tight py-1 block">{ex.name}</span>
+                              <span style={{ color: lightTheme.text }} className="text-xl font-black italic uppercase tracking-tight leading-tight py-1 block">{ex.name}</span>
                               <div className="text-[11px] font-black text-slate-400 uppercase tracking-widest mt-1">
                                 {getMuscleGroupDisplay(ex.muscleGroup).cn} • {ex.sets.length} 組
                               </div>
