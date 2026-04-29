@@ -154,7 +154,7 @@ export const CalendarStrip: React.FC<CalendarStripProps> = ({ selectedDate, onDa
                     }
                   `}
                 >
-                  <span className={`text-lg sm:text-xl ${isSelected ? 'scale-110' : ''}`}>
+                  <span className={`text-base sm:text-lg ${isSelected ? 'scale-110' : ''}`}>
                     {format(day, 'd')}
                   </span>
                   
