@@ -110,19 +110,19 @@ export const ProfileView: React.FC = () => {
   if (!context) return null;
 
   return (
-    <div className="space-y-7 pb-24">
+    <div className="space-y-8 pb-24">
       {/* 個人頂部資訊 */}
-      <div style={{ backgroundColor: lightTheme.card }} className="rounded-[40px] p-7 border border-black/5 relative overflow-hidden shadow-sm">
-         <div className="relative z-10 flex items-center gap-6">
+      <div style={{ backgroundColor: lightTheme.card }} className="rounded-[40px] p-8 border border-black/5 relative overflow-hidden shadow-sm">
+         <div className="relative z-10 flex items-center gap-7">
             <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
-              <div style={{ backgroundColor: '#E5E5E7' }} className="w-20 h-20 rounded-[28px] overflow-hidden border-2 border-black/5 flex items-center justify-center shadow-inner relative">
+              <div style={{ backgroundColor: '#E5E5E7' }} className="w-[88px] h-[88px] rounded-[32px] overflow-hidden border-2 border-black/5 flex items-center justify-center shadow-inner relative">
                 {profileImage ? (
                   <img src={profileImage} alt="Profile" className="w-full h-full object-cover" />
                 ) : (
-                  <User className="w-10 h-10 text-black" />
+                  <User className="w-11 h-11 text-black" />
                 )}
                 <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <Camera className="text-white w-6 h-6" />
+                  <Camera className="text-white w-7 h-7" />
                 </div>
               </div>
               <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={(e) => {
@@ -140,7 +140,7 @@ export const ProfileView: React.FC = () => {
             </div>
 
             <div className="flex-1 overflow-hidden">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-4">
                 {isEditingName ? (
                   <input 
                     autoFocus
@@ -148,41 +148,41 @@ export const ProfileView: React.FC = () => {
                     placeholder="點擊以修改名稱"
                     onChange={(e) => {setUserName(e.target.value); localStorage.setItem('ironlog_user_name', e.target.value);}}
                     onBlur={() => setIsEditingName(false)}
-                    className="bg-transparent border-b border-black text-2xl font-black italic text-black outline-none w-full uppercase placeholder:opacity-50"
+                    className="bg-transparent border-b border-black text-3xl font-black italic text-black outline-none w-full uppercase placeholder:opacity-50"
                   />
                 ) : (
                   <h3 
                     onClick={() => setIsEditingName(true)} 
                     style={{ color: lightTheme.text }} 
-                    className={`text-2xl font-black italic uppercase tracking-tighter truncate pr-2 ${!userName ? 'opacity-50' : ''}`}
+                    className={`text-3xl font-black italic uppercase tracking-tighter truncate pr-2 ${!userName ? 'opacity-50' : ''}`}
                   >
                     {userName || '點擊以修改名稱'}
                   </h3>
                 )}
-                <Edit3 className="w-5 h-5 text-black shrink-0" />
+                <Edit3 className="w-6 h-6 text-black shrink-0" />
               </div>
             </div>
          </div>
       </div>
 
       {/* 身體資料分析區塊 */}
-      <div style={{ backgroundColor: lightTheme.bg }} className="rounded-[44px] p-8 border border-black/5 relative overflow-hidden shadow-xl">
-        <div className="flex justify-between items-center mb-10">
-           <div className="flex items-center gap-4">
-             <div style={{ backgroundColor: lightTheme.card }} className="p-3.5 rounded-2xl border border-black/5">
-                <Activity className="w-6 h-6 text-black" />
+      <div style={{ backgroundColor: lightTheme.bg }} className="rounded-[44px] p-9 border border-black/5 relative overflow-hidden shadow-xl">
+        <div className="flex justify-between items-center mb-11">
+           <div className="flex items-center gap-5">
+             <div style={{ backgroundColor: lightTheme.card }} className="p-4 rounded-2xl border border-black/5">
+                <Activity className="w-7 h-7 text-black" />
              </div>
              <div>
-               <h3 style={{ color: lightTheme.text }} className="text-lg font-black italic uppercase tracking-tighter leading-none">身體資料分析</h3>
-               <p className="text-[11px] font-black text-black uppercase tracking-widest mt-1">生理指標監測</p>
+               <h3 style={{ color: lightTheme.text }} className="text-xl font-black italic uppercase tracking-tighter leading-none">身體資料分析</h3>
+               <p className="text-[12px] font-black text-black uppercase tracking-widest mt-1.5">生理指標監測</p>
              </div>
            </div>
            
            <button 
              onClick={handleSaveMetrics} 
-             className={`px-4 py-2 rounded-xl font-black uppercase italic transition-all flex items-center gap-2 text-[12px] border border-[#82CC00]/20 ${isMetricsSaved ? 'bg-emerald-500 text-white border-emerald-500' : 'bg-white text-[#82CC00] active:scale-95 shadow-sm'}`}
+             className={`px-5 py-2.5 rounded-xl font-black uppercase italic transition-all flex items-center gap-2.5 text-[13px] border border-[#82CC00]/20 ${isMetricsSaved ? 'bg-emerald-500 text-white border-emerald-500' : 'bg-white text-[#82CC00] active:scale-95 shadow-sm'}`}
            >
-             {isMetricsSaved ? <CheckCircle2 className="w-4 h-4" /> : <Save className="w-4 h-4" />}
+             {isMetricsSaved ? <CheckCircle2 className="w-4.5 h-4.5" /> : <Save className="w-4.5 h-4.5" />}
              {isMetricsSaved ? '已儲存' : '儲存'}
            </button>
         </div>
@@ -218,39 +218,39 @@ export const ProfileView: React.FC = () => {
             </div>
           </div>
           
-          <div style={{ backgroundColor: lightTheme.card }} className="px-6 py-5 rounded-[28px] border border-black/5 flex flex-col gap-1.5 shadow-inner">
-            <span className="text-[11px] font-black uppercase text-black tracking-widest">當前 BMI 指數</span>
+          <div style={{ backgroundColor: lightTheme.card }} className="px-7 py-6 rounded-[28px] border border-black/5 flex flex-col gap-2 shadow-inner">
+            <span className="text-[12px] font-black uppercase text-black tracking-widest">當前 BMI 指數</span>
             <div className="flex items-baseline justify-between">
-              <span style={{ color: lightTheme.text }} className="text-4xl font-black italic">{bmi || '--'}</span>
-              <span className={`text-[11px] font-black uppercase px-4 py-1.5 rounded-full border border-white bg-white shadow-sm ${bmiAnalysis.color}`}>{bmi > 0 ? bmiAnalysis.label : '未設定'}</span>
+              <span style={{ color: lightTheme.text }} className="text-[44px] font-black italic">{bmi || '--'}</span>
+              <span className={`text-[12px] font-black uppercase px-5 py-2 rounded-full border border-white bg-white shadow-sm ${bmiAnalysis.color}`}>{bmi > 0 ? bmiAnalysis.label : '未設定'}</span>
             </div>
           </div>
         </div>
       </div>
 
       {/* 營養建議區塊 */}
-      <div style={{ backgroundColor: lightTheme.bg }} className="rounded-[44px] p-8 border border-black/5 relative overflow-hidden shadow-xl">
-         <div className="flex justify-between items-center mb-8">
-            <div className="flex items-center gap-4">
-               <div style={{ backgroundColor: lightTheme.card }} className="p-3.5 rounded-2xl border border-black/5">
-                 <Target className="w-6 h-6 text-black" />
+      <div style={{ backgroundColor: lightTheme.bg }} className="rounded-[44px] p-9 border border-black/5 relative overflow-hidden shadow-xl">
+         <div className="flex justify-between items-center mb-9">
+            <div className="flex items-center gap-5">
+               <div style={{ backgroundColor: lightTheme.card }} className="p-4 rounded-2xl border border-black/5">
+                 <Target className="w-7 h-7 text-black" />
                </div>
                <div>
-                 <h3 style={{ color: lightTheme.text }} className="text-lg font-black italic uppercase tracking-tighter leading-none">營養建議藍圖</h3>
-                 <p className="text-[11px] font-black text-black uppercase tracking-widest mt-1">目標規劃與熱量分析</p>
+                 <h3 style={{ color: lightTheme.text }} className="text-xl font-black italic uppercase tracking-tighter leading-none">營養建議藍圖</h3>
+                 <p className="text-[12px] font-black text-black uppercase tracking-widest mt-1.5">目標規劃與熱量分析</p>
                </div>
             </div>
             <button 
               onClick={handleSaveGoal} 
-              className={`px-4 py-2 rounded-xl font-black uppercase italic transition-all flex items-center gap-2 text-sm border border-[#82CC00]/20 ${isGoalSaved ? 'bg-emerald-500 text-white border-emerald-500' : 'bg-white text-[#82CC00] active:scale-95 shadow-sm'}`}
+              className={`px-5 py-2.5 rounded-xl font-black uppercase italic transition-all flex items-center gap-2.5 text-base border border-[#82CC00]/20 ${isGoalSaved ? 'bg-emerald-500 text-white border-emerald-500' : 'bg-white text-[#82CC00] active:scale-95 shadow-sm'}`}
             >
-              {isGoalSaved ? <CheckCircle2 className="w-4 h-4" /> : <Save className="w-4 h-4" />}
+              {isGoalSaved ? <CheckCircle2 className="w-4.5 h-4.5" /> : <Save className="w-4.5 h-4.5" />}
               {isGoalSaved ? '已儲存' : '儲存'}
             </button>
          </div>
 
          <div className="space-y-6">
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-3 gap-3">
                {(['cut', 'maintain', 'bulk'] as const).map(type => {
                  const colors = {
                    cut: 'bg-rose-500 border-rose-500',
@@ -261,7 +261,7 @@ export const ProfileView: React.FC = () => {
                    <button 
                      key={type}
                      onClick={() => setTempGoal({ ...tempGoal, type })}
-                     className={`py-3 rounded-xl text-[11px] font-black uppercase transition-all border ${tempGoal.type === type ? `${colors[type]} text-white shadow-md` : 'bg-slate-50 text-black border-black/5'}`}
+                     className={`py-3.5 rounded-xl text-[12px] font-black uppercase transition-all border ${tempGoal.type === type ? `${colors[type]} text-white shadow-md` : 'bg-slate-50 text-black border-black/5'}`}
                    >
                      {type === 'cut' ? '減脂' : type === 'bulk' ? '增肌' : '維持'}
                    </button>
@@ -272,86 +272,86 @@ export const ProfileView: React.FC = () => {
             <div className="grid grid-cols-1 gap-3">
                <InputBox icon={<Target className="text-orange-400 w-3.5 h-3.5" />} label="目標體重" val={tempGoal.targetWeight} unit="KG" onChange={(v: string) => setTempGoal({ ...tempGoal, targetWeight: Number(v) })} />
                
-               <div style={{ backgroundColor: lightTheme.card }} className="p-5 rounded-2xl border border-black/5 shadow-inner">
-                 <div className="flex items-center gap-2.5 mb-3.5">
-                    <Bike className="text-indigo-400 w-3.5 h-3.5" />
-                    <span className="text-[10px] font-black uppercase text-black tracking-widest">日常活動量</span>
-                 </div>
-                 <div className="grid grid-cols-5 gap-1.5">
-                   {activityOptions.map(opt => (
-                     <button 
-                       key={opt.val}
-                       onClick={() => setTempGoal({ ...tempGoal, activityLevel: opt.val as any })}
-                       className={`flex flex-col items-center py-2.5 rounded-xl transition-all border ${tempGoal.activityLevel === opt.val ? 'bg-black text-white border-black' : 'bg-white text-black border-black/5'}`}
-                     >
-                       <span className="text-[9px] font-black mb-0.5">{opt.label}</span>
-                       <span className="text-[7px] font-bold text-black">{opt.desc}</span>
-                     </button>
-                   ))}
-                 </div>
+            <div style={{ backgroundColor: lightTheme.card }} className="p-6 rounded-2xl border border-black/5 shadow-inner">
+               <div className="flex items-center gap-3 mb-4">
+                  <Bike className="text-indigo-400 w-4 h-4" />
+                  <span className="text-[12px] font-black uppercase text-black tracking-widest">日常活動量</span>
                </div>
+               <div className="grid grid-cols-5 gap-2">
+                 {activityOptions.map(opt => (
+                   <button 
+                     key={opt.val}
+                     onClick={() => setTempGoal({ ...tempGoal, activityLevel: opt.val as any })}
+                     className={`flex flex-col items-center py-3 rounded-xl transition-all border ${tempGoal.activityLevel === opt.val ? 'bg-black text-white border-black' : 'bg-white text-black border-black/5'}`}
+                   >
+                     <span className="text-[10px] font-black mb-1">{opt.label}</span>
+                     <span className="text-[8px] font-bold text-black">{opt.desc}</span>
+                   </button>
+                 ))}
+               </div>
+            </div>
 
-               <div style={{ backgroundColor: lightTheme.card }} className="p-6 rounded-[32px] border border-black/5 shadow-inner">
-                 <div className="flex items-center justify-between mb-4 px-1">
-                    <div className="flex items-center gap-2.5">
-                       <Beef className="text-rose-400 w-3.5 h-3.5" />
-                       <span className="text-[10px] font-black uppercase text-black tracking-widest">巨量營養比例設定</span>
+               <div style={{ backgroundColor: lightTheme.card }} className="p-7 rounded-[32px] border border-black/5 shadow-inner">
+                 <div className="flex items-center justify-between mb-5 px-1">
+                    <div className="flex items-center gap-3">
+                       <Beef className="text-rose-400 w-4 h-4" />
+                       <span className="text-[12px] font-black uppercase text-black tracking-widest">巨量營養比例設定</span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <span className={`text-[9px] font-black uppercase tracking-widest ${((tempGoal.proteinRatio || 0) + (tempGoal.carbRatio || 0) + (tempGoal.fatRatio || 0)) === 100 ? 'text-emerald-500' : 'text-rose-400'}`}>
+                       <span className={`text-[10px] font-black uppercase tracking-widest ${((tempGoal.proteinRatio || 0) + (tempGoal.carbRatio || 0) + (tempGoal.fatRatio || 0)) === 100 ? 'text-emerald-500' : 'text-rose-400'}`}>
                         總計: {((tempGoal.proteinRatio || 0) + (tempGoal.carbRatio || 0) + (tempGoal.fatRatio || 0)) === 0 ? '預設' : ((tempGoal.proteinRatio || 0) + (tempGoal.carbRatio || 0) + (tempGoal.fatRatio || 0)) + '%'}
                       </span>
                       {tempGoal.proteinRatio !== undefined && ((tempGoal.proteinRatio || 0) + (tempGoal.carbRatio || 0) + (tempGoal.fatRatio || 0)) !== 100 && (
-                        <AlertCircle className="w-3 h-3 text-rose-400" />
+                        <AlertCircle className="w-4 h-4 text-rose-400" />
                       )}
                     </div>
                  </div>
-                 <div className="grid grid-cols-3 gap-3">
-                   <div className="space-y-1.5">
-                     <span className="text-[9px] font-black text-black uppercase tracking-widest block text-center">蛋白質 %</span>
+                 <div className="grid grid-cols-3 gap-4">
+                   <div className="space-y-2">
+                     <span className="text-[10px] font-black text-black uppercase tracking-widest block text-center">蛋白質 %</span>
                      <input 
                        type="number" 
                        value={tempGoal.proteinRatio || ''} 
                        onChange={e => setTempGoal({ ...tempGoal, proteinRatio: Number(e.target.value) })}
-                       className="w-full bg-white border border-black/5 rounded-xl py-2.5 text-center text-sm font-black italic shadow-sm outline-none focus:border-rose-400/50"
+                       className="w-full bg-white border border-black/5 rounded-xl py-3 text-center text-base font-black italic shadow-sm outline-none focus:border-rose-400/50"
                        placeholder="--"
                      />
                    </div>
-                   <div className="space-y-1.5">
-                     <span className="text-[9px] font-black text-black uppercase tracking-widest block text-center">碳水 %</span>
+                   <div className="space-y-2">
+                     <span className="text-[10px] font-black text-black uppercase tracking-widest block text-center">碳水 %</span>
                      <input 
                        type="number" 
                        value={tempGoal.carbRatio || ''} 
                        onChange={e => setTempGoal({ ...tempGoal, carbRatio: Number(e.target.value) })}
-                       className="w-full bg-white border border-black/5 rounded-xl py-2.5 text-center text-sm font-black italic shadow-sm outline-none focus:border-amber-400/50"
+                       className="w-full bg-white border border-black/5 rounded-xl py-3 text-center text-base font-black italic shadow-sm outline-none focus:border-amber-400/50"
                        placeholder="--"
                      />
                    </div>
-                   <div className="space-y-1.5">
-                     <span className="text-[9px] font-black text-black uppercase tracking-widest block text-center">脂肪 %</span>
+                   <div className="space-y-2">
+                     <span className="text-[10px] font-black text-black uppercase tracking-widest block text-center">脂肪 %</span>
                      <input 
                        type="number" 
                        value={tempGoal.fatRatio || ''} 
                        onChange={e => setTempGoal({ ...tempGoal, fatRatio: Number(e.target.value) })}
-                       className="w-full bg-white border border-black/5 rounded-xl py-2.5 text-center text-sm font-black italic shadow-sm outline-none focus:border-indigo-400/50"
+                       className="w-full bg-white border border-black/5 rounded-xl py-3 text-center text-base font-black italic shadow-sm outline-none focus:border-indigo-400/50"
                        placeholder="--"
                      />
                    </div>
                  </div>
-                 <p className="text-[8px] font-medium text-black mt-4 leading-relaxed italic text-center">
+                 <p className="text-[9px] font-medium text-black mt-5 leading-relaxed italic text-center">
                    * 若不設定比例，系統將根據目標 (減脂/增肌/維持) 提供預設建議。
                  </p>
                </div>
             </div>
 
-            <div style={{ backgroundColor: '#FFF9E6' }} className="px-6 py-6 rounded-[32px] border border-black/5 flex flex-col gap-2 shadow-inner">
-              <div className="flex items-center gap-2 mb-1">
-                <Flame className="w-4 h-4 text-orange-400" />
-                <span className="text-[10px] font-black uppercase text-black tracking-widest">建議每日熱量 (TDEE)</span>
+            <div style={{ backgroundColor: '#FFF9E6' }} className="px-7 py-7 rounded-[32px] border border-black/5 flex flex-col gap-2.5 shadow-inner">
+              <div className="flex items-center gap-2.5 mb-1.5">
+                <Flame className="w-4.5 h-4.5 text-orange-400" />
+                <span className="text-[11px] font-black uppercase text-black tracking-widest">建議每日熱量 (TDEE)</span>
               </div>
-              <div className="flex items-baseline gap-1.5">
-                <span style={{ color: lightTheme.text }} className="text-4xl font-black italic">{suggestedCalories || '--'}</span>
-                <span className="text-xs font-black text-black italic">KCAL</span>
+              <div className="flex items-baseline gap-2">
+                <span style={{ color: lightTheme.text }} className="text-[44px] font-black italic">{suggestedCalories || '--'}</span>
+                <span className="text-sm font-black text-black italic">KCAL</span>
               </div>
             </div>
 
@@ -361,30 +361,30 @@ export const ProfileView: React.FC = () => {
               <MacroCard icon={<Droplets className="w-4 h-4 text-indigo-400" />} label="脂肪" val={macros.fats} unit="G" color="bg-indigo-400" />
             </div>
 
-            <div style={{ backgroundColor: lightTheme.card }} className="p-6 rounded-[32px] border border-black/5 flex items-center justify-between shadow-inner">
-               <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-sky-100 flex items-center justify-center text-sky-500">
-                    <GlassWater className="w-6 h-6" />
+            <div style={{ backgroundColor: lightTheme.card }} className="p-7 rounded-[32px] border border-black/5 flex items-center justify-between shadow-inner">
+               <div className="flex items-center gap-5">
+                  <div className="w-14 h-14 rounded-2xl bg-sky-100 flex items-center justify-center text-sky-500">
+                    <GlassWater className="w-7 h-7" />
                   </div>
                   <div>
-                    <span className="text-[11px] font-black uppercase text-black tracking-widest block mb-0.5">每日建議飲水</span>
-                    <span style={{ color: lightTheme.text }} className="text-2xl font-black italic">{waterIntake || '--'} <span className="text-sm not-italic text-black">ML</span></span>
+                    <span className="text-[12px] font-black uppercase text-black tracking-widest block mb-0.5">每日建議飲水</span>
+                    <span style={{ color: lightTheme.text }} className="text-3xl font-black italic">{waterIntake || '--'} <span className="text-base not-italic text-black">ML</span></span>
                   </div>
                </div>
-               <Waves className="text-sky-200 w-8 h-8 opacity-50" />
+               <Waves className="text-sky-200 w-10 h-10 opacity-50" />
             </div>
 
-            <div className="pt-2">
+            <div className="pt-3">
                <button 
                  onClick={handleAiAnalysis}
                  disabled={isAiLoading}
                  style={{ backgroundColor: '#000000', color: '#FFFFFF' }}
-                 className="w-full h-14 rounded-2xl font-black uppercase italic text-sm flex items-center justify-center gap-3 active:scale-[0.98] transition-all shadow-xl disabled:opacity-50"
+                 className="w-full h-16 rounded-2xl font-black uppercase italic text-base flex items-center justify-center gap-3 active:scale-[0.98] transition-all shadow-xl disabled:opacity-50"
                >
                  {isAiLoading ? (
-                   <Loader2 className="w-5 h-5 animate-spin text-[#CCFF00]" />
+                   <Loader2 className="w-6 h-6 animate-spin text-[#CCFF00]" />
                  ) : (
-                   <Sparkles className="w-5 h-5 text-[#CCFF00]" />
+                   <Sparkles className="w-6 h-6 text-[#CCFF00]" />
                  )}
                  {isAiLoading ? 'AI 分析中...' : '獲取個人專屬飲食建議'}
                </button>
@@ -394,29 +394,29 @@ export const ProfileView: React.FC = () => {
                    <motion.div
                      initial={{ opacity: 0, y: 20 }}
                      animate={{ opacity: 1, y: 0 }}
-                     className="mt-6 p-7 rounded-[32px] bg-white border border-black/5 shadow-xl relative overflow-hidden"
+                     className="mt-7 p-8 rounded-[36px] bg-white border border-black/5 shadow-xl relative overflow-hidden"
                    >
-                     <div className="flex items-center justify-between mb-6">
-                       <div className="flex items-center gap-3">
-                         <div className="w-9 h-9 rounded-xl bg-black flex items-center justify-center text-[#CCFF00]">
-                           <Sparkles className="w-5 h-5" />
+                     <div className="flex items-center justify-between mb-7">
+                       <div className="flex items-center gap-4">
+                         <div className="w-10 h-10 rounded-xl bg-black flex items-center justify-center text-[#CCFF00]">
+                           <Sparkles className="w-6 h-6" />
                          </div>
-                         <h4 className="text-base font-black italic uppercase">個人專屬營養藍圖</h4>
+                         <h4 className="text-lg font-black italic uppercase">個人專屬營養藍圖</h4>
                        </div>
-                       <button onClick={() => setShowAiPlan(false)} className="text-[11px] font-black text-black uppercase underline">隱藏</button>
+                       <button onClick={() => setShowAiPlan(false)} className="text-[12px] font-black text-black uppercase underline">隱藏</button>
                      </div>
                      
-                     <div className="prose prose-sm max-w-none text-black leading-relaxed font-medium markdown-body">
+                     <div className="prose prose-base max-w-none text-black leading-relaxed font-medium markdown-body">
                         {isAiLoading ? (
-                          <div className="flex flex-col items-center py-12 gap-4">
-                             <div className="w-12 h-1 bg-slate-100 rounded-full overflow-hidden">
+                          <div className="flex flex-col items-center py-14 gap-5">
+                             <div className="w-14 h-1.5 bg-slate-100 rounded-full overflow-hidden">
                                 <motion.div 
                                   animate={{ x: [-50, 50] }}
                                   transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                                   className="w-full h-full bg-[#CCFF00]"
                                 />
                              </div>
-                             <p className="text-[10px] font-black text-black uppercase tracking-widest">正在為您制定專屬計畫...</p>
+                             <p className="text-[11px] font-black text-black uppercase tracking-widest">正在為您制定專屬計畫...</p>
                           </div>
                         ) : (
                           <div className="markdown-content">
@@ -436,39 +436,39 @@ export const ProfileView: React.FC = () => {
 };
 
 const MacroCard = ({ icon, label, val, unit, color }: any) => (
-  <div style={{ backgroundColor: lightTheme.card }} className="p-4 rounded-3xl border border-black/5 flex flex-col items-center gap-3 shadow-inner">
-    <div className="w-9 h-9 rounded-xl bg-white flex items-center justify-center shadow-sm">
+  <div style={{ backgroundColor: lightTheme.card }} className="p-5 rounded-[32px] border border-black/5 flex flex-col items-center gap-4 shadow-inner">
+    <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-sm">
       {icon}
     </div>
     <div className="text-center">
-      <span className="text-[9px] font-black text-black uppercase tracking-widest block mb-1">{label}</span>
-      <div className="flex items-baseline justify-center gap-0.5">
-        <span style={{ color: lightTheme.text }} className="text-lg font-black italic">{val || '--'}</span>
-        <span className="text-[8px] font-black text-black">{unit}</span>
+      <span className="text-[10px] font-black text-black uppercase tracking-widest block mb-1.5">{label}</span>
+      <div className="flex items-baseline justify-center gap-1">
+        <span style={{ color: lightTheme.text }} className="text-xl font-black italic">{val || '--'}</span>
+        <span className="text-[9px] font-black text-black">{unit}</span>
       </div>
     </div>
-    <div className="w-full h-1 bg-slate-200 rounded-full overflow-hidden">
+    <div className="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden">
       <div className={`h-full ${color}`} style={{ width: val > 0 ? '60%' : '0%' }} />
     </div>
   </div>
 );
 
 const InputBox = ({ icon, label, val, unit, onChange }: any) => (
-  <div style={{ backgroundColor: lightTheme.card }} className="p-5 rounded-2xl border border-black/5 flex-1 shadow-inner">
-    <div className="flex items-center gap-2.5 mb-2.5">
+  <div style={{ backgroundColor: lightTheme.card }} className="p-6 rounded-2xl border border-black/5 flex-1 shadow-inner">
+    <div className="flex items-center gap-3 mb-3">
        {icon}
-       <span className="text-[10px] font-black uppercase text-black tracking-widest">{label}</span>
+       <span className="text-[11px] font-black uppercase text-black tracking-widest">{label}</span>
     </div>
-    <div className="flex items-baseline gap-1.5">
+    <div className="flex items-baseline gap-2">
       <input 
         type="number" 
         placeholder="--"
         style={{ color: lightTheme.text }}
-        className="bg-transparent text-2xl font-black italic outline-none w-full placeholder:text-black" 
+        className="bg-transparent text-3xl font-black italic outline-none w-full placeholder:text-black" 
         value={val === 0 ? '' : val} 
         onChange={e => onChange(e.target.value)} 
       />
-      <span className="text-[11px] font-bold text-black uppercase">{unit}</span>
+      <span className="text-[12px] font-bold text-black uppercase">{unit}</span>
     </div>
   </div>
 );
