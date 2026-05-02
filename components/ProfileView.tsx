@@ -173,8 +173,8 @@ export const ProfileView: React.FC = () => {
                 <Activity className="w-7 h-7 text-black" />
              </div>
              <div>
-               <h3 style={{ color: lightTheme.text }} className="text-xl font-black italic uppercase tracking-tighter leading-none">身體資料分析</h3>
-               <p className="text-[12px] font-black text-black uppercase tracking-widest mt-1.5">生理指標監測</p>
+               <h3 style={{ color: lightTheme.text }} className="text-[19px] font-black italic uppercase tracking-tighter leading-none">身體資料分析</h3>
+               <p className="text-[11.4px] font-black text-black uppercase tracking-widest mt-1.5">生理指標監測</p>
              </div>
            </div>
            
@@ -236,13 +236,13 @@ export const ProfileView: React.FC = () => {
                  <Target className="w-7 h-7 text-black" />
                </div>
                <div>
-                 <h3 style={{ color: lightTheme.text }} className="text-xl font-black italic uppercase tracking-tighter leading-none">營養建議藍圖</h3>
-                 <p className="text-[12px] font-black text-black uppercase tracking-widest mt-1.5">目標規劃與熱量分析</p>
+                 <h3 style={{ color: lightTheme.text }} className="text-[19px] font-black italic uppercase tracking-tighter leading-none">營養建議藍圖</h3>
+                 <p className="text-[11.4px] font-black text-black uppercase tracking-widest mt-1.5">目標規劃與熱量分析</p>
                </div>
             </div>
             <button 
               onClick={handleSaveGoal} 
-              className={`px-[18px] py-[9px] rounded-xl font-black uppercase italic transition-all flex items-center gap-2 text-[14.4px] border border-[#82CC00]/20 ${isGoalSaved ? 'bg-emerald-500 text-white border-emerald-500' : 'bg-white text-[#82CC00] active:scale-95 shadow-sm'}`}
+              className={`px-[18px] py-[9px] rounded-xl font-black uppercase italic transition-all flex items-center gap-2 text-[11.7px] border border-[#82CC00]/20 ${isGoalSaved ? 'bg-emerald-500 text-white border-emerald-500' : 'bg-white text-[#82CC00] active:scale-95 shadow-sm'}`}
             >
               {isGoalSaved ? <CheckCircle2 className="w-4 h-4" /> : <Save className="w-4 h-4" />}
               {isGoalSaved ? '已儲存' : '儲存'}
