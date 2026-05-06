@@ -253,7 +253,7 @@ const App: React.FC = () => {
                           return `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()} ${weekDays[d.getDay()]}`;
                         })()}
                       </h1>
-                      <p className="text-[11px] font-black text-slate-300 uppercase tracking-[0.2em] mt-1.5">
+                      <p className="text-[11px] font-black text-black uppercase tracking-[0.2em] mt-1.5">
                         TODAY'S WORKOUT
                       </p>
                     </div>
@@ -338,7 +338,7 @@ const App: React.FC = () => {
 };
 
 const TabButton = ({ active, onClick, icon, label }: any) => (
-  <button onClick={onClick} className={`flex flex-col items-center gap-2 transition-all w-16 ${active ? 'text-[#82CC00]' : 'text-slate-400'}`}>
+  <button onClick={onClick} className={`flex flex-col items-center gap-2 transition-all w-16 ${active ? 'text-[#82CC00]' : 'text-black'}`}>
     <div className={`p-2.5 rounded-2xl transition-all ${active ? 'bg-[#CCFF00]/10 shadow-[0_0_20px_rgba(204,255,0,0.1)]' : ''}`}>
       {React.cloneElement(icon, { className: `w-6 h-6 ${active ? 'stroke-[2.5]' : 'stroke-2'}` })}
     </div>

@@ -162,12 +162,12 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
           <motion.div key="overview" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6 pb-40">
             <div className="space-y-5 pt-2">
               <div style={{ backgroundColor: lightTheme.card }} className="flex items-center gap-4 border border-black/5 rounded-2xl px-6 py-4 shadow-sm">
-                <Search className="w-5 h-5 text-slate-400" />
+                <Search className="w-5 h-5 text-black" />
                 <input 
                   placeholder="搜尋動作庫..." 
                   value={searchTerm} 
                   onChange={e => setSearchTerm(e.target.value)} 
-                  className="bg-transparent w-full text-lg font-black italic outline-none placeholder:text-slate-300" 
+                  className="bg-transparent w-full text-lg font-black italic outline-none placeholder:text-black" 
                   style={{ color: lightTheme.text }}
                 />
               </div>
@@ -178,7 +178,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                     <button 
                       key={cat} 
                       onClick={() => setActiveCategory(cat)} 
-                      className={`shrink-0 px-5 py-2.5 rounded-xl text-[12px] font-black uppercase tracking-widest transition-all border ${activeCategory === cat ? 'bg-black text-white border-black' : 'bg-slate-100 text-slate-400 border-black/5'}`}
+                      className={`shrink-0 px-5 py-2.5 rounded-xl text-[12px] font-black uppercase tracking-widest transition-all border ${activeCategory === cat ? 'bg-black text-white border-black' : 'bg-slate-100 text-black border-black/5'}`}
                       style={activeCategory === cat ? { backgroundColor: '#000000', color: '#FFFFFF' } : {}}
                     >
                       {getMuscleGroupDisplay(cat as MuscleGroup).cn}
@@ -200,7 +200,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                         <PlusSquare className="w-6 h-6" />
                       </div>
                       <div className="text-left overflow-hidden">
-                        <div className="text-[12px] font-black uppercase tracking-widest leading-none text-slate-400">建立自訂動作</div>
+                        <div className="text-[12px] font-black uppercase tracking-widest leading-none text-black">建立自訂動作</div>
                         <div style={{ color: lightTheme.text }} className="text-lg font-black italic uppercase leading-tight mt-1.5 pr-2">{searchTerm}</div>
                       </div>
                     </div>
@@ -223,7 +223,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                       <div style={{ color: lightTheme.text }} className="text-[16px] font-black italic uppercase leading-tight py-0.5 pr-1">
                         {exName}
                       </div>
-                      <div className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mt-1.5 flex items-center justify-between">
+                      <div className="text-[11px] font-bold text-black uppercase tracking-widest mt-1.5 flex items-center justify-between">
                         {getMuscleGroupDisplay(getMuscleGroup(exName)).cn}
                         <Plus className="w-3.5 h-3.5 text-[#82CC00] stroke-[3] opacity-0 group-active:opacity-100 transition-opacity" />
                       </div>
@@ -258,7 +258,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
             <div className="w-full relative px-1">
               <div style={{ backgroundColor: lightTheme.card }} className="relative overflow-hidden rounded-[24px] shadow-sm border border-black/5 min-h-[240px] flex items-center justify-center">
                 {isGifLoading && !getHardcodedGif(currentDetailEx?.name || '') ? (
-                  <div className="flex flex-col items-center gap-4 py-12 text-slate-400">
+                  <div className="flex flex-col items-center gap-4 py-12 text-black">
                     <Loader2 className="w-9 h-9 animate-spin text-black" />
                     <p className="text-[11px] font-black uppercase tracking-widest">載入動作中...</p>
                   </div>
@@ -278,7 +278,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                 <BookOpen className="w-5 h-5" />
                 <h3 className="text-[12px] font-black uppercase tracking-widest">運動方法</h3>
               </div>
-              <p className="text-base font-medium text-slate-500 leading-relaxed italic whitespace-pre-line">
+              <p className="text-base font-medium text-black leading-relaxed italic whitespace-pre-line">
                 {getExerciseMethod(currentDetailEx?.name || "")}
               </p>
             </div>
@@ -293,7 +293,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                   {session.timerStartedAt && (
                     <div className="flex items-center gap-1.5 px-3 py-1 bg-black/5 border border-black/10 rounded-lg">
                       <Timer className="w-3.5 h-3.5 animate-pulse" />
-                      <span className="text-[12px] font-black font-mono">{elapsedTime}</span>
+                      <span className="text-[12px] font-black font-mono text-black">{elapsedTime}</span>
                     </div>
                   )}
                 </div>
@@ -312,8 +312,8 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                 {currentDetailEx!.sets.map((set, index) => (
                   <div key={set.id} className={`grid grid-cols-12 gap-2.5 items-center p-4 rounded-[28px] border transition-all ${set.completed ? 'bg-[#CCFF00]/10 border-[#CCFF00]/40' : 'bg-white border-black/5 shadow-sm'}`}>
                     <div className="col-span-1 flex justify-center">
-                      <button onClick={() => onUpdate({ ...session, exercises: session.exercises.map(e => e.id !== currentDetailEx!.id ? e : { ...e, sets: e.sets.filter(s => s.id !== set.id) }) })} className="text-slate-200 p-1 active:text-red-500">
-                        <MinusCircle className="w-5 h-5" />
+                      <button onClick={() => onUpdate({ ...session, exercises: session.exercises.map(e => e.id !== currentDetailEx!.id ? e : { ...e, sets: e.sets.filter(s => s.id !== set.id) }) })} className="text-black p-1 active:text-red-500">
+                        <Trash2 className="w-5 h-5" />
                       </button>
                     </div>
                     <div className="col-span-1 text-lg font-black italic text-black text-center">
@@ -372,7 +372,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                           if(newComp && context) context.triggerRestTimer(); 
                           onUpdate({ ...session, exercises: session.exercises.map(ex => ex.id === currentDetailEx!.id ? { ...ex, sets: ex.sets.map(s => s.id === set.id ? { ...s, completed: newComp } : s) } : ex) }); 
                         }} 
-                        className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all active:scale-90 border shadow-sm ${set.completed ? 'bg-[#CCFF00] border-[#CCFF00] text-black' : 'bg-slate-50 border-black/5 text-slate-200'}`}
+                        className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all active:scale-90 border shadow-sm ${set.completed ? 'bg-[#CCFF00] border-[#CCFF00] text-black' : 'bg-slate-50 border-black/5 text-black'}`}
                       >
                         <Check className="w-6 h-6 stroke-[4]" />
                       </button>

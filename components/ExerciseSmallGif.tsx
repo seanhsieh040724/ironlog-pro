@@ -28,7 +28,7 @@ export const ExerciseSmallGif: React.FC<ExerciseSmallGifProps> = ({ name }) => {
   }, [name]);
 
   if (loading) {
-    return <div className="w-full h-full flex items-center justify-center bg-slate-50"><Loader2 className="w-4 h-4 animate-spin text-slate-200" /></div>;
+    return <div className="w-full h-full flex items-center justify-center bg-slate-50"><Loader2 className="w-4 h-4 animate-spin text-black" /></div>;
   }
 
   return (
