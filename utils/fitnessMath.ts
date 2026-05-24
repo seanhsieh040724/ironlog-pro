@@ -126,14 +126,14 @@ const EXERCISE_MEDIA_REGISTRY: Record<string, string> = {
   "蝴蝶機夾胸": "https://www.docteur-fitness.com/wp-content/uploads/2000/06/pec-deck-butterfly-exercice-musculation.gif",
   "跪姿繩索夾胸": "https://www.docteur-fitness.com/wp-content/uploads/2023/07/ecarte-a-la-poulie-vis-a-vis-haute-a-genoux.gif",
   "器械上斜推胸": "https://www.docteur-fitness.com/wp-content/uploads/2000/06/developpe-incline-machine-convergente-exercice-musculation.gif",
-  "史密斯上斜臥推": "https://fitliferegime.com/wp-content/uploads/2024/04/Smith-Machine-Incline-Press.gif",
+  "史密斯上斜臥推": "https://images2.imgbox.com/a6/82/teNBnFVf_o.gif",
   "平板繩索飛鳥": "https://modusx.de/wp-content/uploads/cable-crossover-liegend.gif",
   "啞鈴平板飛鳥": "https://fitliferegime.com/wp-content/uploads/2023/06/Dumbbell-Fly.gif",
   "啞鈴上斜飛鳥": "https://fitliferegime.com/wp-content/uploads/2023/06/Incline-Dumbbell-Fly.gif",
   "器械上斜飛鳥": "https://liftmanual.com/wp-content/uploads/2023/04/lever-incline-fly.webp",
   "上斜器械胸推": "https://liftmanual.com/wp-content/uploads/2023/04/lever-incline-chest-press.gif",
   "雙槓撐體輔助": "https://www.docteur-fitness.com/wp-content/uploads/2022/04/dips-assiste-machine.gif",
-  "器械平板胸推": "https://apilyfta.com/static/GymvisualPNG/10411101-Lever-Lying-Chest-Press-(plate-loaded)_Chest_small.png",
+  "仰臥器械胸推": "https://images2.imgbox.com/7e/a4/OJA0HI9E_o.gif",
   "雙槓撐體": "https://i.pinimg.com/originals/e7/45/d6/e745d6fcd41963a8a6d36c4b66c009a9.gif",
   "標準俯地挺身": "https://www.docteur-fitness.com/wp-content/uploads/2020/10/pompe-musculation.gif",
   "槓鈴彎舉": "https://www.docteur-fitness.com/wp-content/uploads/2021/09/curl-barre.gif",
@@ -234,7 +234,7 @@ const EXERCISE_METHODS: Record<string, string> = {
 
   "雙槓撐體輔助": "01 雙膝跪在輔助墊上，雙手握住雙槓，身體微前傾以將重心移向胸部。\n\n02 緩慢彎曲手肘下降身體，直到感受胸肌下緣有明顯的牽拉感與舒張。\n\n03 感覺胸肌下緣收縮發力，利用機器輔助將身體撐回起始位置。",
 
-  "器械平板胸推": "01 平躺於器械推胸機上，雙手握住握把，調整位置使握把位於胸部中線。\n\n02 緩慢控制重量下降，感受胸大肌整體的受壓與舒張。\n\n03 感覺胸肌強力收縮，將握把向上推起，專注於胸肌整體的發力感。",
+  "仰臥器械胸推": "01 平躺於器械推胸機上，雙手握住握把，調整位置使握把位於胸部中線。\n\n02 緩慢控制重量下降，感受胸大肌整體的受壓與舒張。\n\n03 感覺胸肌強力收縮，將握把向上推起，專注於胸肌整體的發力感。",
 
   // 背部 (Back)
   "引體向上": "01 雙手略寬於肩握住單槓，身體自然垂懸，核心收緊，穩定軀幹不晃動。\n\n02 緩慢下降身體回到垂懸狀態，控制下落速度，感受背闊肌兩側的拉伸與舒張。\n\n03 感覺背部肌群收縮時，帶動手肘向下拉，將身體向上拉起直到下巴超過單槓高度。",

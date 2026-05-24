@@ -11,7 +11,7 @@ import { AppContext } from '../App';
 import { lightTheme, CardStyle, TextStyle, InputStyle, ActionButtonStyle } from '../themeStyles';
 
 export const ORGANIZED_EXERCISES: Record<string, string[]> = {
-  'chest': ['槓鈴平板臥推', '槓鈴上斜臥推', '啞鈴平板臥推', '啞鈴上斜臥推', '史密斯平板臥推', '坐姿器械推胸', '蝴蝶機夾胸', '跪姿繩索夾胸', '平板繩索飛鳥', '啞鈴平板飛鳥', '啞鈴上斜飛鳥', '器械上斜飛鳥', '上斜器械胸推', '雙槓撐體輔助', '器械平板胸推', '雙槓撐體', '標準俯地挺身', '器械上斜推胸', '史密斯上斜臥推'],
+  'chest': ['槓鈴平板臥推', '槓鈴上斜臥推', '啞鈴平板臥推', '啞鈴上斜臥推', '史密斯平板臥推', '坐姿器械推胸', '蝴蝶機夾胸', '跪姿繩索夾胸', '平板繩索飛鳥', '啞鈴平板飛鳥', '啞鈴上斜飛鳥', '器械上斜飛鳥', '上斜器械胸推', '雙槓撐體輔助', '仰臥器械胸推', '雙槓撐體', '標準俯地挺身', '器械上斜推胸', '史密斯上斜臥推'],
   'back': ['引體向上', '滑輪下拉', '槓鈴划船', '啞鈴單臂划船', '坐姿划船機', 'T桿划船機', '器械反握高位下拉', '傳統硬舉', '輔助引體向上機', 'V把坐姿划船', '寬握水平划船', '滑輪反握下拉', '器械下拉', '直臂下拉', '啞鈴上斜划船'],
   'shoulders': ['啞鈴肩推', '槓鈴肩推', '阿諾肩推', '器械肩推', '史密斯機肩推', '啞鈴側平舉', '滑輪側平舉', '器械側平舉', '啞鈴前平舉', '蝴蝶機後三角飛鳥', '滑輪面拉', '俯身啞鈴反向飛鳥'],
   'legs': ['槓鈴深蹲', '啞鈴高腳杯蹲', '上斜腿推機', '水平腿推機', '槓鈴臀推', '保加利亞啞鈴分腿蹲', '哈克深蹲', '仰臥腿後勾', '坐姿腿後勾', '器械站姿提踵', '相撲硬舉', '器械腿外展', '器械腿內收', '六角槓硬舉'],
@@ -37,7 +37,7 @@ const getHardcodedGif = (name: string) => {
   if (name === '器械上斜飛鳥') return 'https://liftmanual.com/wp-content/uploads/2023/04/lever-incline-fly.webp';
   if (name === '上斜器械胸推') return 'https://liftmanual.com/wp-content/uploads/2023/04/lever-incline-chest-press.gif';
   if (name === '雙槓撐體輔助') return 'https://www.docteur-fitness.com/wp-content/uploads/2022/04/dips-assiste-machine.gif';
-  if (name === '器械平板胸推') return 'https://apilyfta.com/static/GymvisualPNG/10411101-Lever-Lying-Chest-Press-(plate-loaded)_Chest_small.png';
+  if (name === '仰臥器械胸推') return 'https://images2.imgbox.com/7e/a4/OJA0HI9E_o.gif';
   if (name === '器械下拉') return 'https://i.pinimg.com/originals/8c/de/6c/8cde6c7cab8d14552f7eb07871f649a4.gif';
   if (name === '直臂下拉') return 'https://modusx.de/wp-content/uploads/ueberzuege-kabel-ruecken.gif';
   if (name === '啞鈴上斜划船') return 'https://www.inspireusafoundation.org/wp-content/uploads/2022/10/dumbbell-incline-row.gif';

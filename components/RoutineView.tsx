@@ -23,7 +23,7 @@ const getHardcodedGif = (n: string) => {
   if (n === '器械上斜飛鳥') return 'https://liftmanual.com/wp-content/uploads/2023/04/lever-incline-fly.webp';
   if (n === '上斜器械胸推') return 'https://liftmanual.com/wp-content/uploads/2023/04/lever-incline-chest-press.gif';
   if (n === '雙槓撐體輔助') return 'https://www.docteur-fitness.com/wp-content/uploads/2022/04/dips-assiste-machine.gif';
-  if (n === '器械平板胸推') return 'https://apilyfta.com/static/GymvisualPNG/10411101-Lever-Lying-Chest-Press-(plate-loaded)_Chest_small.png';
+  if (n === '仰臥器械胸推') return 'https://images2.imgbox.com/7e/a4/OJA0HI9E_o.gif';
   if (n === '器械下拉') return 'https://i.pinimg.com/originals/8c/de/6c/8cde6c7cab8d14552f7eb07871f649a4.gif';
   if (n === '直臂下拉') return 'https://modusx.de/wp-content/uploads/ueberzuege-kabel-ruecken.gif';
   if (n === '啞鈴上斜划船') return 'https://www.inspireusafoundation.org/wp-content/uploads/2022/10/dumbbell-incline-row.gif';
