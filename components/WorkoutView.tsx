@@ -235,24 +235,16 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
           </motion.div>
         ) : (
           <motion.div key="detail" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="space-y-6 pb-40">
-            <div className="flex items-center justify-between mb-8 px-1">
-              <div className="flex items-center gap-2 flex-1 min-w-0">
-                <button 
-                  onClick={() => setActiveExerciseId(null)} 
-                  className="p-2 -ml-2 active:scale-90 transition-all shrink-0"
-                >
-                  <ChevronLeft className="w-8 h-8 text-[#82CC00] stroke-[4]" />
-                </button>
-                <h2 style={{ color: lightTheme.text }} className="text-3xl font-black italic uppercase leading-tight py-1">
-                  {currentDetailEx?.name}
-                </h2>
-              </div>
+            <div className="relative flex items-center justify-center mb-8 px-1 min-h-[48px]">
               <button 
-                onClick={() => { if(confirm('移除？')) { onUpdate({ ...session, exercises: session.exercises.filter(e => e.id !== currentDetailEx!.id) }); setActiveExerciseId(null); } }} 
-                className="w-10 h-10 bg-red-50 rounded-xl flex items-center justify-center text-red-400 border border-red-100 active:scale-95 transition-all shrink-0"
+                onClick={() => setActiveExerciseId(null)} 
+                className="absolute left-1 p-2 active:scale-90 transition-all shrink-0 z-10"
               >
-                <Trash2 className="w-4 h-4" />
+                <ChevronLeft className="w-8 h-8 text-[#82CC00] stroke-[4]" />
               </button>
+              <h2 style={{ color: lightTheme.text }} className="text-2xl sm:text-3xl font-black italic uppercase leading-tight py-1 text-center px-12">
+                {currentDetailEx?.name}
+              </h2>
             </div>
 
             <div className="w-full relative px-1">
@@ -293,7 +285,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                   {session.timerStartedAt && (
                     <div className="flex items-center gap-1.5 px-3 py-1 bg-black/5 border border-black/10 rounded-lg">
                       <Timer className="w-3.5 h-3.5 animate-pulse" />
-                      <span className="text-[12px] font-black font-mono text-black">{elapsedTime}</span>
+                      <span className="text-[12px] font-black font-sans text-black">{elapsedTime}</span>
                     </div>
                   )}
                 </div>
@@ -310,7 +302,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
               </div>
               <div className="space-y-4">
                 {currentDetailEx!.sets.map((set, index) => (
-                  <div key={set.id} className={`grid grid-cols-12 gap-2.5 items-center p-4 rounded-[28px] border transition-all ${set.completed ? 'bg-[#CCFF00]/10 border-[#CCFF00]/40' : 'bg-white border-black/5 shadow-sm'}`}>
+                  <div key={set.id} className={`grid grid-cols-12 gap-1 sm:gap-2.5 items-center p-2.5 sm:p-4 rounded-[28px] border border-black transition-all ${set.completed ? 'bg-[#CCFF00]' : 'bg-white shadow-sm'}`}>
                     <div className="col-span-1 flex justify-center">
                       <button onClick={() => onUpdate({ ...session, exercises: session.exercises.map(e => e.id !== currentDetailEx!.id ? e : { ...e, sets: e.sets.filter(s => s.id !== set.id) }) })} className="text-black p-1 active:text-red-500">
                         <Trash2 className="w-5 h-5" />
@@ -320,49 +312,57 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                       {index + 1}
                     </div>
                     
-                    <div className="col-span-4 flex items-center justify-center gap-2 relative">
-                      <input 
-                        type="number" 
-                        value={set.weight || ''} 
-                        placeholder="0" 
-                        onChange={(e) => {
-                          const newWeight = Number(e.target.value);
-                          onUpdate({ 
-                            ...session, 
-                            exercises: session.exercises.map(ex => {
-                              if (ex.id === currentDetailEx!.id) {
-                                const newSets = ex.sets.map((s, i) => {
-                                  if (i >= index) return { ...s, weight: newWeight };
-                                  return s;
-                                });
-                                return { ...ex, sets: newSets };
-                              }
-                              return ex;
-                            }) 
-                          });
-                        }} 
-                        style={{ color: '#000000' }}
-                        className="w-16 bg-slate-100 rounded-xl py-3 text-center text-2xl font-black outline-none border border-black/5 focus:border-black/20 transition-all shadow-inner" 
-                      />
-                      <span className="text-[11px] font-black text-black italic uppercase shrink-0">kg</span>
-                      
-                      {lastPerformedExercise && lastPerformedExercise.sets[index] && (
-                        <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 text-[10px] font-black text-black italic uppercase tracking-wider whitespace-nowrap">
-                          上次: {lastPerformedExercise.sets[index].weight}kg
-                        </div>
-                      )}
+                    <div className="col-span-4 flex items-center justify-center gap-1 sm:gap-2">
+                      <div className="relative">
+                        <input 
+                          type="number" 
+                          value={set.weight || ''} 
+                          placeholder="0" 
+                          onChange={(e) => {
+                            const newWeight = Number(e.target.value);
+                            onUpdate({ 
+                              ...session, 
+                              exercises: session.exercises.map(ex => {
+                                if (ex.id === currentDetailEx!.id) {
+                                  const newSets = ex.sets.map((s, i) => {
+                                    if (i >= index) return { ...s, weight: newWeight };
+                                    return s;
+                                  });
+                                  return { ...ex, sets: newSets };
+                                }
+                                return ex;
+                              }) 
+                            });
+                          }} 
+                          style={{ color: '#000000' }}
+                          className="w-[44px] sm:w-[51px] bg-slate-100 rounded-xl py-2 sm:py-2.5 text-center text-[17px] sm:text-[19px] font-black outline-none border border-black/5 focus:border-black/20 transition-all shadow-inner [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield] appearance-none px-0.5" 
+                        />
+                        {lastPerformedExercise && lastPerformedExercise.sets[index] && (
+                          <div className="absolute -bottom-3.5 left-1/2 -translate-x-1/2 text-[10px] font-black text-black italic uppercase tracking-wider whitespace-nowrap">
+                            上次: {lastPerformedExercise.sets[index].weight}kg
+                          </div>
+                        )}
+                      </div>
+                      <span className="text-[10px] sm:text-[11px] font-black text-black italic uppercase shrink-0">kg</span>
                     </div>
 
-                    <div className="col-span-4 flex items-center justify-center gap-2">
-                      <input 
-                        type="number" 
-                        value={set.reps || ''} 
-                        placeholder="0" 
-                        onChange={(e) => onUpdate({ ...session, exercises: session.exercises.map(ex => ex.id === currentDetailEx!.id ? { ...ex, sets: ex.sets.map(s => s.id === set.id ? { ...s, reps: Number(e.target.value) } : s) } : ex) })} 
-                        style={{ color: '#000000' }}
-                        className="w-16 bg-slate-100 rounded-xl py-3 text-center text-2xl font-black outline-none border border-black/5 focus:border-black/20 transition-all shadow-inner" 
-                      />
-                      <span className="text-[11px] font-black text-black italic uppercase shrink-0">rep</span>
+                    <div className="col-span-4 flex items-center justify-center gap-1 sm:gap-2">
+                      <div className="relative">
+                        <input 
+                          type="number" 
+                          value={set.reps || ''} 
+                          placeholder="0" 
+                          onChange={(e) => onUpdate({ ...session, exercises: session.exercises.map(ex => ex.id === currentDetailEx!.id ? { ...ex, sets: ex.sets.map(s => s.id === set.id ? { ...s, reps: Number(e.target.value) } : s) } : ex) })} 
+                          style={{ color: '#000000' }}
+                          className="w-[44px] sm:w-[51px] bg-slate-100 rounded-xl py-2 sm:py-2.5 text-center text-[17px] sm:text-[19px] font-black outline-none border border-black/5 focus:border-black/20 transition-all shadow-inner [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield] appearance-none px-0.5" 
+                        />
+                        {lastPerformedExercise && lastPerformedExercise.sets[index] && (
+                          <div className="absolute -bottom-3.5 left-1/2 -translate-x-1/2 text-[10px] font-black text-black italic uppercase tracking-wider whitespace-nowrap">
+                            上次: {lastPerformedExercise.sets[index].reps}次
+                          </div>
+                        )}
+                      </div>
+                      <span className="text-[10px] sm:text-[11px] font-black text-black italic uppercase shrink-0">rep</span>
                     </div>
 
                     <div className="col-span-2 flex justify-end">

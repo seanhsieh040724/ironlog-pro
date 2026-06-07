@@ -212,7 +212,7 @@ const IntegratedWorkoutView: React.FC<IntegratedWorkoutViewProps> = ({
                   {timerStartedAt && (
                     <div className="flex items-center gap-1.5 px-3 py-1 bg-black/5 border border-black/10 rounded-lg">
                       <Timer className="w-3.5 h-3.5 animate-pulse" />
-                      <span className="text-[11px] font-black font-mono text-black">{elapsedTime}</span>
+                      <span className="text-[11px] font-black font-sans text-black">{elapsedTime}</span>
                     </div>
                   )}
                 </div>
@@ -230,7 +230,7 @@ const IntegratedWorkoutView: React.FC<IntegratedWorkoutViewProps> = ({
 
               <div className="space-y-4">
                 {ex.sets.map((set, sIdx) => (
-                  <div key={set.id} className={`grid grid-cols-12 gap-2.5 items-center p-4 rounded-[28px] border transition-all ${set.completed ? 'bg-[#CCFF00]/10 border-[#CCFF00]/40' : 'bg-white border-black/5 shadow-sm'}`}>
+                  <div key={set.id} className={`grid grid-cols-12 gap-1 sm:gap-2.5 items-center p-2.5 sm:p-4 rounded-[28px] border transition-all ${set.completed ? 'bg-[#CCFF00] border-black' : 'bg-white border-black/5 shadow-sm'}`}>
                     <div className="col-span-1 flex justify-center">
                       <button onClick={() => removeSetFromEx(exIdx, set.id)} className="text-black p-1 active:text-red-500">
                         <MinusCircle className="w-5 h-5" />
@@ -238,28 +238,28 @@ const IntegratedWorkoutView: React.FC<IntegratedWorkoutViewProps> = ({
                     </div>
                     <div className="col-span-1 text-lg font-black italic text-black text-center">{sIdx + 1}</div>
                     
-                    <div className="col-span-4 flex items-center justify-center gap-2">
+                    <div className="col-span-4 flex items-center justify-center gap-1 sm:gap-2">
                       <input 
                         type="number" 
                         value={set.weight || ''} 
                         placeholder="0" 
                         onChange={e => updateSetData(exIdx, set.id, { weight: Number(e.target.value) }, sIdx)} 
                         style={{ color: '#000000' }}
-                        className="w-16 bg-slate-100 rounded-xl py-3 text-center text-2xl font-black outline-none border border-black/5 focus:border-black/20 transition-all shadow-inner" 
+                        className="w-[44px] sm:w-[51px] bg-slate-100 rounded-xl py-2 sm:py-2.5 text-center text-[17px] sm:text-[19px] font-black outline-none border border-black/5 focus:border-black/20 transition-all shadow-inner [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield] appearance-none px-0.5" 
                       />
-                      <span className="text-[11px] font-black text-black italic uppercase shrink-0">kg</span>
+                      <span className="text-[10px] sm:text-[11px] font-black text-black italic uppercase shrink-0">kg</span>
                     </div>
 
-                    <div className="col-span-4 flex items-center justify-center gap-2">
+                    <div className="col-span-4 flex items-center justify-center gap-1 sm:gap-2">
                       <input 
                         type="number" 
                         value={set.reps || ''} 
                         placeholder="0" 
                         onChange={e => updateSetData(exIdx, set.id, { reps: Number(e.target.value) }, sIdx)} 
                         style={{ color: '#000000' }}
-                        className="w-16 bg-slate-100 rounded-xl py-3 text-center text-2xl font-black outline-none border border-black/5 focus:border-black/20 transition-all shadow-inner" 
+                        className="w-[44px] sm:w-[51px] bg-slate-100 rounded-xl py-2 sm:py-2.5 text-center text-[17px] sm:text-[19px] font-black outline-none border border-black/5 focus:border-black/20 transition-all shadow-inner [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield] appearance-none px-0.5" 
                       />
-                      <span className="text-[11px] font-black text-black italic uppercase shrink-0">rep</span>
+                      <span className="text-[10px] sm:text-[11px] font-black text-black italic uppercase shrink-0">rep</span>
                     </div>
 
                     <div className="col-span-2 flex justify-end">
@@ -623,7 +623,7 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
 
                         <div className="space-y-4">
                           {mockSets.map((set, index) => (
-                            <div key={set.id} className={`grid grid-cols-12 gap-2.5 items-center p-4 rounded-[28px] border transition-all ${set.completed ? 'bg-[#CCFF00]/10 border-[#CCFF00]/40' : 'bg-white border-black/5 shadow-sm'}`}>
+                            <div key={set.id} className={`grid grid-cols-12 gap-1 sm:gap-2.5 items-center p-2.5 sm:p-4 rounded-[28px] border transition-all ${set.completed ? 'bg-[#CCFF00] border-black' : 'bg-white border-black/5 shadow-sm'}`}>
                               <div className="col-span-1 flex justify-center">
                                 <button onClick={() => setMockSets(mockSets.filter(s => s.id !== set.id))} className="text-black p-1 active:text-red-500">
                                   <MinusCircle className="w-5 h-5" />
@@ -631,7 +631,7 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
                               </div>
                               <div className="col-span-1 text-lg font-black italic text-black text-center">{index + 1}</div>
                               
-                              <div className="col-span-4 flex items-center justify-center gap-2">
+                              <div className="col-span-4 flex items-center justify-center gap-1 sm:gap-2">
                                 <input 
                                   type="number" 
                                   value={set.weight || ''} 
@@ -645,21 +645,21 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
                                     }));
                                   }} 
                                   style={{ color: '#000000' }}
-                                  className="w-16 bg-slate-100 rounded-xl py-3 text-center text-2xl font-black outline-none border border-black/5 focus:border-black/20 transition-all shadow-inner" 
+                                  className="w-[44px] sm:w-[51px] bg-slate-100 rounded-xl py-2 sm:py-2.5 text-center text-[17px] sm:text-[19px] font-black outline-none border border-black/5 focus:border-black/20 transition-all shadow-inner [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield] appearance-none px-0.5" 
                                 />
-                                <span className="text-[11px] font-black text-black italic uppercase shrink-0">kg</span>
+                                <span className="text-[10px] sm:text-[11px] font-black text-black italic uppercase shrink-0">kg</span>
                               </div>
 
-                              <div className="col-span-4 flex items-center justify-center gap-2">
+                              <div className="col-span-4 flex items-center justify-center gap-1 sm:gap-2">
                                 <input 
                                   type="number" 
                                   value={set.reps || ''} 
                                   placeholder="0" 
                                   onChange={e => setMockSets(mockSets.map(s => s.id === set.id ? { ...s, reps: Number(e.target.value) } : s))} 
                                   style={{ color: '#000000' }}
-                                  className="w-16 bg-slate-100 rounded-xl py-3 text-center text-2xl font-black outline-none border border-black/5 focus:border-black/20 transition-all shadow-inner" 
+                                  className="w-[44px] sm:w-[51px] bg-slate-100 rounded-xl py-2 sm:py-2.5 text-center text-[17px] sm:text-[19px] font-black outline-none border border-black/5 focus:border-black/20 transition-all shadow-inner [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield] appearance-none px-0.5" 
                                 />
-                                <span className="text-[11px] font-black text-black italic uppercase shrink-0">rep</span>
+                                <span className="text-[10px] sm:text-[11px] font-black text-black italic uppercase shrink-0">rep</span>
                               </div>
 
                               <div className="col-span-2 flex justify-end">
