@@ -845,7 +845,7 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
       </div>
 
       <div className="space-y-6">
-        <p className="text-[10px] font-black text-black uppercase tracking-[0.4em] ml-2">我的自訂課表</p>
+        <p className="text-[12px] font-black text-black uppercase tracking-[0.4em] ml-2">我的自訂課表</p>
         
         <button 
           onClick={() => setIsCreating(true)} 
@@ -887,8 +887,8 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
       </div>
 
       <div className="space-y-10 pt-4">
-        <p className="text-[10px] font-black text-black uppercase tracking-[0.4em] ml-2 flex items-center gap-3">
-           <Layers className="w-5 h-5" /> 科學訓練系統庫
+        <p className="text-[12px] font-black text-black uppercase tracking-[0.4em] ml-2 flex items-center gap-3">
+           <Layers className="w-5 h-5" /> 推薦課表
         </p>
         
         {RECOMMENDED_SYSTEMS.map(system => (
