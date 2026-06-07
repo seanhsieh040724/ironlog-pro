@@ -302,17 +302,17 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
               </div>
               <div className="space-y-4">
                 {currentDetailEx!.sets.map((set, index) => (
-                  <div key={set.id} className={`grid grid-cols-12 gap-1 sm:gap-2.5 items-center p-2.5 sm:p-4 rounded-[28px] border border-black transition-all ${set.completed ? 'bg-[#CCFF00]' : 'bg-white shadow-sm'}`}>
+                  <div key={set.id} className={`grid grid-cols-12 gap-1 sm:gap-2.5 items-center p-3.5 sm:p-5 rounded-[34px] border border-black transition-all ${set.completed ? 'bg-[#CCFF00]' : 'bg-white shadow-sm'}`}>
                     <div className="col-span-1 flex justify-center">
                       <button onClick={() => onUpdate({ ...session, exercises: session.exercises.map(e => e.id !== currentDetailEx!.id ? e : { ...e, sets: e.sets.filter(s => s.id !== set.id) }) })} className="text-black p-1 active:text-red-500">
-                        <Trash2 className="w-5 h-5" />
+                        <Trash2 className="w-6 h-6" />
                       </button>
                     </div>
-                    <div className="col-span-1 text-lg font-black italic text-black text-center">
+                    <div className="col-span-1 text-xl sm:text-2xl font-black italic text-black text-center">
                       {index + 1}
                     </div>
                     
-                    <div className="col-span-4 flex items-center justify-center gap-1 sm:gap-2">
+                    <div className="col-span-4 flex items-center justify-center gap-1.5 sm:gap-2.5">
                       <div className="relative">
                         <input 
                           type="number" 
@@ -332,21 +332,21 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                                 }
                                 return ex;
                               }) 
-                            });
+                             });
                           }} 
                           style={{ color: '#000000' }}
-                          className="w-[44px] sm:w-[51px] bg-slate-100 rounded-xl py-2 sm:py-2.5 text-center text-[17px] sm:text-[19px] font-black outline-none border border-black/5 focus:border-black/20 transition-all shadow-inner [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield] appearance-none px-0.5" 
+                          className="w-[53px] sm:w-[61px] bg-slate-100 rounded-xl py-2.5 sm:py-3 text-center text-[20px] sm:text-[23px] font-black outline-none border border-black/5 focus:border-black/20 transition-all shadow-inner [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield] appearance-none px-0.5" 
                         />
                         {lastPerformedExercise && lastPerformedExercise.sets[index] && (
-                          <div className="absolute -bottom-3.5 left-1/2 -translate-x-1/2 text-[10px] font-black text-black italic uppercase tracking-wider whitespace-nowrap">
+                          <div className="absolute -bottom-[18px] left-1/2 -translate-x-1/2 text-[11px] sm:text-[12px] font-black text-black italic uppercase tracking-wider whitespace-nowrap">
                             上次: {lastPerformedExercise.sets[index].weight}kg
                           </div>
                         )}
                       </div>
-                      <span className="text-[10px] sm:text-[11px] font-black text-black italic uppercase shrink-0">kg</span>
+                      <span className="text-[12px] sm:text-[13px] font-black text-black italic uppercase shrink-0">kg</span>
                     </div>
 
-                    <div className="col-span-4 flex items-center justify-center gap-1 sm:gap-2">
+                    <div className="col-span-4 flex items-center justify-center gap-1.5 sm:gap-2.5">
                       <div className="relative">
                         <input 
                           type="number" 
@@ -354,15 +354,15 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                           placeholder="0" 
                           onChange={(e) => onUpdate({ ...session, exercises: session.exercises.map(ex => ex.id === currentDetailEx!.id ? { ...ex, sets: ex.sets.map(s => s.id === set.id ? { ...s, reps: Number(e.target.value) } : s) } : ex) })} 
                           style={{ color: '#000000' }}
-                          className="w-[44px] sm:w-[51px] bg-slate-100 rounded-xl py-2 sm:py-2.5 text-center text-[17px] sm:text-[19px] font-black outline-none border border-black/5 focus:border-black/20 transition-all shadow-inner [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield] appearance-none px-0.5" 
+                          className="w-[53px] sm:w-[61px] bg-slate-100 rounded-xl py-2.5 sm:py-3 text-center text-[20px] sm:text-[23px] font-black outline-none border border-black/5 focus:border-black/20 transition-all shadow-inner [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield] appearance-none px-0.5" 
                         />
                         {lastPerformedExercise && lastPerformedExercise.sets[index] && (
-                          <div className="absolute -bottom-3.5 left-1/2 -translate-x-1/2 text-[10px] font-black text-black italic uppercase tracking-wider whitespace-nowrap">
+                          <div className="absolute -bottom-[18px] left-1/2 -translate-x-1/2 text-[11px] sm:text-[12px] font-black text-black italic uppercase tracking-wider whitespace-nowrap">
                             上次: {lastPerformedExercise.sets[index].reps}次
                           </div>
                         )}
                       </div>
-                      <span className="text-[10px] sm:text-[11px] font-black text-black italic uppercase shrink-0">rep</span>
+                      <span className="text-[12px] sm:text-[13px] font-black text-black italic uppercase shrink-0">rep</span>
                     </div>
 
                     <div className="col-span-2 flex justify-end">
@@ -372,9 +372,9 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                           if(newComp && context) context.triggerRestTimer(); 
                           onUpdate({ ...session, exercises: session.exercises.map(ex => ex.id === currentDetailEx!.id ? { ...ex, sets: ex.sets.map(s => s.id === set.id ? { ...s, completed: newComp } : s) } : ex) }); 
                         }} 
-                        className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all active:scale-90 border shadow-sm ${set.completed ? 'bg-[#CCFF00] border-[#CCFF00] text-black' : 'bg-slate-50 border-black/5 text-black'}`}
+                        className={`w-[58px] h-[58px] rounded-xl flex items-center justify-center transition-all active:scale-90 border shadow-sm ${set.completed ? 'bg-[#CCFF00] border-[#CCFF00] text-black' : 'bg-slate-50 border-black/5 text-black'}`}
                       >
-                        <Check className="w-6 h-6 stroke-[4]" />
+                        <Check className="w-7 h-7 stroke-[4]" />
                       </button>
                     </div>
                   </div>
