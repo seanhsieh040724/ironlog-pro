@@ -102,7 +102,7 @@ export const RestTimer: React.FC<RestTimerProps> = ({ active, seconds: initialSe
             <Timer className={`w-8 h-8 text-black ${timeLeft > 0 ? 'animate-pulse' : ''}`} />
           </div>
           <h3 className="text-[11px] font-black uppercase tracking-widest mb-1 text-black">組間休息中</h3>
-          <div style={{ color: lightTheme.text }} className="text-7xl font-black font-sans mb-8 transition-colors">
+          <div style={{ color: lightTheme.text }} className="text-7xl font-normal font-sans mb-8 transition-colors">
             {formatTime(timeLeft)}
           </div>
           

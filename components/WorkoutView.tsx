@@ -240,7 +240,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                 onClick={() => setActiveExerciseId(null)} 
                 className="absolute left-1 p-2 active:scale-90 transition-all shrink-0 z-10"
               >
-                <ChevronLeft className="w-8 h-8 text-[#82CC00] stroke-[4]" />
+                <ChevronLeft className="w-8 h-8 text-black stroke-[4]" />
               </button>
               <h2 style={{ color: lightTheme.text }} className="text-2xl sm:text-3xl font-black italic uppercase leading-tight py-1 text-center px-12">
                 {currentDetailEx?.name}

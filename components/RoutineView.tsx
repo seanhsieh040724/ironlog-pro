@@ -506,7 +506,7 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
                     {selectedExName ? (
                       <>
                         <button onClick={() => setSelectedExName(null)} className="p-2 -ml-2 active:scale-90 transition-all shrink-0">
-                          <ChevronLeft className="w-8 h-8 text-[#82CC00] stroke-[4]" />
+                          <ChevronLeft className="w-8 h-8 text-black stroke-[4]" />
                         </button>
                         <h2 style={{ color: lightTheme.text }} className="text-xl font-black italic uppercase leading-tight py-1">
                           {selectedExName}
