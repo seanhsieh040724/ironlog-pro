@@ -113,7 +113,7 @@ export const ProfileView: React.FC = () => {
     <div className="space-y-8 pb-24">
       {/* 個人頂部資訊 */}
       <div style={{ backgroundColor: lightTheme.card }} className="rounded-[40px] p-8 border border-black/5 relative overflow-hidden shadow-sm">
-         <div className="relative z-10 flex items-center gap-7">
+         <div className="relative z-10 flex flex-col items-center gap-5 text-center">
             <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
               <div style={{ backgroundColor: '#E5E5E7' }} className="w-[88px] h-[88px] rounded-[32px] overflow-hidden border-2 border-black/5 flex items-center justify-center shadow-inner relative">
                 {profileImage ? (
@@ -139,27 +139,27 @@ export const ProfileView: React.FC = () => {
               }} />
             </div>
 
-            <div className="flex-1 overflow-hidden">
-              <div className="flex items-center gap-4">
+            <div className="w-full max-w-md overflow-hidden">
+              <div className="flex items-center justify-center gap-2">
                 {isEditingName ? (
                   <input 
                     autoFocus
                     value={userName}
-                    placeholder="點擊以修改名稱"
+                    placeholder="請輸入您的名稱"
                     onChange={(e) => {setUserName(e.target.value); localStorage.setItem('ironlog_user_name', e.target.value);}}
                     onBlur={() => setIsEditingName(false)}
-                    className="bg-transparent border-b border-black text-3xl font-black italic text-black outline-none w-full uppercase placeholder:opacity-50"
+                    className="bg-transparent border-b border-black text-[21px] font-black italic text-black outline-none w-full text-center uppercase placeholder:opacity-40 placeholder:font-normal placeholder:not-italic placeholder:text-zinc-400"
                   />
                 ) : (
                   <h3 
                     onClick={() => setIsEditingName(true)} 
-                    style={{ color: lightTheme.text }} 
-                    className={`text-3xl font-black italic uppercase tracking-tighter truncate pr-2 ${!userName ? 'opacity-50' : ''}`}
+                    style={{ color: !userName ? '#9CA3AF' : lightTheme.text }} 
+                    className={`text-[21px] uppercase tracking-tighter truncate cursor-pointer ${!userName ? 'font-normal opacity-50 not-italic text-stone-400' : 'font-black italic'}`}
                   >
-                    {userName || '點擊以修改名稱'}
+                    {userName || '請輸入您的名稱'}
                   </h3>
                 )}
-                <Edit3 className="w-6 h-6 text-black shrink-0" />
+                <Edit3 onClick={() => setIsEditingName(true)} className="w-5 h-5 text-black shrink-0 cursor-pointer" />
               </div>
             </div>
          </div>
