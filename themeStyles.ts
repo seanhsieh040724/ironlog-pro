@@ -17,7 +17,7 @@ export const ContainerStyle = {
   backgroundColor: lightTheme.bg,
   color: lightTheme.text,
   minHeight: '100vh',
-  fontFamily: "'Outfit', sans-serif"
+  fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "SF Pro", "PingFang TC", "PingFang SC", "Helvetica Neue", Helvetica, Arial, sans-serif'
 };
 
 // 運動卡片/容器樣式
@@ -33,7 +33,6 @@ export const CardStyle = {
 export const TextStyle = {
   color: lightTheme.text,
   fontWeight: '900',
-  fontStyle: 'italic',
   textTransform: 'uppercase' as const
 };
 

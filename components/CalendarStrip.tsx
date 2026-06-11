@@ -68,7 +68,7 @@ export const CalendarStrip: React.FC<CalendarStripProps> = ({ selectedDate, onDa
             <CalendarIcon className="w-5 h-5 text-black" />
           </div>
           <div className="overflow-hidden">
-            <h3 style={{ color: lightTheme.text }} className="text-2xl sm:text-3xl font-black italic uppercase tracking-tighter leading-none truncate whitespace-nowrap">
+            <h3 style={{ color: lightTheme.text }} className="text-2xl sm:text-3xl font-black uppercase tracking-tighter leading-none truncate whitespace-nowrap">
               {format(viewDate, 'yyyy MMM', { locale: zhTW })}
             </h3>
             <p className="text-[11px] font-black text-black uppercase tracking-widest mt-1 truncate">

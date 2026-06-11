@@ -32,8 +32,8 @@ export const MuscleHeatmap: React.FC<MuscleHeatmapProps> = ({ scores }) => {
         
         {/* 頂部文字標籤 */}
         <div className="absolute top-6 left-0 right-0 flex justify-around pointer-events-none px-12">
-          <span className="text-[11px] font-black text-slate-400 uppercase tracking-[0.4em] italic">正面視圖</span>
-          <span className="text-[11px] font-black text-slate-400 uppercase tracking-[0.4em] italic">背面視圖</span>
+          <span className="text-[11px] font-black text-slate-400 uppercase tracking-[0.4em]">正面視圖</span>
+          <span className="text-[11px] font-black text-slate-400 uppercase tracking-[0.4em]">背面視圖</span>
         </div>
 
         <svg viewBox="0 0 800 500" className="w-full h-full drop-shadow-sm">

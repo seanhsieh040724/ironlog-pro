@@ -167,7 +167,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                   placeholder="搜尋動作庫..." 
                   value={searchTerm} 
                   onChange={e => setSearchTerm(e.target.value)} 
-                  className="bg-transparent w-full text-lg font-black italic outline-none placeholder:text-black" 
+                  className="bg-transparent w-full text-lg font-black outline-none placeholder:text-black" 
                   style={{ color: lightTheme.text }}
                 />
               </div>
@@ -201,7 +201,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                       </div>
                       <div className="text-left overflow-hidden">
                         <div className="text-[12px] font-black uppercase tracking-widest leading-none text-black">建立自訂動作</div>
-                        <div style={{ color: lightTheme.text }} className="text-lg font-black italic uppercase leading-tight mt-1.5 pr-2">{searchTerm}</div>
+                        <div style={{ color: lightTheme.text }} className="text-lg font-black uppercase leading-tight mt-1.5 pr-2">{searchTerm}</div>
                       </div>
                     </div>
                     <ChevronRight className="w-5 h-5 text-[#82CC00] stroke-[3]" />
@@ -220,7 +220,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                       <ExerciseSmallGif name={exName} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div style={{ color: lightTheme.text }} className="text-[16px] font-black italic uppercase leading-tight py-0.5 pr-1">
+                      <div style={{ color: lightTheme.text }} className="text-[16px] font-black uppercase leading-tight py-0.5 pr-1">
                         {exName}
                       </div>
                       <div className="text-[11px] font-bold text-black uppercase tracking-widest mt-1.5 flex items-center justify-between">
@@ -242,7 +242,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
               >
                 <ChevronLeft className="w-8 h-8 text-black stroke-[4]" />
               </button>
-              <h2 style={{ color: lightTheme.text }} className="text-2xl sm:text-3xl font-black italic uppercase leading-tight py-1 text-center px-12">
+              <h2 style={{ color: lightTheme.text }} className="text-2xl sm:text-3xl font-black uppercase leading-tight py-1 text-center px-12">
                 {currentDetailEx?.name}
               </h2>
             </div>
@@ -270,7 +270,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                 <BookOpen className="w-5 h-5" />
                 <h3 className="text-[12px] font-black uppercase tracking-widest">運動方法</h3>
               </div>
-              <p className="text-base font-medium text-black leading-relaxed italic whitespace-pre-line">
+              <p className="text-base font-medium text-black leading-relaxed whitespace-pre-line">
                 {getExerciseMethod(currentDetailEx?.name || "")}
               </p>
             </div>
@@ -280,7 +280,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                 <div className="flex items-center gap-4">
                   <div className="flex items-center gap-2.5">
                     <Target className="w-5 h-5 text-black" />
-                    <h3 style={{ color: lightTheme.text }} className="text-base font-black italic uppercase">訓練錄入</h3>
+                    <h3 style={{ color: lightTheme.text }} className="text-base font-black uppercase">訓練錄入</h3>
                   </div>
                   {session.timerStartedAt && (
                     <div className="flex items-center gap-1.5 px-3 py-1 bg-black/5 border border-black/10 rounded-lg">
@@ -308,7 +308,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                         <Trash2 className="w-6 h-6" />
                       </button>
                     </div>
-                    <div className="col-span-1 text-xl sm:text-2xl font-black italic text-black text-center">
+                    <div className="col-span-1 text-xl sm:text-2xl font-black text-black text-center">
                       {index + 1}
                     </div>
                     
@@ -338,12 +338,12 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                           className="w-[53px] sm:w-[61px] bg-slate-100 rounded-xl py-2.5 sm:py-3 text-center text-[20px] sm:text-[23px] font-black outline-none border border-black/5 focus:border-black/20 transition-all shadow-inner [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield] appearance-none px-0.5" 
                         />
                         {lastPerformedExercise && lastPerformedExercise.sets[index] && (
-                          <div className="absolute -bottom-[18px] left-1/2 -translate-x-1/2 text-[11px] sm:text-[12px] font-black text-black italic uppercase tracking-wider whitespace-nowrap">
+                          <div className="absolute -bottom-[18px] left-1/2 -translate-x-1/2 text-[11px] sm:text-[12px] font-black text-black uppercase tracking-wider whitespace-nowrap">
                             上次: {lastPerformedExercise.sets[index].weight}kg
                           </div>
                         )}
                       </div>
-                      <span className="text-[12px] sm:text-[13px] font-black text-black italic uppercase shrink-0">kg</span>
+                      <span className="text-[12px] sm:text-[13px] font-black text-black uppercase shrink-0">kg</span>
                     </div>
 
                     <div className="col-span-4 flex items-center justify-center gap-1.5 sm:gap-2.5">
@@ -357,12 +357,12 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                           className="w-[53px] sm:w-[61px] bg-slate-100 rounded-xl py-2.5 sm:py-3 text-center text-[20px] sm:text-[23px] font-black outline-none border border-black/5 focus:border-black/20 transition-all shadow-inner [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield] appearance-none px-0.5" 
                         />
                         {lastPerformedExercise && lastPerformedExercise.sets[index] && (
-                          <div className="absolute -bottom-[18px] left-1/2 -translate-x-1/2 text-[11px] sm:text-[12px] font-black text-black italic uppercase tracking-wider whitespace-nowrap">
+                          <div className="absolute -bottom-[18px] left-1/2 -translate-x-1/2 text-[11px] sm:text-[12px] font-black text-black uppercase tracking-wider whitespace-nowrap">
                             上次: {lastPerformedExercise.sets[index].reps}次
                           </div>
                         )}
                       </div>
-                      <span className="text-[12px] sm:text-[13px] font-black text-black italic uppercase shrink-0">rep</span>
+                      <span className="text-[12px] sm:text-[13px] font-black text-black uppercase shrink-0">rep</span>
                     </div>
 
                     <div className="col-span-2 flex justify-end">
@@ -389,7 +389,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                     onFinish();
                   }} 
                   style={{ backgroundColor: '#000000', color: '#FFFFFF' }}
-                  className="w-full font-black h-14 rounded-2xl uppercase italic text-lg active:scale-95 transition-all shadow-xl flex items-center justify-center gap-3 tracking-tighter"
+                  className="w-full font-black h-14 rounded-2xl uppercase text-lg active:scale-95 transition-all shadow-xl flex items-center justify-center gap-3 tracking-tighter"
                 >
                   <Save className="w-5 h-5 stroke-[2.5]" style={{ color: lightTheme.accent }} /> 儲存訓練
                 </button>

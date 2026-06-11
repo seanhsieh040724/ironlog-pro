@@ -41,21 +41,21 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise, onDelete }
             <span className="text-[10px] font-bold text-slate-500 uppercase mb-1 tracking-wider">Weight</span>
             <div className="flex items-baseline">
               <span className="text-xl font-black text-white">{exercise.weight}</span>
-              <span className="ml-1 text-[10px] font-bold text-indigo-500 italic uppercase">KG</span>
+              <span className="ml-1 text-[10px] font-bold text-indigo-500 uppercase">KG</span>
             </div>
           </div>
           <div className="flex flex-col p-4 bg-black/40 rounded-2xl border border-white/5">
             <span className="text-[10px] font-bold text-slate-500 uppercase mb-1 tracking-wider">Sets</span>
             <div className="flex items-baseline">
               <span className="text-xl font-black text-white">{exercise.sets}</span>
-              <span className="ml-1 text-[10px] font-bold text-purple-500 italic uppercase">SET</span>
+              <span className="ml-1 text-[10px] font-bold text-purple-500 uppercase">SET</span>
             </div>
           </div>
           <div className="flex flex-col p-4 bg-black/40 rounded-2xl border border-white/5">
             <span className="text-[10px] font-bold text-slate-500 uppercase mb-1 tracking-wider">Reps</span>
             <div className="flex items-baseline">
               <span className="text-xl font-black text-white">{exercise.reps}</span>
-              <span className="ml-1 text-[10px] font-bold text-fuchsia-500 italic uppercase">REP</span>
+              <span className="ml-1 text-[10px] font-bold text-fuchsia-500 uppercase">REP</span>
             </div>
           </div>
         </div>

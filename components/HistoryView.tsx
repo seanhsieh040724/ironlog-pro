@@ -161,7 +161,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
         <div className="flex items-center justify-between px-2">
           <div className="flex items-center gap-3 text-slate-400">
              <CalendarDays className="w-5 h-5 text-black" />
-             <h2 style={{ color: lightTheme.text }} className="text-xl font-black italic tracking-tighter uppercase pr-2">
+             <h2 style={{ color: lightTheme.text }} className="text-xl font-black tracking-tighter uppercase pr-2">
                訓練日報 <span className="text-black">/ {format(selectedDate, 'MM.dd')}</span>
              </h2>
           </div>
@@ -189,9 +189,9 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
             >
               <div className="flex justify-between items-start">
                 <div className="space-y-2">
-                  <h4 style={{ color: lightTheme.text }} className="text-xl font-black italic uppercase leading-tight pr-3">當日總訓練</h4>
+                  <h4 style={{ color: lightTheme.text }} className="text-xl font-black uppercase leading-tight pr-3">當日總訓練</h4>
                   <div className="flex flex-wrap items-center gap-3 mt-2">
-                    <span style={{ backgroundColor: lightTheme.card, color: lightTheme.text }} className="flex items-center gap-2 border border-black/5 px-3 py-1.5 rounded-xl text-sm font-black italic shadow-inner">
+                    <span style={{ backgroundColor: lightTheme.card, color: lightTheme.text }} className="flex items-center gap-2 border border-black/5 px-3 py-1.5 rounded-xl text-sm font-black shadow-inner">
                       <Timer className="w-3.5 h-3.5 text-black" /> {dailyStats.totalMinutes} 分鐘
                     </span>
                     <span style={{ backgroundColor: lightTheme.card, color: '#6E6E73' }} className="border border-black/5 px-3 py-1.5 rounded-xl text-sm font-black">
@@ -227,7 +227,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
                                 exit={{ opacity: 0 }}
                                 className="absolute inset-0 z-[110] bg-red-500/95 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center"
                               >
-                                <p className="text-white font-black italic text-xl mb-4 uppercase tracking-tighter">確定要刪除此動作？</p>
+                                <p className="text-white font-black text-xl mb-4 uppercase tracking-tighter">確定要刪除此動作？</p>
                                 <div className="flex gap-3 w-full">
                                   <button 
                                     onClick={() => executeDeleteExercise(session.id, ex.id)}
@@ -264,7 +264,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
                               <ExerciseSmallGif name={ex.name} />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <span style={{ color: lightTheme.text }} className="text-xl font-black italic uppercase tracking-tight leading-tight py-1 block">{ex.name}</span>
+                              <span style={{ color: lightTheme.text }} className="text-xl font-black uppercase tracking-tight leading-tight py-1 block">{ex.name}</span>
                               <div className="text-[11px] font-black text-slate-400 uppercase tracking-widest mt-1">
                                 {getMuscleGroupDisplay(ex.muscleGroup).cn} • {ex.sets.length} 組
                               </div>
@@ -275,16 +275,16 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
                             {ex.sets.map((set, sIdx) => (
                               <div key={set.id} className="flex items-center justify-between py-2.5 px-4 bg-white/50 rounded-2xl border border-black/[0.03]">
                                 <div className="flex items-center gap-3">
-                                  <span className="text-[11px] font-black text-slate-300 italic w-4">#{sIdx + 1}</span>
+                                  <span className="text-[11px] font-black text-slate-300 w-4">#{sIdx + 1}</span>
                                   <div className="flex items-center gap-1">
-                                    <span style={{ color: lightTheme.text }} className="text-lg font-black italic">{set.weight}</span>
-                                    <span className="text-[10px] font-black text-black uppercase italic">kg</span>
+                                    <span style={{ color: lightTheme.text }} className="text-lg font-black">{set.weight}</span>
+                                    <span className="text-[10px] font-black text-black uppercase">kg</span>
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-4">
                                   <div className="flex items-center gap-1">
-                                    <span style={{ color: lightTheme.text }} className="text-lg font-black italic">{set.reps}</span>
-                                    <span className="text-[10px] font-black text-black uppercase italic">reps</span>
+                                    <span style={{ color: lightTheme.text }} className="text-lg font-black">{set.reps}</span>
+                                    <span className="text-[10px] font-black text-black uppercase">reps</span>
                                   </div>
                                   <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${set.completed ? 'bg-[#CCFF00] text-black' : 'bg-slate-100 text-slate-200'}`}>
                                     <Check className="w-3.5 h-3.5 stroke-[4]" />
@@ -319,7 +319,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
                 <BarChart3 className="w-6 h-6 text-black" />
               </div>
               <div>
-                <h3 style={{ color: lightTheme.text }} className="text-lg font-black italic uppercase tracking-tighter pr-2">訓練容量分布</h3>
+                <h3 style={{ color: lightTheme.text }} className="text-lg font-black uppercase tracking-tighter pr-2">訓練容量分布</h3>
                 <p className="text-[10px] font-black text-black uppercase tracking-widest mt-1">累積負荷分析</p>
               </div>
            </div>
@@ -350,7 +350,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
                         </div>
                      </div>
                      <div className="text-right">
-                        <span className={setTotal > 0 ? "text-2xl font-black italic text-black" : "text-slate-200 font-black italic text-xl"}>{setTotal}</span>
+                        <span className={setTotal > 0 ? "text-2xl font-black text-black" : "text-slate-200 font-black text-xl"}>{setTotal}</span>
                         <span className="text-[9px] font-black text-black uppercase ml-1.5">Sets</span>
                      </div>
                   </div>
@@ -392,7 +392,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
                 <Clock className="w-5 h-5 text-black" />
               </div>
               <div>
-                <h3 className="text-base font-black italic uppercase tracking-tighter pr-2 text-black">每週訓練時數</h3>
+                <h3 className="text-base font-black uppercase tracking-tighter pr-2 text-black">每週訓練時數</h3>
                 <p className="text-[10px] font-black text-black opacity-50 uppercase tracking-widest mt-0.5">
                   {format(chartWeekStart, 'yyyy.MM.dd')} - {format(endOfWeek(chartWeekStart, { weekStartsOn: 1 }), 'MM.dd')}
                 </p>

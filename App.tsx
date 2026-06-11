@@ -246,7 +246,7 @@ const App: React.FC = () => {
                       <Calendar className="w-6 h-6 text-black" />
                     </div>
                     <div>
-                      <h1 style={{ color: lightTheme.text }} className="text-3xl font-black italic uppercase tracking-tighter leading-none">
+                      <h1 style={{ color: lightTheme.text }} className="text-3xl font-black uppercase tracking-tighter leading-none">
                         {(() => {
                           const d = new Date();
                           const weekDays = ['週日', '週一', '週二', '週三', '週四', '週五', '週六'];

@@ -20,7 +20,7 @@ export const Header: React.FC<HeaderProps> = ({ totalSets }) => {
             <span className="text-xl font-extrabold leading-none mt-1">{dateStr}</span>
           </div>
           <div>
-            <h1 className="text-2xl font-black italic tracking-tighter text-white">FIT<span className="text-indigo-500">PRO</span></h1>
+            <h1 className="text-2xl font-black tracking-tighter text-white">FIT<span className="text-indigo-500">PRO</span></h1>
             <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest leading-none">{monthStr} WORKOUT SESSION</p>
           </div>
         </div>

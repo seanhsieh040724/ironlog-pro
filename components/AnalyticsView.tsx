@@ -82,21 +82,21 @@ export const AnalyticsView: React.FC<{ history: WorkoutSession[] }> = ({ history
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="text-2xl font-black italic uppercase tracking-tight mb-2">訓練進度分析</h2>
+        <h2 className="text-2xl font-black uppercase tracking-tight mb-2">訓練進度分析</h2>
         <p className="text-sm text-slate-500 font-bold uppercase tracking-widest">Visualizing your progress</p>
       </div>
 
       {chartData ? (
         <div className="glass-card rounded-[32px] p-6">
           <div className="flex justify-between items-center mb-6">
-            <h3 className="font-black italic text-electric uppercase tracking-tighter">{targetEx} 重量成長趨勢</h3>
+            <h3 className="font-black text-electric uppercase tracking-tighter">{targetEx} 重量成長趨勢</h3>
           </div>
           <div className="h-64">
             <Line data={chartData} options={options} />
           </div>
         </div>
       ) : (
-        <div className="py-20 text-center opacity-30 italic font-medium">紀錄更多訓練以生成圖表</div>
+        <div className="py-20 text-center opacity-30 font-medium">紀錄更多訓練以生成圖表</div>
       )}
 
       <div className="grid grid-cols-2 gap-4">
@@ -110,6 +110,6 @@ export const AnalyticsView: React.FC<{ history: WorkoutSession[] }> = ({ history
 const StatCard = ({ label, value }: any) => (
   <div className="glass-card rounded-3xl p-5 border-white/5">
     <div className="text-[11px] font-black text-slate-500 uppercase tracking-widest mb-1">{label}</div>
-    <div className="text-4xl font-black text-white italic">{value}</div>
+    <div className="text-4xl font-black text-white">{value}</div>
   </div>
 );

@@ -37,7 +37,7 @@ export const AddExerciseModal: React.FC<AddExerciseModalProps> = ({ isOpen, onCl
         
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h2 className="text-3xl font-black text-white italic tracking-tighter uppercase">NEW ENTRY</h2>
+            <h2 className="text-3xl font-black text-white tracking-tighter uppercase">NEW ENTRY</h2>
             <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mt-1">紀錄你的訓練汗水</p>
           </div>
           <button onClick={onClose} className="w-10 h-10 bg-slate-900 rounded-full flex items-center justify-center text-slate-500 transition-all active:scale-90">

@@ -37,12 +37,12 @@ export const AchievementModal: React.FC<AchievementModalProps> = ({ achievement,
            </div>
         </div>
 
-        <h2 className="text-3xl font-black italic tracking-tighter text-neon-green uppercase mb-2">
+        <h2 className="text-3xl font-black tracking-tighter text-neon-green uppercase mb-2">
           {achievement.title}
         </h2>
         
         <p className="text-white font-bold mb-6">
-          你在 <span className="text-sunset uppercase italic">{achievement.exerciseName}</span> <br/>
+          你在 <span className="text-sunset uppercase">{achievement.exerciseName}</span> <br/>
           打破了個人重量紀錄！
         </p>
 

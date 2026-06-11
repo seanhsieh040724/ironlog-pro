@@ -112,56 +112,54 @@ export const ProfileView: React.FC = () => {
   return (
     <div className="space-y-8 pb-24">
       {/* 個人頂部資訊 */}
-      <div style={{ backgroundColor: lightTheme.card }} className="rounded-[40px] p-8 border border-black/5 relative overflow-hidden shadow-sm">
-         <div className="relative z-10 flex flex-col items-center gap-5 text-center">
-            <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
-              <div style={{ backgroundColor: '#E5E5E7' }} className="w-[88px] h-[88px] rounded-[32px] overflow-hidden border-2 border-black/5 flex items-center justify-center shadow-inner relative">
-                {profileImage ? (
-                  <img src={profileImage} alt="Profile" className="w-full h-full object-cover" />
-                ) : (
-                  <User className="w-11 h-11 text-black" />
-                )}
-                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <Camera className="text-white w-7 h-7" />
-                </div>
-              </div>
-              <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) {
-                  const reader = new FileReader();
-                  reader.onloadend = () => {
-                    const b64 = reader.result as string;
-                    setProfileImage(b64);
-                    localStorage.setItem('ironlog_user_avatar', b64);
-                  };
-                  reader.readAsDataURL(file);
-                }
-              }} />
-            </div>
+      <div className="flex flex-col items-center gap-5 py-4 text-center">
+         <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
+           <div style={{ backgroundColor: '#E5E5E7' }} className="w-[88px] h-[88px] rounded-[32px] overflow-hidden border-2 border-black/5 flex items-center justify-center shadow-inner relative">
+             {profileImage ? (
+               <img src={profileImage} alt="Profile" className="w-full h-full object-cover" />
+             ) : (
+               <User className="w-11 h-11 text-black" />
+             )}
+             <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+               <Camera className="text-white w-7 h-7" />
+             </div>
+           </div>
+           <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={(e) => {
+             const file = e.target.files?.[0];
+             if (file) {
+               const reader = new FileReader();
+               reader.onloadend = () => {
+                 const b64 = reader.result as string;
+                 setProfileImage(b64);
+                 localStorage.setItem('ironlog_user_avatar', b64);
+               };
+               reader.readAsDataURL(file);
+             }
+           }} />
+         </div>
 
-            <div className="w-full max-w-md overflow-hidden">
-              <div className="flex items-center justify-center gap-2">
-                {isEditingName ? (
-                  <input 
-                    autoFocus
-                    value={userName}
-                    placeholder="請輸入您的名稱"
-                    onChange={(e) => {setUserName(e.target.value); localStorage.setItem('ironlog_user_name', e.target.value);}}
-                    onBlur={() => setIsEditingName(false)}
-                    className="bg-transparent border-b border-black text-[21px] font-black italic text-black outline-none w-full text-center uppercase placeholder:opacity-40 placeholder:font-normal placeholder:not-italic placeholder:text-zinc-400"
-                  />
-                ) : (
-                  <h3 
-                    onClick={() => setIsEditingName(true)} 
-                    style={{ color: !userName ? '#9CA3AF' : lightTheme.text }} 
-                    className={`text-[21px] uppercase tracking-tighter truncate cursor-pointer ${!userName ? 'font-normal opacity-50 not-italic text-stone-400' : 'font-black italic'}`}
-                  >
-                    {userName || '請輸入您的名稱'}
-                  </h3>
-                )}
-                <Edit3 onClick={() => setIsEditingName(true)} className="w-5 h-5 text-black shrink-0 cursor-pointer" />
-              </div>
-            </div>
+         <div className="w-full max-w-md overflow-hidden">
+           <div className="flex items-center justify-center gap-2">
+             {isEditingName ? (
+               <input 
+                 autoFocus
+                 value={userName}
+                 placeholder="請輸入您的名稱"
+                 onChange={(e) => {setUserName(e.target.value); localStorage.setItem('ironlog_user_name', e.target.value);}}
+                 onBlur={() => setIsEditingName(false)}
+                 className="bg-transparent border-b border-black text-[21px] font-black text-black outline-none w-full text-center uppercase placeholder:opacity-40 placeholder:font-normal placeholder:text-zinc-400"
+               />
+             ) : (
+               <h3 
+                 onClick={() => setIsEditingName(true)} 
+                 style={{ color: !userName ? '#9CA3AF' : lightTheme.text }} 
+                 className={`text-[21px] uppercase tracking-tighter truncate cursor-pointer ${!userName ? 'font-normal opacity-50 text-stone-400' : 'font-black'}`}
+               >
+                 {userName || '請輸入您的名稱'}
+               </h3>
+             )}
+             <Edit3 onClick={() => setIsEditingName(true)} className="w-5 h-5 text-black shrink-0 cursor-pointer" />
+           </div>
          </div>
       </div>
 
@@ -173,14 +171,14 @@ export const ProfileView: React.FC = () => {
                 <Activity className="w-7 h-7 text-black" />
              </div>
              <div>
-               <h3 style={{ color: lightTheme.text }} className="text-[19px] font-black italic uppercase tracking-tighter leading-none">身體資料分析</h3>
+               <h3 style={{ color: lightTheme.text }} className="text-[19px] font-black uppercase tracking-tighter leading-none">身體資料分析</h3>
                <p className="text-[11.4px] font-black text-black uppercase tracking-widest mt-1.5">生理指標監測</p>
              </div>
            </div>
            
            <button 
              onClick={handleSaveMetrics} 
-             className={`px-[18px] py-[9px] rounded-xl font-black uppercase italic transition-all flex items-center gap-2 text-[11.7px] border border-[#82CC00]/20 ${isMetricsSaved ? 'bg-emerald-500 text-white border-emerald-500' : 'bg-white text-[#82CC00] active:scale-95 shadow-sm'}`}
+             className={`px-[18px] py-[9px] rounded-xl font-black uppercase transition-all flex items-center gap-2 text-[11.7px] border border-[#82CC00]/20 ${isMetricsSaved ? 'bg-emerald-500 text-white border-emerald-500' : 'bg-white text-[#82CC00] active:scale-95 shadow-sm'}`}
            >
              {isMetricsSaved ? <CheckCircle2 className="w-4 h-4" /> : <Save className="w-4 h-4" />}
              {isMetricsSaved ? '已儲存' : '儲存'}
@@ -221,7 +219,7 @@ export const ProfileView: React.FC = () => {
           <div style={{ backgroundColor: lightTheme.card }} className="px-7 py-6 rounded-[28px] border border-black/5 flex flex-col gap-2 shadow-inner">
             <span className="text-[12px] font-black uppercase text-black tracking-widest">當前 BMI 指數</span>
             <div className="flex items-baseline justify-between">
-              <span style={{ color: lightTheme.text }} className="text-[44px] font-black italic">{bmi || '--'}</span>
+              <span style={{ color: lightTheme.text }} className="text-[44px] font-black">{bmi || '--'}</span>
               <span className={`text-[12px] font-black uppercase px-5 py-2 rounded-full border border-white bg-white shadow-sm ${bmiAnalysis.color}`}>{bmi > 0 ? bmiAnalysis.label : '未設定'}</span>
             </div>
           </div>
@@ -236,13 +234,13 @@ export const ProfileView: React.FC = () => {
                  <Target className="w-7 h-7 text-black" />
                </div>
                <div>
-                 <h3 style={{ color: lightTheme.text }} className="text-[19px] font-black italic uppercase tracking-tighter leading-none">營養建議藍圖</h3>
+                 <h3 style={{ color: lightTheme.text }} className="text-[19px] font-black uppercase tracking-tighter leading-none">營養建議藍圖</h3>
                  <p className="text-[11.4px] font-black text-black uppercase tracking-widest mt-1.5">目標規劃與熱量分析</p>
                </div>
             </div>
             <button 
               onClick={handleSaveGoal} 
-              className={`px-[18px] py-[9px] rounded-xl font-black uppercase italic transition-all flex items-center gap-2 text-[11.7px] border border-[#82CC00]/20 ${isGoalSaved ? 'bg-emerald-500 text-white border-emerald-500' : 'bg-white text-[#82CC00] active:scale-95 shadow-sm'}`}
+              className={`px-[18px] py-[9px] rounded-xl font-black uppercase transition-all flex items-center gap-2 text-[11.7px] border border-[#82CC00]/20 ${isGoalSaved ? 'bg-emerald-500 text-white border-emerald-500' : 'bg-white text-[#82CC00] active:scale-95 shadow-sm'}`}
             >
               {isGoalSaved ? <CheckCircle2 className="w-4 h-4" /> : <Save className="w-4 h-4" />}
               {isGoalSaved ? '已儲存' : '儲存'}
@@ -313,7 +311,7 @@ export const ProfileView: React.FC = () => {
                        type="number" 
                        value={tempGoal.proteinRatio || ''} 
                        onChange={e => setTempGoal({ ...tempGoal, proteinRatio: Number(e.target.value) })}
-                       className="w-full bg-white border border-black/5 rounded-xl py-3 text-center text-base font-black italic shadow-sm outline-none focus:border-rose-400/50"
+                       className="w-full bg-white border border-black/5 rounded-xl py-3 text-center text-base font-black shadow-sm outline-none focus:border-rose-400/50"
                        placeholder="--"
                      />
                    </div>
@@ -323,7 +321,7 @@ export const ProfileView: React.FC = () => {
                        type="number" 
                        value={tempGoal.carbRatio || ''} 
                        onChange={e => setTempGoal({ ...tempGoal, carbRatio: Number(e.target.value) })}
-                       className="w-full bg-white border border-black/5 rounded-xl py-3 text-center text-base font-black italic shadow-sm outline-none focus:border-amber-400/50"
+                       className="w-full bg-white border border-black/5 rounded-xl py-3 text-center text-base font-black shadow-sm outline-none focus:border-amber-400/50"
                        placeholder="--"
                      />
                    </div>
@@ -333,12 +331,12 @@ export const ProfileView: React.FC = () => {
                        type="number" 
                        value={tempGoal.fatRatio || ''} 
                        onChange={e => setTempGoal({ ...tempGoal, fatRatio: Number(e.target.value) })}
-                       className="w-full bg-white border border-black/5 rounded-xl py-3 text-center text-base font-black italic shadow-sm outline-none focus:border-indigo-400/50"
+                       className="w-full bg-white border border-black/5 rounded-xl py-3 text-center text-base font-black shadow-sm outline-none focus:border-indigo-400/50"
                        placeholder="--"
                      />
                    </div>
                  </div>
-                 <p className="text-[9px] font-medium text-black mt-5 leading-relaxed italic text-center">
+                 <p className="text-[9px] font-medium text-black mt-5 leading-relaxed text-center">
                    * 若不設定比例，系統將根據目標 (減脂/增肌/維持) 提供預設建議。
                  </p>
                </div>
@@ -350,8 +348,8 @@ export const ProfileView: React.FC = () => {
                 <span className="text-[11px] font-black uppercase text-black tracking-widest">建議每日熱量 (TDEE)</span>
               </div>
               <div className="flex items-baseline gap-2">
-                <span style={{ color: lightTheme.text }} className="text-[44px] font-black italic">{suggestedCalories || '--'}</span>
-                <span className="text-sm font-black text-black italic">KCAL</span>
+                <span style={{ color: lightTheme.text }} className="text-[44px] font-black">{suggestedCalories || '--'}</span>
+                <span className="text-sm font-black text-black">KCAL</span>
               </div>
             </div>
 
@@ -368,7 +366,7 @@ export const ProfileView: React.FC = () => {
                   </div>
                   <div>
                     <span className="text-[12px] font-black uppercase text-black tracking-widest block mb-0.5">每日建議飲水</span>
-                    <span style={{ color: lightTheme.text }} className="text-3xl font-black italic">{waterIntake || '--'} <span className="text-base not-italic text-black">ML</span></span>
+                    <span style={{ color: lightTheme.text }} className="text-3xl font-black">{waterIntake || '--'} <span className="text-base text-black">ML</span></span>
                   </div>
                </div>
                <Waves className="text-sky-200 w-10 h-10 opacity-50" />
@@ -379,7 +377,7 @@ export const ProfileView: React.FC = () => {
                  onClick={handleAiAnalysis}
                  disabled={isAiLoading}
                  style={{ backgroundColor: '#000000', color: '#FFFFFF' }}
-                 className="w-full h-16 rounded-2xl font-black uppercase italic text-base flex items-center justify-center gap-3 active:scale-[0.98] transition-all shadow-xl disabled:opacity-50"
+                 className="w-full h-16 rounded-2xl font-black uppercase text-base flex items-center justify-center gap-3 active:scale-[0.98] transition-all shadow-xl disabled:opacity-50"
                >
                  {isAiLoading ? (
                    <Loader2 className="w-6 h-6 animate-spin text-[#CCFF00]" />
@@ -401,7 +399,7 @@ export const ProfileView: React.FC = () => {
                          <div className="w-10 h-10 rounded-xl bg-black flex items-center justify-center text-[#CCFF00]">
                            <Sparkles className="w-6 h-6" />
                          </div>
-                         <h4 className="text-lg font-black italic uppercase">個人專屬營養藍圖</h4>
+                         <h4 className="text-lg font-black uppercase">個人專屬營養藍圖</h4>
                        </div>
                        <button onClick={() => setShowAiPlan(false)} className="text-[12px] font-black text-black uppercase underline">隱藏</button>
                      </div>
@@ -443,7 +441,7 @@ const MacroCard = ({ icon, label, val, unit, color }: any) => (
     <div className="text-center">
       <span className="text-[10px] font-black text-black uppercase tracking-widest block mb-1.5">{label}</span>
       <div className="flex items-baseline justify-center gap-1">
-        <span style={{ color: lightTheme.text }} className="text-xl font-black italic">{val || '--'}</span>
+        <span style={{ color: lightTheme.text }} className="text-xl font-black">{val || '--'}</span>
         <span className="text-[9px] font-black text-black">{unit}</span>
       </div>
     </div>
@@ -464,7 +462,7 @@ const InputBox = ({ icon, label, val, unit, onChange }: any) => (
         type="number" 
         placeholder="--"
         style={{ color: lightTheme.text }}
-        className="bg-transparent text-3xl font-black italic outline-none w-full placeholder:text-black" 
+        className="bg-transparent text-3xl font-black outline-none w-full placeholder:text-black" 
         value={val === 0 ? '' : val} 
         onChange={e => onChange(e.target.value)} 
       />
