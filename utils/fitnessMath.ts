@@ -383,7 +383,11 @@ const EXERCISE_METHODS: Record<string, string> = {
 };
 
 export const getExerciseMethod = (name: string): string => {
-  return EXERCISE_METHODS[name] || "01 準備起始姿勢並確保脊椎中立穩定核心。調整負重與器械高度，確保身體重心穩固且安全。\n\n02 按照標準生理運動路徑執行動作。發力時呼氣，還原時吸氣. 專注於目標肌群的收縮感，而非僅是移動重量。\n\n03 全程控制離心還原速度，維持肌肉張力不流失. 結束後平穩放下重量，確保不對關節造成衝擊性的傷害。";
+  const method = EXERCISE_METHODS[name] || "01 準備起始姿勢並確保脊椎中立穩定核心。調整負重與器械高度，確保身體重心穩固且安全。\n\n02 按照標準生理運動路徑執行動作。發力時呼氣，還原時吸氣. 專注於目標肌群的收縮感，而非僅是移動重量。\n\n03 全程控制離心還原速度，維持肌肉張力不流失. 結束後平穩放下重量，確保不對關節造成衝擊性的傷害。";
+  return method
+    .replace(/\b01\b/g, "1")
+    .replace(/\b02\b/g, "2")
+    .replace(/\b03\b/g, "3");
 };
 
 export const calculateMuscleActivation = (history: WorkoutSession[]): Record<MuscleGroup, number> => {

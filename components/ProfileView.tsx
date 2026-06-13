@@ -7,12 +7,35 @@ import {
   Flame, Edit3, CheckCircle2, Save, Beef, Soup, 
   Droplets, Waves, GlassWater, 
   Cake, Maximize2, Weight as WeightIcon, UserCheck, Bike, 
-  Camera, Sparkles, AlertCircle, Loader2
+  Camera, Sparkles, AlertCircle, Loader2, TrendingUp, Calendar, History
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { lightTheme } from '../themeStyles';
 import { generateDietarySuggestions } from '../services/aiService';
 import Markdown from 'react-markdown';
+import { Line } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Filler,
+  Legend,
+} from 'chart.js';
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Filler,
+  Legend
+);
 
 export const ProfileView: React.FC = () => {
   const context = useContext(AppContext);
@@ -70,6 +93,82 @@ export const ProfileView: React.FC = () => {
   const waterIntake = useMemo(() => {
     return calculateWaterIntake(tempMetrics.weight);
   }, [tempMetrics.weight]);
+
+  const weightTrendData = useMemo(() => {
+    const validMetrics = [...bodyMetrics]
+      .filter(m => m.weight > 0)
+      .sort((a, b) => a.date - b.date);
+
+    if (validMetrics.length === 0) return null;
+
+    const labels = validMetrics.map(m => new Date(m.date).toLocaleDateString([], { month: '2-digit', day: '2-digit' }));
+    const dataPoints = validMetrics.map(m => m.weight);
+
+    return {
+      labels,
+      datasets: [
+        {
+          label: '體重 (KG)',
+          data: dataPoints,
+          borderColor: '#82CC00',
+          backgroundColor: 'rgba(130, 204, 0, 0.08)',
+          fill: true,
+          tension: 0.3,
+          pointBackgroundColor: '#82CC00',
+          pointBorderColor: '#FFFFFF',
+          pointBorderWidth: 1.5,
+          pointRadius: 4,
+          pointHoverRadius: 6,
+        }
+      ]
+    };
+  }, [bodyMetrics]);
+
+  const weightTrendOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: false,
+      },
+      tooltip: {
+        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+        titleColor: '#000000',
+        bodyColor: '#000000',
+        borderColor: 'rgba(0, 0, 0, 0.1)',
+        borderWidth: 1,
+        padding: 8,
+        displayColors: false,
+        callbacks: {
+          label: (context: any) => `${context.parsed.y} KG`
+        }
+      }
+    },
+    scales: {
+      x: {
+        grid: {
+          display: false,
+        },
+        ticks: {
+          color: '#8E8E93',
+          font: {
+            size: 10,
+          }
+        }
+      },
+      y: {
+        grid: {
+          color: 'rgba(0, 0, 0, 0.03)',
+        },
+        ticks: {
+          color: '#8E8E93',
+          font: {
+            size: 10,
+          }
+        }
+      }
+    }
+  };
 
   const handleSaveMetrics = () => {
     const newMetric = { ...tempMetrics, id: crypto.randomUUID(), date: Date.now() };
@@ -223,6 +322,79 @@ export const ProfileView: React.FC = () => {
               <span className={`text-[12px] font-black uppercase px-5 py-2 rounded-full border border-white bg-white shadow-sm ${bmiAnalysis.color}`}>{bmi > 0 ? bmiAnalysis.label : '未設定'}</span>
             </div>
           </div>
+
+          {/* 體重趨勢圖 */}
+          <div style={{ backgroundColor: lightTheme.card }} className="px-7 py-6 rounded-[28px] border border-black/5 flex flex-col gap-4 shadow-inner">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <TrendingUp className="text-[#82CC00] w-4 h-4" />
+                <span className="text-[12px] font-black uppercase text-black tracking-widest">體重變化趨勢</span>
+              </div>
+              {bodyMetrics.filter(m => m.weight > 0).length > 0 && (
+                <span className="text-[10px] uppercase text-slate-400 tracking-wider">
+                  已記錄 {bodyMetrics.filter(m => m.weight > 0).length} 次
+                </span>
+              )}
+            </div>
+
+            {weightTrendData ? (
+              <div className="h-48 relative w-full pt-2">
+                <Line data={weightTrendData} options={weightTrendOptions} />
+              </div>
+            ) : (
+              <div className="py-10 text-center flex flex-col items-center justify-center gap-2">
+                <TrendingUp className="text-slate-300 w-10 h-10 stroke-[1.5]" />
+                <p className="text-xs text-slate-400 font-medium">記錄多次體重後，此處將顯示您的體重變化趨勢圖。</p>
+              </div>
+            )}
+          </div>
+
+          {/* 歷史體重紀錄列表 */}
+          {bodyMetrics.length > 0 && (
+            <div className="pt-2">
+              <details className="group">
+                <summary className="flex items-center justify-between cursor-pointer list-none select-none text-[12px] font-black uppercase text-black tracking-widest hover:opacity-80 transition-opacity">
+                  <div className="flex items-center gap-2">
+                    <History className="text-stone-400 w-4 h-4" />
+                    <span>查看體重紀錄歷史 ({bodyMetrics.length})</span>
+                  </div>
+                  <span className="text-[10px] text-[#82CC00] group-open:hidden">展開 ▾</span>
+                  <span className="text-[10px] text-[#82CC00] hidden group-open:inline">收起 ▴</span>
+                </summary>
+                
+                <div className="mt-4 space-y-2 max-h-48 overflow-y-auto pr-1">
+                  {bodyMetrics.map((m) => (
+                    <div 
+                      key={m.id || m.date} 
+                      style={{ backgroundColor: lightTheme.card }} 
+                      className="px-5 py-3 rounded-xl border border-black/[0.03] flex items-center justify-between text-xs gap-3"
+                    >
+                      <div className="flex items-center gap-2 text-stone-500">
+                        <Calendar className="w-3.5 h-3.5" />
+                        <span>{new Date(m.date).toLocaleDateString([], { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <span className="text-[13px] font-black text-black">
+                          {m.weight} KG <span className="text-[10px] text-stone-400 font-normal">({m.height}cm / {m.age}歲)</span>
+                        </span>
+                        <button 
+                          onClick={() => {
+                            const updated = bodyMetrics.filter(x => x.id !== m.id);
+                            setBodyMetrics(updated);
+                            localStorage.setItem('ironlog_v3_metrics', JSON.stringify(updated));
+                          }}
+                          className="p-1 hover:bg-red-50 rounded-lg text-rose-500 transition-colors"
+                          title="刪除此紀錄"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </details>
+            </div>
+          )}
         </div>
       </div>
 
