@@ -2,11 +2,14 @@ import React, { useState, useEffect, createContext, useMemo } from 'react';
 import { WorkoutView } from './components/WorkoutView';
 import { RoutineView } from './components/RoutineView';
 import { HistoryView } from './components/HistoryView';
-import { ProfileView } from './components/ProfileView';
+import { DietView } from './components/DietView';
+import { CoachView } from './components/CoachView';
+import { SettingsView } from './components/SettingsView';
 import { RestTimer } from './components/RestTimer';
 import { CalendarStrip } from './components/CalendarStrip';
+import { WorkoutSummaryModal } from './components/WorkoutSummaryModal';
 import { AppTab, WorkoutSession, BodyMetric, UserGoal, RoutineTemplate } from './types';
-import { Dumbbell, History, User, LayoutGrid, Calendar } from 'lucide-react';
+import { Dumbbell, History, LayoutGrid, Calendar, Apple, Bot, Settings } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
 import { ContainerStyle, lightTheme } from './themeStyles';
@@ -29,6 +32,7 @@ const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<AppTab>('workout');
   const [history, setHistory] = useState<WorkoutSession[]>([]);
   const [currentSession, setCurrentSession] = useState<WorkoutSession | null>(null);
+  const [sessionForSummary, setSessionForSummary] = useState<WorkoutSession | null>(null);
   const [bodyMetrics, setBodyMetrics] = useState<BodyMetric[]>([]);
   const [goal, setGoal] = useState<UserGoal>({
     type: 'maintain',
@@ -124,16 +128,7 @@ const App: React.FC = () => {
     };
 
     setHistory([completedSession, ...history]);
-    
-    setCurrentSession({
-      id: crypto.randomUUID(),
-      startTime: Date.now(),
-      title: `${format(new Date(), 'MM/dd')} 訓練`,
-      exercises: []
-    });
-    
-    setSelectedDate(new Date());
-    setActiveTab('history');
+    setSessionForSummary(completedSession);
   };
 
   const handleSaveAsRoutine = (session: WorkoutSession) => {
@@ -313,16 +308,20 @@ const App: React.FC = () => {
                     setCurrentSession(newSess);
                     setActiveTab('workout');
                   }} />}
-                  {activeTab === 'profile' && <ProfileView />}
+                  {activeTab === 'diet' && <DietView />}
+                  {activeTab === 'coach' && <CoachView />}
+                  {activeTab === 'settings' && <SettingsView />}
                 </motion.div>
               </AnimatePresence>
             </main>
 
-            <nav style={{ backgroundColor: 'rgba(255, 255, 255, 0.9)', backdropFilter: 'blur(20px)' }} className="fixed bottom-0 left-0 right-0 max-w-md mx-auto border-t border-black/5 safe-bottom z-50 px-8 py-5 flex justify-between items-center rounded-t-[40px] shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
-              <TabButton active={activeTab === 'workout'} onClick={() => setActiveTab('workout')} icon={<Dumbbell />} label="訓練" />
-              <TabButton active={activeTab === 'history'} onClick={() => setActiveTab('history')} icon={<History />} label="記錄" />
+            <nav style={{ backgroundColor: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(20px)' }} className="fixed bottom-0 left-0 right-0 max-w-md mx-auto border-t border-black/5 safe-bottom z-50 px-2 py-4 flex justify-between items-center rounded-t-[40px] shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
               <TabButton active={activeTab === 'routines'} onClick={() => setActiveTab('routines')} icon={<LayoutGrid />} label="課表" />
-              <TabButton active={activeTab === 'profile'} onClick={() => setActiveTab('profile')} icon={<User />} label="個人" />
+              <TabButton active={activeTab === 'history'} onClick={() => setActiveTab('history')} icon={<History />} label="歷史" />
+              <TabButton active={activeTab === 'workout'} onClick={() => setActiveTab('workout')} icon={<Dumbbell />} label="主頁" />
+              <TabButton active={activeTab === 'diet'} onClick={() => setActiveTab('diet')} icon={<Apple />} label="飲食分析" />
+              <TabButton active={activeTab === 'coach'} onClick={() => setActiveTab('coach')} icon={<Bot />} label="教練" />
+              <TabButton active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} icon={<Settings />} label="設定" />
             </nav>
 
             <RestTimer 
@@ -330,6 +329,25 @@ const App: React.FC = () => {
               seconds={restTimer.seconds} 
               onClose={() => setRestTimer(prev => ({ ...prev, active: false }))} 
             />
+
+            <AnimatePresence>
+              {sessionForSummary && (
+                <WorkoutSummaryModal 
+                  session={sessionForSummary} 
+                  onClose={() => {
+                    setCurrentSession({
+                      id: crypto.randomUUID(),
+                      startTime: Date.now(),
+                      title: `${format(new Date(), 'MM/dd')} 訓練`,
+                      exercises: []
+                    });
+                    setSelectedDate(new Date());
+                    setActiveTab('history');
+                    setSessionForSummary(null);
+                  }}
+                />
+              )}
+            </AnimatePresence>
           </motion.div>
         )}
       </AnimatePresence>
@@ -338,11 +356,11 @@ const App: React.FC = () => {
 };
 
 const TabButton = ({ active, onClick, icon, label }: any) => (
-  <button onClick={onClick} className={`flex flex-col items-center gap-2 transition-all w-16 ${active ? 'text-[#82CC00]' : 'text-black'}`}>
-    <div className={`p-2.5 rounded-2xl transition-all ${active ? 'bg-[#CCFF00]/10 shadow-[0_0_20px_rgba(204,255,0,0.1)]' : ''}`}>
-      {React.cloneElement(icon, { className: `w-6 h-6 ${active ? 'stroke-[2.5]' : 'stroke-2'}` })}
+  <button onClick={onClick} className={`flex flex-col items-center gap-1 transition-all w-[64px] ${active ? 'text-[#82CC00]' : 'text-black/60 hover:text-black'}`}>
+    <div className={`p-1.5 rounded-xl transition-all ${active ? 'bg-[#CCFF00]/10 shadow-[0_0_20px_rgba(204,255,0,0.1)]' : ''}`}>
+      {React.cloneElement(icon, { className: `w-5 h-5 ${active ? 'stroke-[2.5]' : 'stroke-2'}` })}
     </div>
-    <span className="text-[12px] font-black uppercase tracking-widest">{label}</span>
+    <span className={`text-[9px] font-black tracking-tight leading-tight transition-all ${active ? 'text-black' : 'text-black/60'}`}>{label}</span>
   </button>
 );
 

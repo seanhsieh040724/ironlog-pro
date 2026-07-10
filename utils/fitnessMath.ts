@@ -125,6 +125,7 @@ const EXERCISE_MEDIA_REGISTRY: Record<string, string> = {
   "坐姿器械推胸": "https://www.docteur-fitness.com/wp-content/uploads/2022/11/developpe-machine-assis-pectoraux.gif",
   "蝴蝶機夾胸": "https://www.docteur-fitness.com/wp-content/uploads/2000/06/pec-deck-butterfly-exercice-musculation.gif",
   "跪姿繩索夾胸": "https://www.docteur-fitness.com/wp-content/uploads/2023/07/ecarte-a-la-poulie-vis-a-vis-haute-a-genoux.gif",
+  "站姿繩索夾胸": "https://images2.imgbox.com/84/e9/MDZXAjNh_o.gif",
   "器械上斜推胸": "https://www.docteur-fitness.com/wp-content/uploads/2000/06/developpe-incline-machine-convergente-exercice-musculation.gif",
   "史密斯上斜臥推": "https://images2.imgbox.com/a6/82/teNBnFVf_o.gif",
   "平板繩索飛鳥": "https://modusx.de/wp-content/uploads/cable-crossover-liegend.gif",
@@ -213,6 +214,8 @@ const EXERCISE_METHODS: Record<string, string> = {
   "蝴蝶機夾胸": "01 坐在機器上，背部貼緊靠背，雙臂向兩側張開握住把手，手肘微彎並保持固定。\n\n02 緩慢讓把手向兩側張開，控制回彈力道，直到感受胸肌內側至外側的完全舒張。\n\n03 感覺胸肌內側收縮，帶動雙臂向中心擠壓，直到雙手接近併攏，加強對胸部中縫的刺激。",
 
   "跪姿繩索夾胸": "01 採跪姿於滑輪機中央，雙手握住高位把手，身體稍微前傾，核心收緊維持平衡。\n\n02 緩慢將手臂向兩側斜上方打開，控制繩索拉力，感受胸大肌整體的舒張。\n\n03 感覺胸肌下緣與內側收縮，雙臂向身體前方斜下方劃出弧線合併，專注於胸肌擠壓感。",
+
+  "站姿繩索夾胸": "01 採站姿雙腳前後或並排站立於滑輪機中央，雙手握住高位把手，身體稍微前傾，核心收緊維持平衡。\n\n02 保持手肘微彎，緩慢將雙臂向兩側斜上方打開，控制繩索拉力，感受胸肌（特別是中下胸）的深度拉伸與舒張。\n\n03 感覺胸肌收縮發力，雙臂向身體前下方劃出弧線合併，並在動作頂點（雙手接近或交叉時）強力擠壓胸肌，稍作停頓。",
 
   "雙槓撐體": "01 雙手握住雙槓支撐起身體，上半身微前傾，膝蓋微彎，使身體重心稍微偏向前胸。\n\n02 緩慢彎曲手肘下降身體，直到感受胸肌下緣有明顯的牽拉感與舒張。\n\n03 感覺胸肌下緣收縮發力，將身體撐回起始位置，過程保持肩部穩定。",
 

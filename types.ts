@@ -74,7 +74,7 @@ export interface Achievement {
   exerciseName?: string;
 }
 
-export type AppTab = 'workout' | 'routines' | 'history' | 'profile';
+export type AppTab = 'routines' | 'history' | 'workout' | 'diet' | 'coach' | 'settings';
 
 declare global {
   interface Window {

@@ -11,7 +11,7 @@ import { AppContext } from '../App';
 import { lightTheme, CardStyle, TextStyle, InputStyle, ActionButtonStyle } from '../themeStyles';
 
 export const ORGANIZED_EXERCISES: Record<string, string[]> = {
-  'chest': ['槓鈴平板臥推', '槓鈴上斜臥推', '啞鈴平板臥推', '啞鈴上斜臥推', '史密斯平板臥推', '坐姿器械推胸', '蝴蝶機夾胸', '跪姿繩索夾胸', '平板繩索飛鳥', '啞鈴平板飛鳥', '啞鈴上斜飛鳥', '器械上斜飛鳥', '上斜器械胸推', '雙槓撐體輔助', '仰臥器械胸推', '雙槓撐體', '標準俯地挺身', '器械上斜推胸', '史密斯上斜臥推'],
+  'chest': ['槓鈴平板臥推', '槓鈴上斜臥推', '啞鈴平板臥推', '啞鈴上斜臥推', '史密斯平板臥推', '坐姿器械推胸', '蝴蝶機夾胸', '跪姿繩索夾胸', '站姿繩索夾胸', '平板繩索飛鳥', '啞鈴平板飛鳥', '啞鈴上斜飛鳥', '器械上斜飛鳥', '上斜器械胸推', '雙槓撐體輔助', '仰臥器械胸推', '雙槓撐體', '標準俯地挺身', '器械上斜推胸', '史密斯上斜臥推'],
   'back': ['引體向上', '滑輪下拉', '槓鈴划船', '啞鈴單臂划船', '坐姿划船機', 'T桿划船機', '器械反握高位下拉', '傳統硬舉', '輔助引體向上機', 'V把坐姿划船', '寬握水平划船', '滑輪反握下拉', '器械下拉', '直臂下拉', '啞鈴上斜划船'],
   'shoulders': ['啞鈴肩推', '槓鈴肩推', '阿諾肩推', '器械肩推', '史密斯機肩推', '啞鈴側平舉', '滑輪側平舉', '器械側平舉', '啞鈴前平舉', '蝴蝶機後三角飛鳥', '滑輪面拉', '俯身啞鈴反向飛鳥'],
   'legs': ['槓鈴深蹲', '啞鈴高腳杯蹲', '上斜腿推機', '水平腿推機', '槓鈴臀推', '保加利亞啞鈴分腿蹲', '哈克深蹲', '仰臥腿後勾', '坐姿腿後勾', '器械站姿提踵', '相撲硬舉', '器械腿外展', '器械腿內收', '六角槓硬舉'],
@@ -32,6 +32,7 @@ const getHardcodedGif = (name: string) => {
   if (name === '槓鈴臀推') return 'https://www.docteur-fitness.com/wp-content/uploads/2021/12/hips-thrust.gif';
   if (name === '水平腿推機') return 'https://i.pinimg.com/originals/81/0f/96/810f969dcadba4d95912efa62e75ba61.gif';
   if (name === '平板繩索飛鳥') return 'https://modusx.de/wp-content/uploads/cable-crossover-liegend.gif';
+  if (name === '站姿繩索夾胸') return 'https://images2.imgbox.com/84/e9/MDZXAjNh_o.gif';
   if (name === '啞鈴平板飛鳥') return 'https://fitliferegime.com/wp-content/uploads/2023/06/Dumbbell-Fly.gif';
   if (name === '啞鈴上斜飛鳥') return 'https://fitliferegime.com/wp-content/uploads/2023/06/Incline-Dumbbell-Fly.gif';
   if (name === '器械上斜飛鳥') return 'https://liftmanual.com/wp-content/uploads/2023/04/lever-incline-fly.webp';
@@ -301,84 +302,112 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                 </div>
               </div>
               <div className="space-y-4">
-                {currentDetailEx!.sets.map((set, index) => (
-                  <div key={set.id} className={`grid grid-cols-12 gap-1 sm:gap-2.5 items-center p-3.5 sm:p-5 rounded-[34px] border border-black transition-all ${set.completed ? 'bg-[#CCFF00]' : 'bg-white shadow-sm'}`}>
-                    <div className="col-span-1 flex justify-center">
-                      <button onClick={() => onUpdate({ ...session, exercises: session.exercises.map(e => e.id !== currentDetailEx!.id ? e : { ...e, sets: e.sets.filter(s => s.id !== set.id) }) })} className="text-black p-1 active:text-red-500">
-                        <Trash2 className="w-6 h-6" />
-                      </button>
-                    </div>
-                    <div className="col-span-1 text-xl sm:text-2xl font-black text-black text-center">
-                      {index + 1}
-                    </div>
-                    
-                    <div className="col-span-4 flex items-center justify-center gap-1.5 sm:gap-2.5">
-                      <div className="relative">
-                        <input 
-                          type="number" 
-                          value={set.weight || ''} 
-                          placeholder="0" 
-                          onChange={(e) => {
-                            const newWeight = Number(e.target.value);
-                            onUpdate({ 
-                              ...session, 
-                              exercises: session.exercises.map(ex => {
-                                if (ex.id === currentDetailEx!.id) {
-                                  const newSets = ex.sets.map((s, i) => {
-                                    if (i >= index) return { ...s, weight: newWeight };
-                                    return s;
-                                  });
-                                  return { ...ex, sets: newSets };
-                                }
-                                return ex;
-                              }) 
-                             });
+                <AnimatePresence initial={false}>
+                  {currentDetailEx!.sets.map((set, index) => (
+                    <motion.div 
+                      key={set.id}
+                      layout
+                      initial={{ opacity: 0, y: 15, scale: 0.96 }}
+                      animate={{ 
+                        opacity: 1, 
+                        y: 0, 
+                        scale: set.completed ? [1, 1.03, 1] : 1 
+                      }}
+                      exit={{ opacity: 0, scale: 0.95, y: -15, transition: { duration: 0.15 } }}
+                      transition={{ 
+                        type: 'spring', 
+                        stiffness: 400, 
+                        damping: 28,
+                        layout: { type: 'spring', stiffness: 350, damping: 28 } 
+                      }}
+                      className={`grid grid-cols-12 gap-1 sm:gap-2.5 items-center p-3.5 sm:p-5 rounded-[34px] border border-black transition-all ${set.completed ? 'bg-[#CCFF00]' : 'bg-white shadow-sm'}`}
+                    >
+                      <div className="col-span-1 flex justify-center">
+                        <button onClick={() => onUpdate({ ...session, exercises: session.exercises.map(e => e.id !== currentDetailEx!.id ? e : { ...e, sets: e.sets.filter(s => s.id !== set.id) }) })} className="text-black p-1 active:text-red-500">
+                          <Trash2 className="w-6 h-6" />
+                        </button>
+                      </div>
+                      <div className="col-span-1 text-xl sm:text-2xl font-black text-black text-center">
+                        {index + 1}
+                      </div>
+                      
+                      <div className="col-span-4 flex items-center justify-center gap-1.5 sm:gap-2.5">
+                        <div className="relative">
+                          <input 
+                            type="number" 
+                            value={set.weight || ''} 
+                            placeholder="0" 
+                            onChange={(e) => {
+                              const newWeight = Number(e.target.value);
+                              onUpdate({ 
+                                ...session, 
+                                exercises: session.exercises.map(ex => {
+                                  if (ex.id === currentDetailEx!.id) {
+                                    const newSets = ex.sets.map((s, i) => {
+                                      if (i >= index) return { ...s, weight: newWeight };
+                                      return s;
+                                    });
+                                    return { ...ex, sets: newSets };
+                                  }
+                                  return ex;
+                                }) 
+                              });
+                            }} 
+                            style={{ color: '#000000' }}
+                            className="w-[53px] sm:w-[61px] bg-slate-100 rounded-xl py-2.5 sm:py-3 text-center text-[20px] sm:text-[23px] font-black outline-none border border-black/5 focus:border-black/20 transition-all shadow-inner [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield] appearance-none px-0.5" 
+                          />
+                          {lastPerformedExercise && lastPerformedExercise.sets[index] && (
+                            <div className="absolute -bottom-[18px] left-1/2 -translate-x-1/2 text-[11px] sm:text-[12px] font-black text-black uppercase tracking-wider whitespace-nowrap">
+                              上次: {lastPerformedExercise.sets[index].weight}kg
+                            </div>
+                          )}
+                        </div>
+                        <span className="text-[12px] sm:text-[13px] font-black text-black uppercase shrink-0">kg</span>
+                      </div>
+
+                      <div className="col-span-4 flex items-center justify-center gap-1.5 sm:gap-2.5">
+                        <div className="relative">
+                          <input 
+                            type="number" 
+                            value={set.reps || ''} 
+                            placeholder="0" 
+                            onChange={(e) => onUpdate({ ...session, exercises: session.exercises.map(ex => ex.id === currentDetailEx!.id ? { ...ex, sets: ex.sets.map(s => s.id === set.id ? { ...s, reps: Number(e.target.value) } : s) } : ex) })} 
+                            style={{ color: '#000000' }}
+                            className="w-[53px] sm:w-[61px] bg-slate-100 rounded-xl py-2.5 sm:py-3 text-center text-[20px] sm:text-[23px] font-black outline-none border border-black/5 focus:border-black/20 transition-all shadow-inner [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield] appearance-none px-0.5" 
+                          />
+                          {lastPerformedExercise && lastPerformedExercise.sets[index] && (
+                            <div className="absolute -bottom-[18px] left-1/2 -translate-x-1/2 text-[11px] sm:text-[12px] font-black text-black uppercase tracking-wider whitespace-nowrap">
+                              上次: {lastPerformedExercise.sets[index].reps}次
+                            </div>
+                          )}
+                        </div>
+                        <span className="text-[12px] sm:text-[13px] font-black text-black uppercase shrink-0">rep</span>
+                      </div>
+
+                      <div className="col-span-2 flex justify-end">
+                        <motion.button 
+                          whileTap={{ scale: 0.9 }}
+                          onClick={() => { 
+                            const newComp = !set.completed; 
+                            if(newComp && context) context.triggerRestTimer(); 
+                            onUpdate({ ...session, exercises: session.exercises.map(ex => ex.id === currentDetailEx!.id ? { ...ex, sets: ex.sets.map(s => s.id === set.id ? { ...s, completed: newComp } : s) } : ex) }); 
                           }} 
-                          style={{ color: '#000000' }}
-                          className="w-[53px] sm:w-[61px] bg-slate-100 rounded-xl py-2.5 sm:py-3 text-center text-[20px] sm:text-[23px] font-black outline-none border border-black/5 focus:border-black/20 transition-all shadow-inner [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield] appearance-none px-0.5" 
-                        />
-                        {lastPerformedExercise && lastPerformedExercise.sets[index] && (
-                          <div className="absolute -bottom-[18px] left-1/2 -translate-x-1/2 text-[11px] sm:text-[12px] font-black text-black uppercase tracking-wider whitespace-nowrap">
-                            上次: {lastPerformedExercise.sets[index].weight}kg
-                          </div>
-                        )}
+                          className={`w-[58px] h-[58px] rounded-xl flex items-center justify-center transition-all border shadow-sm ${set.completed ? 'bg-[#CCFF00] border-[#CCFF00] text-black' : 'bg-slate-50 border-black/5 text-black'}`}
+                        >
+                          <motion.div
+                            animate={{ 
+                              scale: set.completed ? [1, 1.25, 1] : 1,
+                              rotate: set.completed ? [0, 10, -10, 0] : 0
+                            }}
+                            transition={{ duration: 0.3, ease: "easeInOut" }}
+                          >
+                            <Check className="w-7 h-7 stroke-[4]" />
+                          </motion.div>
+                        </motion.button>
                       </div>
-                      <span className="text-[12px] sm:text-[13px] font-black text-black uppercase shrink-0">kg</span>
-                    </div>
-
-                    <div className="col-span-4 flex items-center justify-center gap-1.5 sm:gap-2.5">
-                      <div className="relative">
-                        <input 
-                          type="number" 
-                          value={set.reps || ''} 
-                          placeholder="0" 
-                          onChange={(e) => onUpdate({ ...session, exercises: session.exercises.map(ex => ex.id === currentDetailEx!.id ? { ...ex, sets: ex.sets.map(s => s.id === set.id ? { ...s, reps: Number(e.target.value) } : s) } : ex) })} 
-                          style={{ color: '#000000' }}
-                          className="w-[53px] sm:w-[61px] bg-slate-100 rounded-xl py-2.5 sm:py-3 text-center text-[20px] sm:text-[23px] font-black outline-none border border-black/5 focus:border-black/20 transition-all shadow-inner [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield] appearance-none px-0.5" 
-                        />
-                        {lastPerformedExercise && lastPerformedExercise.sets[index] && (
-                          <div className="absolute -bottom-[18px] left-1/2 -translate-x-1/2 text-[11px] sm:text-[12px] font-black text-black uppercase tracking-wider whitespace-nowrap">
-                            上次: {lastPerformedExercise.sets[index].reps}次
-                          </div>
-                        )}
-                      </div>
-                      <span className="text-[12px] sm:text-[13px] font-black text-black uppercase shrink-0">rep</span>
-                    </div>
-
-                    <div className="col-span-2 flex justify-end">
-                      <button 
-                        onClick={() => { 
-                          const newComp = !set.completed; 
-                          if(newComp && context) context.triggerRestTimer(); 
-                          onUpdate({ ...session, exercises: session.exercises.map(ex => ex.id === currentDetailEx!.id ? { ...ex, sets: ex.sets.map(s => s.id === set.id ? { ...s, completed: newComp } : s) } : ex) }); 
-                        }} 
-                        className={`w-[58px] h-[58px] rounded-xl flex items-center justify-center transition-all active:scale-90 border shadow-sm ${set.completed ? 'bg-[#CCFF00] border-[#CCFF00] text-black' : 'bg-slate-50 border-black/5 text-black'}`}
-                      >
-                        <Check className="w-7 h-7 stroke-[4]" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
               </div>
               <div className="pt-6 pb-12">
                 <button 

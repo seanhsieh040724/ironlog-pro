@@ -7,7 +7,8 @@ import {
   Flame, Edit3, CheckCircle2, Save, Beef, Soup, 
   Droplets, Waves, GlassWater, 
   Cake, Maximize2, Weight as WeightIcon, UserCheck, Bike, 
-  Camera, Sparkles, AlertCircle, Loader2, TrendingUp, Calendar, History
+  Camera, Sparkles, AlertCircle, Loader2, TrendingUp, Calendar, History,
+  Award, Trophy, Crown, Lock
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { lightTheme } from '../themeStyles';
@@ -49,6 +50,95 @@ export const ProfileView: React.FC = () => {
   const globalGoal: UserGoal = context?.goal || { type: 'maintain', targetWeight: 0, startWeight: 0, activityLevel: 1.55 };
   const setGlobalGoal = context?.setGoal || (() => {});
   const setBodyMetrics = context?.setBodyMetrics || (() => {});
+  const history = context?.history || [];
+
+  const stats = useMemo(() => {
+    let totalSets = 0;
+    let totalVolume = 0;
+    const activeDays = new Set<string>();
+    
+    history.forEach(session => {
+      const dateKey = new Date(session.startTime).toDateString();
+      activeDays.add(dateKey);
+      
+      session.exercises?.forEach(ex => {
+        ex.sets?.forEach(set => {
+          if (set.completed) {
+            totalSets += 1;
+            totalVolume += (set.weight * set.reps);
+          }
+        });
+      });
+    });
+    
+    return {
+      totalWorkouts: history.length,
+      workoutDays: activeDays.size,
+      totalSets,
+      totalVolume,
+    };
+  }, [history]);
+
+  const badges = useMemo(() => [
+    {
+      id: 'first_workout',
+      title: '初試身手',
+      desc: '完成 1 次訓練課表',
+      rule: '完成 1 次訓練',
+      requirement: () => stats.totalWorkouts >= 1,
+      icon: Award,
+      color: 'bg-indigo-50 border-indigo-200 text-indigo-600',
+    },
+    {
+      id: 'streak_3',
+      title: '持續不懈',
+      desc: '累計訓練打卡達 3 天',
+      rule: '累計打卡 3 天',
+      requirement: () => stats.workoutDays >= 3,
+      icon: Calendar,
+      color: 'bg-emerald-50 border-emerald-200 text-emerald-600',
+    },
+    {
+      id: 'workouts_5',
+      title: '熱血愛好者',
+      desc: '累計完成 5 次訓練',
+      rule: '累計完成 5 次',
+      requirement: () => stats.totalWorkouts >= 5,
+      icon: Flame,
+      color: 'bg-orange-50 border-orange-200 text-orange-500',
+    },
+    {
+      id: 'sets_100',
+      title: '百煉成鋼',
+      desc: '累計完成 100 組動作',
+      rule: '累計 100 組動作',
+      requirement: () => stats.totalSets >= 100,
+      icon: Sparkles,
+      color: 'bg-amber-50 border-amber-200 text-amber-500',
+    },
+    {
+      id: 'volume_10t',
+      title: '重力主宰',
+      desc: '累計起重重量達 10,000 kg',
+      rule: '累計容量 10 噸',
+      requirement: () => stats.totalVolume >= 10000,
+      icon: Trophy,
+      color: 'bg-yellow-50 border-yellow-200 text-yellow-600',
+    },
+    {
+      id: 'workouts_15',
+      title: '鋼鐵猛獸',
+      desc: '累計完成 15 次訓練',
+      rule: '累計完成 15 次',
+      requirement: () => stats.totalWorkouts >= 15,
+      icon: Crown,
+      color: 'bg-rose-50 border-rose-200 text-rose-500',
+    },
+  ], [stats]);
+
+  const unlockedCount = useMemo(() => {
+    return badges.filter(b => b.requirement()).length;
+  }, [badges]);
 
   const latest: BodyMetric = useMemo(() => {
     const first = bodyMetrics[0];
@@ -396,6 +486,82 @@ export const ProfileView: React.FC = () => {
             </div>
           )}
         </div>
+      </div>
+
+      {/* 訓練成就徽章區塊 */}
+      <div style={{ backgroundColor: lightTheme.bg }} className="rounded-[44px] p-9 border border-black/5 relative overflow-hidden shadow-xl">
+         <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-11">
+            <div className="flex items-center gap-5">
+               <div style={{ backgroundColor: lightTheme.card }} className="p-4 rounded-2xl border border-black/5">
+                 <Award className="w-7 h-7 text-black" />
+               </div>
+               <div>
+                 <h3 style={{ color: lightTheme.text }} className="text-[19px] font-black uppercase tracking-tighter leading-none">訓練成就徽章</h3>
+                 <p className="text-[11.4px] font-black text-black uppercase tracking-widest mt-1.5">解鎖您的健身里程碑</p>
+               </div>
+            </div>
+            <div style={{ backgroundColor: lightTheme.card }} className="flex items-center gap-2.5 px-4 py-2 border border-black/5 rounded-2xl shadow-sm self-start sm:self-auto">
+              <Trophy className="w-4 h-4 text-[#82CC00]" />
+              <span className="text-[12px] font-black text-black">已解鎖 {unlockedCount} / {badges.length}</span>
+            </div>
+         </div>
+
+         {/* 核心訓練統計數據 */}
+         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+           <div style={{ backgroundColor: lightTheme.card }} className="p-5 rounded-2xl border border-black/5 shadow-inner flex flex-col items-center justify-center text-center">
+             <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1.5">累計訓練</span>
+             <span className="text-2xl font-black text-black">{stats.totalWorkouts} 次</span>
+           </div>
+           <div style={{ backgroundColor: lightTheme.card }} className="p-5 rounded-2xl border border-black/5 shadow-inner flex flex-col items-center justify-center text-center">
+             <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1.5">訓練天數</span>
+             <span className="text-2xl font-black text-black">{stats.workoutDays} 天</span>
+           </div>
+           <div style={{ backgroundColor: lightTheme.card }} className="p-5 rounded-2xl border border-black/5 shadow-inner flex flex-col items-center justify-center text-center">
+             <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1.5">累計組數</span>
+             <span className="text-2xl font-black text-black">{stats.totalSets} 組</span>
+           </div>
+           <div style={{ backgroundColor: lightTheme.card }} className="p-5 rounded-2xl border border-black/5 shadow-inner flex flex-col items-center justify-center text-center">
+             <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1.5">累計起重量</span>
+             <span className="text-2xl font-black text-black">{stats.totalVolume.toLocaleString()} KG</span>
+           </div>
+         </div>
+
+         {/* 徽章 Grid */}
+         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+           {badges.map(badge => {
+             const isUnlocked = badge.requirement();
+             const BadgeIcon = badge.icon;
+             return (
+               <div 
+                 key={badge.id}
+                 style={{ backgroundColor: lightTheme.card }}
+                 className={`p-6 rounded-[32px] border ${isUnlocked ? 'border-black/5' : 'border-black/[0.02] opacity-50'} shadow-inner flex flex-col items-center text-center transition-all relative overflow-hidden`}
+               >
+                 {isUnlocked && (
+                   <div className="absolute inset-x-0 top-0 h-1 bg-[#82CC00]" />
+                 )}
+                 
+                 <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-4 text-center shadow-sm relative ${isUnlocked ? badge.color : 'bg-slate-150 text-slate-300 border border-slate-200/50'}`}>
+                   <BadgeIcon className="w-7 h-7" />
+                   {!isUnlocked && (
+                     <div className="absolute -bottom-1.5 -right-1.5 w-5 h-5 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-400 shadow-sm">
+                       <Lock className="w-3 h-3" />
+                     </div>
+                   )}
+                 </div>
+
+                 <span className="text-[13px] font-black text-black uppercase mb-1">{badge.title}</span>
+                 <span className="text-[10px] text-slate-450 leading-tight block">{badge.desc}</span>
+
+                 {isUnlocked ? (
+                   <span className="text-[9px] text-[#82CC00] font-black uppercase tracking-wider mt-3 bg-[#82CC00]/10 px-2 py-0.5 rounded-full">已達成</span>
+                 ) : (
+                   <span className="text-[9px] text-slate-400 font-black uppercase tracking-wider mt-3 bg-slate-100 px-2 py-0.5 rounded-full">未解鎖</span>
+                 )}
+               </div>
+             );
+           })}
+         </div>
       </div>
 
       {/* 營養建議區塊 */}

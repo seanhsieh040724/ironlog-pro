@@ -18,6 +18,7 @@ const getHardcodedGif = (n: string) => {
   if (n === '槓鈴臀推') return 'https://www.docteur-fitness.com/wp-content/uploads/2021/12/hips-thrust.gif';
   if (n === '水平腿推機') return 'https://i.pinimg.com/originals/81/0f/96/810f969dcadba4d95912efa62e75ba61.gif';
   if (n === '平板繩索飛鳥') return 'https://modusx.de/wp-content/uploads/cable-crossover-liegend.gif';
+  if (n === '站姿繩索夾胸') return 'https://images2.imgbox.com/84/e9/MDZXAjNh_o.gif';
   if (n === '啞鈴平板飛鳥') return 'https://fitliferegime.com/wp-content/uploads/2023/06/Dumbbell-Fly.gif';
   if (n === '啞鈴上斜飛鳥') return 'https://fitliferegime.com/wp-content/uploads/2023/06/Incline-Dumbbell-Fly.gif';
   if (n === '器械上斜飛鳥') return 'https://liftmanual.com/wp-content/uploads/2023/04/lever-incline-fly.webp';
@@ -61,6 +62,68 @@ const ExerciseGifDisplay: React.FC<{ name: string }> = ({ name }) => {
           referrerPolicy="no-referrer"
         />
       )}
+    </div>
+  );
+};
+
+const RoutineExerciseRow: React.FC<{ name: string; sets: number; reps: number; muscleGroup: string; index: number }> = ({ name, sets, reps, muscleGroup, index }) => {
+  const [gifUrl, setGifUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+    const loadGif = async () => {
+      const hardcoded = getHardcodedGif(name);
+      if (hardcoded) {
+        if (isMounted) {
+          setGifUrl(hardcoded);
+          setLoading(false);
+        }
+        return;
+      }
+      setLoading(true);
+      try {
+        const url = await fetchExerciseGif(name);
+        if (isMounted) setGifUrl(url);
+      } catch (error) {
+        console.error('Failed to fetch gif:', error);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+    loadGif();
+    return () => { isMounted = false; };
+  }, [name]);
+
+  const muscleCn = getMuscleGroupDisplay(muscleGroup as MuscleGroup).cn;
+
+  return (
+    <div style={{ backgroundColor: lightTheme.bg }} className="p-3 border border-black/5 rounded-2xl shadow-sm flex items-center gap-4">
+      {/* Small GIF on Left */}
+      <div className="w-16 h-16 rounded-xl overflow-hidden bg-slate-100 shrink-0 flex items-center justify-center border border-black/5 relative">
+        {loading ? (
+          <Loader2 className="w-4 h-4 animate-spin text-black/40" />
+        ) : (
+          <img 
+            src={gifUrl || `https://picsum.photos/seed/${name}/100/100`} 
+            alt={name} 
+            className="w-full h-full object-cover"
+            referrerPolicy="no-referrer"
+          />
+        )}
+      </div>
+
+      {/* Details on Right */}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-black text-[#CCFF00]">#{index}</span>
+          <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">{muscleCn}</span>
+        </div>
+        <h4 className="text-sm font-black text-black uppercase leading-tight truncate mt-0.5">{name}</h4>
+        <div className="text-[11px] font-bold text-stone-500 mt-1">
+          建議：<span className="font-black text-black">{sets} 組</span> x <span className="font-black text-black">{reps} 下</span>
+        </div>
+      </div>
     </div>
   );
 };
@@ -318,6 +381,7 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
   const [mockSets, setMockSets] = useState<SetEntry[]>([]);
   const [gifUrl, setGifUrl] = useState<string | null>(null);
   const [isGifLoading, setIsGifLoading] = useState(false);
+  const [weeklyDays, setWeeklyDays] = useState<number>(2);
 
   if (!context) return null;
   const { customRoutines, setCustomRoutines, setHistory, history } = context;
@@ -836,12 +900,241 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
     }
   ];
 
+  const WEEKLY_DAY_ROUTINES: Record<number, { title: string; desc: string; days: RoutineTemplate[] }> = {
+    2: {
+      title: '每週二練基礎維持課表',
+      desc: '專為時間有限者設計。Day 1 專注上肢拉推力量，Day 2 專注下肢與核心。高效率、極省時。',
+      days: [
+        {
+          id: 'w2-d1',
+          name: 'Day 1 - 全身上肢拉與推',
+          exercises: [
+            { id: 'w2-d1-e1', name: '槓鈴平板臥推', muscleGroup: 'chest', defaultSets: 4, defaultReps: 10, defaultWeight: 0 },
+            { id: 'w2-d1-e2', name: '引體向上', muscleGroup: 'back', defaultSets: 4, defaultReps: 8, defaultWeight: 0 },
+            { id: 'w2-d1-e3', name: '站姿繩索夾胸', muscleGroup: 'chest', defaultSets: 3, defaultReps: 12, defaultWeight: 0 }
+          ]
+        },
+        {
+          id: 'w2-d2',
+          name: 'Day 2 - 全身下肢與核心',
+          exercises: [
+            { id: 'w2-d2-e1', name: '槓鈴深蹲', muscleGroup: 'quads', defaultSets: 4, defaultReps: 10, defaultWeight: 0 },
+            { id: 'w2-d2-e2', name: '傳統硬舉', muscleGroup: 'back', defaultSets: 3, defaultReps: 6, defaultWeight: 0 },
+            { id: 'w2-d2-e3', name: '槓鈴臀推', muscleGroup: 'quads', defaultSets: 3, defaultReps: 12, defaultWeight: 0 }
+          ]
+        }
+      ]
+    },
+    3: {
+      title: '每週三練經典推拉腿課表',
+      desc: '最科學的三天分化模式。推、拉、腿循環，給予各肌群最充分的恢復與最高強度刺激。',
+      days: [
+        {
+          id: 'w3-d1',
+          name: 'Day 1 - 推部力量與維度',
+          exercises: [
+            { id: 'w3-d1-e1', name: '槓鈴平板臥推', muscleGroup: 'chest', defaultSets: 4, defaultReps: 10, defaultWeight: 0 },
+            { id: 'w3-d1-e2', name: '啞鈴肩推', muscleGroup: 'shoulders', defaultSets: 3, defaultReps: 10, defaultWeight: 0 },
+            { id: 'w3-d1-e3', name: '平板繩索飛鳥', muscleGroup: 'chest', defaultSets: 3, defaultReps: 12, defaultWeight: 0 }
+          ]
+        },
+        {
+          id: 'w3-d2',
+          name: 'Day 2 - 拉部寬度與厚度',
+          exercises: [
+            { id: 'w3-d2-e1', name: '槓鈴划船', muscleGroup: 'back', defaultSets: 4, defaultReps: 10, defaultWeight: 0 },
+            { id: 'w3-d2-e2', name: '滑輪下拉', muscleGroup: 'back', defaultSets: 4, defaultReps: 12, defaultWeight: 0 },
+            { id: 'w3-d2-e3', name: '直臂下拉', muscleGroup: 'back', defaultSets: 3, defaultReps: 12, defaultWeight: 0 }
+          ]
+        },
+        {
+          id: 'w3-d3',
+          name: 'Day 3 - 腿部與臀部力量',
+          exercises: [
+            { id: 'w3-d3-e1', name: '槓鈴深蹲', muscleGroup: 'quads', defaultSets: 4, defaultReps: 10, defaultWeight: 0 },
+            { id: 'w3-d3-e2', name: '槓鈴臀推', muscleGroup: 'quads', defaultSets: 3, defaultReps: 12, defaultWeight: 0 },
+            { id: 'w3-d3-e3', name: '水平腿推機', muscleGroup: 'quads', defaultSets: 3, defaultReps: 12, defaultWeight: 0 }
+          ]
+        }
+      ]
+    },
+    4: {
+      title: '每週四練上下肢精準分化課表',
+      desc: '最適合重訓愛好者的 4 天上下肢交替訓練模式。高效率、高容積。',
+      days: [
+        {
+          id: 'w4-d1',
+          name: 'Day 1 - 上肢 A 力量拉推',
+          exercises: [
+            { id: 'w4-d1-e1', name: '槓鈴平板臥推', muscleGroup: 'chest', defaultSets: 4, defaultReps: 8, defaultWeight: 0 },
+            { id: 'w4-d1-e2', name: '引體向上', muscleGroup: 'back', defaultSets: 4, defaultReps: 8, defaultWeight: 0 },
+            { id: 'w4-d1-e3', name: '站姿繩索夾胸', muscleGroup: 'chest', defaultSets: 3, defaultReps: 12, defaultWeight: 0 }
+          ]
+        },
+        {
+          id: 'w4-d2',
+          name: 'Day 2 - 下肢 A 力量深蹲',
+          exercises: [
+            { id: 'w4-d2-e1', name: '槓鈴深蹲', muscleGroup: 'quads', defaultSets: 4, defaultReps: 8, defaultWeight: 0 },
+            { id: 'w4-d2-e2', name: '水平腿推機', muscleGroup: 'quads', defaultSets: 3, defaultReps: 10, defaultWeight: 0 },
+            { id: 'w4-d2-e3', name: '槓鈴臀推', muscleGroup: 'quads', defaultSets: 3, defaultReps: 12, defaultWeight: 0 }
+          ]
+        },
+        {
+          id: 'w4-d3',
+          name: 'Day 3 - 上肢 B 肥大雕琢',
+          exercises: [
+            { id: 'w4-d3-e1', name: '上斜器械胸推', muscleGroup: 'chest', defaultSets: 4, defaultReps: 12, defaultWeight: 0 },
+            { id: 'w4-d3-e2', name: '器械下拉', muscleGroup: 'back', defaultSets: 4, defaultReps: 12, defaultWeight: 0 },
+            { id: 'w4-d3-e3', name: '直臂下拉', muscleGroup: 'back', defaultSets: 3, defaultReps: 15, defaultWeight: 0 }
+          ]
+        },
+        {
+          id: 'w4-d4',
+          name: 'Day 4 - 下肢 B 肥大拉伸',
+          exercises: [
+            { id: 'w4-d4-e1', name: '傳統硬舉', muscleGroup: 'back', defaultSets: 3, defaultReps: 8, defaultWeight: 0 },
+            { id: 'w4-d4-e2', name: '啞鈴上斜划船', muscleGroup: 'back', defaultSets: 3, defaultReps: 12, defaultWeight: 0 },
+            { id: 'w4-d4-e3', name: '仰臥器械胸推', muscleGroup: 'chest', defaultSets: 3, defaultReps: 12, defaultWeight: 0 }
+          ]
+        }
+      ]
+    },
+    5: {
+      title: '每週五練經典肌群分化課表',
+      desc: '五天完美肌群分化，每天專精一個部位。極致容量與雕琢泵感。',
+      days: [
+        {
+          id: 'w5-d1',
+          name: 'Day 1 - 胸部力量與形狀',
+          exercises: [
+            { id: 'w5-d1-e1', name: '槓鈴平板臥推', muscleGroup: 'chest', defaultSets: 4, defaultReps: 10, defaultWeight: 0 },
+            { id: 'w5-d1-e2', name: '站姿繩索夾胸', muscleGroup: 'chest', defaultSets: 3, defaultReps: 12, defaultWeight: 0 },
+            { id: 'w5-d1-e3', name: '仰臥器械胸推', muscleGroup: 'chest', defaultSets: 3, defaultReps: 12, defaultWeight: 0 }
+          ]
+        },
+        {
+          id: 'w5-d2',
+          name: 'Day 2 - 背部維度與厚度',
+          exercises: [
+            { id: 'w5-d2-e1', name: '器械下拉', muscleGroup: 'back', defaultSets: 4, defaultReps: 12, defaultWeight: 0 },
+            { id: 'w5-d2-e2', name: '引體向上', muscleGroup: 'back', defaultSets: 3, defaultReps: 8, defaultWeight: 0 },
+            { id: 'w5-d2-e3', name: '直臂下拉', muscleGroup: 'back', defaultSets: 3, defaultReps: 12, defaultWeight: 0 }
+          ]
+        },
+        {
+          id: 'w5-d3',
+          name: 'Day 3 - 肩部雕刻與立體感',
+          exercises: [
+            { id: 'w5-d3-e1', name: '啞鈴肩推', muscleGroup: 'shoulders', defaultSets: 4, defaultReps: 10, defaultWeight: 0 },
+            { id: 'w5-d3-e2', name: '滑輪面拉', muscleGroup: 'shoulders', defaultSets: 3, defaultReps: 15, defaultWeight: 0 },
+            { id: 'w5-d3-e3', name: '啞鈴側平舉', muscleGroup: 'shoulders', defaultSets: 4, defaultReps: 15, defaultWeight: 0 }
+          ]
+        },
+        {
+          id: 'w5-d4',
+          name: 'Day 4 - 下肢大重量深蹲',
+          exercises: [
+            { id: 'w5-d4-e1', name: '槓鈴深蹲', muscleGroup: 'quads', defaultSets: 4, defaultReps: 8, defaultWeight: 0 },
+            { id: 'w5-d4-e2', name: '槓鈴臀推', muscleGroup: 'quads', defaultSets: 3, defaultReps: 12, defaultWeight: 0 },
+            { id: 'w5-d4-e3', name: '水平腿推機', muscleGroup: 'quads', defaultSets: 3, defaultReps: 12, defaultWeight: 0 }
+          ]
+        },
+        {
+          id: 'w5-d5',
+          name: 'Day 5 - 手臂肌群極限雕琢',
+          exercises: [
+            { id: 'w5-d5-e1', name: '槓鈴彎舉', muscleGroup: 'arms', defaultSets: 4, defaultReps: 12, defaultWeight: 0 },
+            { id: 'w5-d5-e2', name: '雙槓撐體輔助', muscleGroup: 'arms', defaultSets: 3, defaultReps: 12, defaultWeight: 0 }
+          ]
+        }
+      ]
+    }
+  };
+
+  const currentWeeklySystem = WEEKLY_DAY_ROUTINES[weeklyDays];
+
   return (
     <div className="space-y-12 pb-40">
       <div className="flex justify-between items-center px-1 pt-2">
         <h2 style={{ color: lightTheme.text }} className="text-2xl font-black tracking-tighter uppercase flex items-center gap-4">
           <LayoutGrid className="w-7 h-7" /> 訓練課表
         </h2>
+      </div>
+
+      {/* 每週訓練天數選擇器（2, 3, 4, 5 天）- 新增需求 */}
+      <div style={{ backgroundColor: lightTheme.card }} className="mx-1 p-6 rounded-[36px] border border-black/5 shadow-sm space-y-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h3 style={{ color: lightTheme.text }} className="text-base font-black uppercase tracking-tight">每週訓練天數</h3>
+            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">選擇每週天數顯示對應計劃</p>
+          </div>
+          <span className="text-xs font-black text-white bg-black px-3 py-1 rounded-lg uppercase tracking-widest">
+            每週 {weeklyDays} 練
+          </span>
+        </div>
+
+        <div className="grid grid-cols-4 gap-2.5">
+          {[2, 3, 4, 5].map(days => (
+            <button
+              key={days}
+              onClick={() => setWeeklyDays(days)}
+              className={`py-3 rounded-2xl text-sm font-black transition-all border ${
+                weeklyDays === days 
+                  ? 'bg-[#CCFF00] text-black border-black shadow-md scale-105' 
+                  : 'bg-white text-black border-black/5 hover:border-black/20'
+              }`}
+            >
+              {days} 天
+            </button>
+          ))}
+        </div>
+
+        {/* 展開並顯示 GIF 的每週課表 */}
+        <div className="border-t border-black/5 pt-5 space-y-6">
+          <div className="bg-slate-50 rounded-2xl p-4 border border-black/[0.02]">
+            <h4 className="text-sm font-black text-black uppercase leading-tight">{currentWeeklySystem.title}</h4>
+            <p className="text-[11px] text-stone-500 mt-1.5 leading-relaxed">{currentWeeklySystem.desc}</p>
+          </div>
+
+          {/* List of All Days vertically stacked */}
+          <div className="space-y-8 pt-2">
+            {currentWeeklySystem.days.map((routineDay, dIdx) => (
+              <div key={routineDay.id} className="space-y-4 border-t border-black/5 pt-6 first:border-t-0 first:pt-0">
+                <div className="flex items-center justify-between bg-slate-50 p-4 rounded-2xl border border-black/[0.02]">
+                  <div className="min-w-0 pr-2">
+                    <h5 className="text-[13px] font-black uppercase text-black leading-tight">
+                      {routineDay.name}
+                    </h5>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">
+                      {routineDay.exercises.length} 個動作項目
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => handleEnterIntegratedMode(routineDay)}
+                    className="flex items-center gap-1.5 text-black text-[10px] font-black uppercase bg-[#CCFF00]/20 px-3 py-1.5 rounded-lg active:scale-95 transition-all shrink-0"
+                  >
+                    <Play className="w-3.5 h-3.5 fill-current" /> 開始此天訓練
+                  </button>
+                </div>
+
+                {/* Vertical list of small exercises */}
+                <div className="grid grid-cols-1 gap-3.5">
+                  {routineDay.exercises.map((ex, exIdx) => (
+                    <RoutineExerciseRow 
+                      key={ex.id}
+                      name={ex.name}
+                      sets={ex.defaultSets}
+                      reps={ex.defaultReps}
+                      muscleGroup={ex.muscleGroup}
+                      index={exIdx + 1}
+                    />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
       <div className="space-y-6">
@@ -884,41 +1177,6 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
             </button>
           ))}
         </div>
-      </div>
-
-      <div className="space-y-10 pt-4">
-        <p className="text-[12px] font-black text-black uppercase tracking-[0.4em] ml-2 flex items-center gap-3">
-           <Layers className="w-5 h-5" /> 推薦課表
-        </p>
-        
-        {RECOMMENDED_SYSTEMS.map(system => (
-          <div key={system.id} style={{ backgroundColor: lightTheme.card }} className="rounded-[48px] p-8 border border-black/5 space-y-6 relative overflow-hidden shadow-sm">
-            <div className="flex justify-between items-start">
-              <div className="flex-1 pr-4">
-                <h3 style={{ color: lightTheme.text }} className="text-xl font-black uppercase tracking-tighter leading-tight py-1">{system.title}</h3>
-                <p className="text-xs text-black mt-2 leading-relaxed">{system.description}</p>
-              </div>
-              <span className="shrink-0 px-3 py-1 bg-black text-white text-[9px] font-black uppercase tracking-widest rounded-lg border border-black/10">{system.tag}</span>
-            </div>
-
-            <div className="grid grid-cols-1 gap-3.5">
-               {system.routines.map((r, idx) => (
-                 <button key={r.id} onClick={() => setPreviewRoutine(r as any)} style={{ backgroundColor: lightTheme.bg }} className="flex items-center justify-between p-6 border border-black/5 rounded-[28px] hover:border-black/20 active:scale-[0.98] transition-all text-left group shadow-sm">
-                   <div className="flex items-center gap-5 overflow-hidden">
-                      <div style={{ backgroundColor: lightTheme.card }} className="w-10 h-10 rounded-xl flex items-center justify-center text-[11px] font-black text-black shrink-0 border border-black/5">D{idx + 1}</div>
-                      <div className="overflow-hidden flex-1">
-                        <div style={{ color: lightTheme.text }} className="text-base font-black uppercase leading-tight py-1 pr-2">{r.name}</div>
-                        <div className="text-[9px] font-bold text-black uppercase tracking-widest mt-1">{r.exercises.length} 個動作</div>
-                      </div>
-                   </div>
-                   <div style={{ color: '#82CC00' }} className="w-8 h-8 rounded-lg flex items-center justify-center group-active:scale-110 transition-all">
-                    <ChevronRight className="w-6 h-6 stroke-[4]" />
-                   </div>
-                 </button>
-               ))}
-            </div>
-          </div>
-        ))}
       </div>
     </div>
   );
