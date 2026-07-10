@@ -248,15 +248,15 @@ export const CoachView: React.FC = () => {
             onChange={(e) => setInputMessage(e.target.value)}
             disabled={isTyping}
             style={{ color: '#000000' }}
-            className="flex-1 bg-white border border-black/10 rounded-2xl px-5 h-13 text-xs font-bold outline-none focus:border-black transition-all shadow-sm placeholder:text-slate-400"
+            className="flex-1 bg-white border border-black/10 rounded-3xl px-7 h-20 text-base font-black outline-none focus:border-black transition-all shadow-sm placeholder:text-slate-400"
           />
           <button
             type="submit"
             disabled={!inputMessage.trim() || isTyping}
             style={{ backgroundColor: '#000000' }}
-            className="w-13 h-13 rounded-2xl flex items-center justify-center text-white active:scale-95 transition-all shadow-md disabled:opacity-40 disabled:scale-100"
+            className="w-20 h-20 rounded-3xl flex items-center justify-center text-white active:scale-95 transition-all shadow-md disabled:opacity-40 disabled:scale-100 shrink-0"
           >
-            <Send className="w-5 h-5 text-[#CCFF00] stroke-[2.5]" />
+            <Send className="w-8 h-8 text-[#CCFF00] stroke-[2.5]" />
           </button>
         </form>
       </div>

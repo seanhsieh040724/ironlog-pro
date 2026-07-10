@@ -430,7 +430,7 @@ export const DietView: React.FC = () => {
           <InputBox icon={<WeightIcon className="text-emerald-400 w-3.5 h-3.5" />} label="當前體重" val={tempMetrics.weight} unit="KG" onChange={(v: string) => setTempMetrics({ ...tempMetrics, weight: Number(v) })} />
           <InputBox icon={<Cake className="text-rose-400 w-3.5 h-3.5" />} label="年齡" val={tempMetrics.age} unit="歲" onChange={(v: string) => setTempMetrics({ ...tempMetrics, age: Number(v) })} />
           
-          <div style={{ backgroundColor: lightTheme.card }} className="p-6 rounded-2xl border border-black/5 flex flex-col shadow-inner">
+          <div style={{ backgroundColor: lightTheme.card }} className="p-6 rounded-2xl flex flex-col shadow-inner">
             <div className="flex items-center gap-3 mb-3">
               <UserCheck className="text-violet-400 w-3.5 h-3.5" />
               <span className="text-[11px] font-black uppercase text-black tracking-widest">性別</span>
@@ -452,7 +452,7 @@ export const DietView: React.FC = () => {
             </div>
           </div>
           
-          <div style={{ backgroundColor: lightTheme.card }} className="px-7 py-6 rounded-[28px] border border-black/5 flex flex-col gap-2 shadow-inner">
+          <div style={{ backgroundColor: lightTheme.card }} className="px-7 py-6 rounded-[28px] flex flex-col gap-2 shadow-inner">
             <span className="text-[12px] font-black uppercase text-black tracking-widest">當前 BMI 指數</span>
             <div className="flex items-baseline justify-between">
               <span style={{ color: lightTheme.text }} className="text-[44px] font-black">{bmi || '--'}</span>
@@ -461,7 +461,7 @@ export const DietView: React.FC = () => {
           </div>
 
           {/* 體重趨勢圖 */}
-          <div style={{ backgroundColor: lightTheme.card }} className="px-7 py-6 rounded-[28px] border border-black/5 flex flex-col gap-4 shadow-inner">
+          <div style={{ backgroundColor: lightTheme.card }} className="px-7 py-6 rounded-[28px] flex flex-col gap-4 shadow-inner">
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-2">
                 <TrendingUp className="text-[#82CC00] w-4 h-4" />
@@ -504,7 +504,7 @@ export const DietView: React.FC = () => {
                     <div 
                       key={m.id || m.date} 
                       style={{ backgroundColor: lightTheme.card }} 
-                      className="px-5 py-3 rounded-xl border border-black/[0.03] flex items-center justify-between text-xs gap-3"
+                      className="px-5 py-3 rounded-xl flex items-center justify-between text-xs gap-3"
                     >
                       <div className="flex items-center gap-2 text-stone-500">
                         <Calendar className="w-3.5 h-3.5" />
@@ -579,7 +579,7 @@ export const DietView: React.FC = () => {
             <div className="grid grid-cols-1 gap-3">
                <InputBox icon={<Target className="text-orange-400 w-3.5 h-3.5" />} label="目標體重" val={tempGoal.targetWeight} unit="KG" onChange={(v: string) => setTempGoal({ ...tempGoal, targetWeight: Number(v) })} />
                
-               <div style={{ backgroundColor: lightTheme.card }} className="p-6 rounded-2xl border border-black/5 shadow-inner">
+               <div style={{ backgroundColor: lightTheme.card }} className="p-6 rounded-2xl shadow-inner">
                   <div className="flex items-center gap-3 mb-4">
                      <Bike className="text-indigo-400 w-4 h-4" />
                      <span className="text-[12px] font-black uppercase text-black tracking-widest">日常活動量</span>
@@ -592,14 +592,14 @@ export const DietView: React.FC = () => {
                         className={`flex flex-col items-center py-3 rounded-xl transition-all border ${tempGoal.activityLevel === opt.val ? 'bg-black text-white border-black' : 'bg-white text-black border-black/5'}`}
                       >
                         <span className="text-[10px] font-black mb-1">{opt.label}</span>
-                        <span className="text-[8px] font-bold text-black">{opt.desc}</span>
+                        <span className={`text-[8px] font-bold ${tempGoal.activityLevel === opt.val ? 'text-white' : 'text-slate-400'}`}>{opt.desc}</span>
                       </button>
                     ))}
                   </div>
                </div>
              </div>
 
-             <div style={{ backgroundColor: '#FFF9E6' }} className="px-7 py-7 rounded-[32px] border border-black/5 flex flex-col gap-2.5 shadow-inner">
+             <div style={{ backgroundColor: '#FFF9E6' }} className="px-7 py-7 rounded-[32px] flex flex-col gap-2.5 shadow-inner">
                <div className="flex items-center gap-2.5 mb-1.5">
                  <Flame className="w-4.5 h-4.5 text-orange-400" />
                  <span className="text-[11px] font-black uppercase text-black tracking-widest">建議每日熱量 (TDEE)</span>
@@ -645,7 +645,7 @@ export const DietView: React.FC = () => {
 );
 
 const InputBox = ({ icon, label, val, unit, onChange }: any) => (
-  <div style={{ backgroundColor: lightTheme.card }} className="p-6 rounded-2xl border border-black/5 flex-1 shadow-inner">
+  <div style={{ backgroundColor: lightTheme.card }} className="p-6 rounded-2xl flex-1 shadow-inner">
     <div className="flex items-center gap-3 mb-3">
        {icon}
        <span className="text-[11px] font-black uppercase text-black tracking-widest">{label}</span>
