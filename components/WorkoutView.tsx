@@ -318,7 +318,8 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                         type: 'spring', 
                         stiffness: 400, 
                         damping: 28,
-                        layout: { type: 'spring', stiffness: 350, damping: 28 } 
+                        layout: { type: 'spring', stiffness: 350, damping: 28 },
+                        scale: { type: 'keyframes', ease: 'easeInOut', duration: 0.3 }
                       }}
                       className={`grid grid-cols-12 gap-1 sm:gap-2.5 items-center p-3.5 sm:p-5 rounded-[34px] border border-black transition-all ${set.completed ? 'bg-[#CCFF00]' : 'bg-white shadow-sm'}`}
                     >

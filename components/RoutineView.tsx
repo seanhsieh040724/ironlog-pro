@@ -116,11 +116,11 @@ const RoutineExerciseRow: React.FC<{ name: string; sets: number; reps: number; m
       {/* Details on Right */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-black text-[#CCFF00]">#{index}</span>
-          <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">{muscleCn}</span>
+          <span className="text-[11px] font-black px-1.5 py-0.5 rounded bg-black text-[#CCFF00]">#{index}</span>
+          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">{muscleCn}</span>
         </div>
-        <h4 className="text-sm font-black text-black uppercase leading-tight truncate mt-0.5">{name}</h4>
-        <div className="text-[11px] font-bold text-stone-500 mt-1">
+        <h4 className="text-[16px] font-black text-black uppercase leading-tight truncate mt-1.5">{name}</h4>
+        <div className="text-[13px] font-bold text-stone-500 mt-1.5">
           建議：<span className="font-black text-black">{sets} 組</span> x <span className="font-black text-black">{reps} 下</span>
         </div>
       </div>
@@ -1057,8 +1057,8 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
   return (
     <div className="space-y-12 pb-40">
       <div className="flex justify-between items-center px-1 pt-2">
-        <h2 style={{ color: lightTheme.text }} className="text-2xl font-black tracking-tighter uppercase flex items-center gap-4">
-          <LayoutGrid className="w-7 h-7" /> 訓練課表
+        <h2 style={{ color: lightTheme.text }} className="text-[30px] sm:text-4xl font-black tracking-tighter uppercase flex items-center gap-4">
+          <LayoutGrid className="w-7 h-7 animate-pulse" /> 訓練課表
         </h2>
       </div>
 
@@ -1066,10 +1066,10 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
       <div style={{ backgroundColor: lightTheme.card }} className="mx-1 p-6 rounded-[36px] border border-black/5 shadow-sm space-y-6">
         <div className="flex justify-between items-center">
           <div>
-            <h3 style={{ color: lightTheme.text }} className="text-base font-black uppercase tracking-tight">每週訓練天數</h3>
-            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">選擇每週天數顯示對應計劃</p>
+            <h3 style={{ color: lightTheme.text }} className="text-xl font-black uppercase tracking-tight">每週訓練天數</h3>
+            <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">選擇每週天數顯示對應計劃</p>
           </div>
-          <span className="text-xs font-black text-white bg-black px-3 py-1 rounded-lg uppercase tracking-widest">
+          <span className="text-xs sm:text-sm font-black text-white bg-black px-3 py-1 rounded-lg uppercase tracking-widest">
             每週 {weeklyDays} 練
           </span>
         </div>
@@ -1079,7 +1079,7 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
             <button
               key={days}
               onClick={() => setWeeklyDays(days)}
-              className={`py-3 rounded-2xl text-sm font-black transition-all border ${
+              className={`py-3.5 rounded-2xl text-base font-black transition-all border ${
                 weeklyDays === days 
                   ? 'bg-[#CCFF00] text-black border-black shadow-md scale-105' 
                   : 'bg-white text-black border-black/5 hover:border-black/20'
@@ -1093,8 +1093,8 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
         {/* 展開並顯示 GIF 的每週課表 */}
         <div className="border-t border-black/5 pt-5 space-y-6">
           <div className="bg-slate-50 rounded-2xl p-4 border border-black/[0.02]">
-            <h4 className="text-sm font-black text-black uppercase leading-tight">{currentWeeklySystem.title}</h4>
-            <p className="text-[11px] text-stone-500 mt-1.5 leading-relaxed">{currentWeeklySystem.desc}</p>
+            <h4 className="text-[16px] font-black text-black uppercase leading-tight">{currentWeeklySystem.title}</h4>
+            <p className="text-[13px] text-stone-500 mt-1.5 leading-relaxed">{currentWeeklySystem.desc}</p>
           </div>
 
           {/* List of All Days vertically stacked */}
@@ -1103,16 +1103,16 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
               <div key={routineDay.id} className="space-y-4 border-t border-black/5 pt-6 first:border-t-0 first:pt-0">
                 <div className="flex items-center justify-between bg-slate-50 p-4 rounded-2xl border border-black/[0.02]">
                   <div className="min-w-0 pr-2">
-                    <h5 className="text-[13px] font-black uppercase text-black leading-tight">
+                    <h5 className="text-[16px] font-black uppercase text-black leading-tight">
                       {routineDay.name}
                     </h5>
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">
+                    <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1.5">
                       {routineDay.exercises.length} 個動作項目
                     </p>
                   </div>
                   <button
                     onClick={() => handleEnterIntegratedMode(routineDay)}
-                    className="flex items-center gap-1.5 text-black text-[10px] font-black uppercase bg-[#CCFF00]/20 px-3 py-1.5 rounded-lg active:scale-95 transition-all shrink-0"
+                    className="flex items-center gap-1.5 text-black text-xs font-black uppercase bg-[#CCFF00]/20 px-3 py-1.5 rounded-lg active:scale-95 transition-all shrink-0"
                   >
                     <Play className="w-3.5 h-3.5 fill-current" /> 開始此天訓練
                   </button>
@@ -1138,7 +1138,7 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
       </div>
 
       <div className="space-y-6">
-        <p className="text-[12px] font-black text-black uppercase tracking-[0.4em] ml-2">我的自訂課表</p>
+        <p className="text-sm font-black text-black uppercase tracking-[0.4em] ml-2">我的自訂課表</p>
         
         <button 
           onClick={() => setIsCreating(true)} 

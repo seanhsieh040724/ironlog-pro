@@ -72,7 +72,6 @@ export const WorkoutSummaryModal: React.FC<WorkoutSummaryModalProps> = ({ sessio
       }
     });
 
-    text += `\n🔥 耶巴蒂 LightWeight！今天的努力絕不白費！ #IronLog #健身日誌 #鋼鐵意志`;
     return text;
   }, [session, stats]);
 
@@ -230,10 +229,10 @@ export const WorkoutSummaryModal: React.FC<WorkoutSummaryModalProps> = ({ sessio
         </div>
 
         {/* Footer actions */}
-        <div className="p-6 border-t border-black/5 bg-slate-50/50 flex flex-col gap-3 shrink-0">
+        <div className="p-6 border-t border-black/5 bg-slate-50/50 flex flex-col gap-3.5 shrink-0">
           <button
             onClick={handleCopy}
-            className={`w-full font-black h-13 rounded-2xl uppercase text-[15px] transition-all flex items-center justify-center gap-2.5 shadow-md active:scale-[0.98] ${copied ? 'bg-emerald-500 text-white shadow-emerald-500/10' : 'bg-[#CCFF00] text-black hover:bg-[#b5e000]'}`}
+            className={`w-full font-black h-12 rounded-2xl uppercase text-[13px] tracking-wider transition-all flex items-center justify-center gap-2.5 shadow-md active:scale-[0.98] ${copied ? 'bg-emerald-500 text-white shadow-emerald-500/10' : 'bg-[#CCFF00] text-black hover:bg-[#b5e000]'}`}
           >
             {copied ? (
               <>

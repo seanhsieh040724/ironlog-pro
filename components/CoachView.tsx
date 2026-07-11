@@ -31,24 +31,15 @@ export const CoachView: React.FC = () => {
     const saved = localStorage.getItem('ironlog_coach_chat_history');
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          return parsed.filter((m: any) => m.id !== 'welcome');
+        }
       } catch {
-        // Fallback to initial message
+        // Fallback
       }
     }
-    return [
-      {
-        id: 'welcome',
-        role: 'model',
-        text: `你好！我是你的專屬 AI 鋼鐵教練（IronLog AI Coach）。我已經載入了你當前的身體數據：
-- **目前體重**：${latest.weight} KG 
-- **目標體重**：${goal.targetWeight} KG (${goal.type === 'bulk' ? '積極增肌' : goal.type === 'cut' ? '高效減脂' : '健康維持體態'})
-
-我準備好為你解答所有**重訓課表規劃、重訓動作教學、補劑使用以及專屬健身營養建議**了！
-你可以直接在下方輸入訊息，或點擊下方的建議問題來開始我們今天的訓練對話！`,
-        timestamp: Date.now()
-      }
-    ];
+    return [];
   });
   
   const [isTyping, setIsTyping] = useState(false);
@@ -97,19 +88,7 @@ export const CoachView: React.FC = () => {
 
   const clearChat = () => {
     if (confirm('確定要清除與 AI 教練的所有對話紀錄嗎？')) {
-      const initial: ChatMessage[] = [
-        {
-          id: 'welcome',
-          role: 'model',
-          text: `對話紀錄已重設。我是你的專屬 AI 鋼鐵教練。已重新載入你當前的身體數據：
-- **目前體重**：${latest.weight} KG
-- **目標體重**：${goal.targetWeight} KG
-
-今天有什麼我可以幫你的重訓或飲食規劃嗎？`,
-          timestamp: Date.now()
-        }
-      ];
-      setMessages(initial);
+      setMessages([]);
       localStorage.removeItem('ironlog_coach_chat_history');
     }
   };
@@ -123,45 +102,29 @@ export const CoachView: React.FC = () => {
 
   return (
     <div className="flex flex-col h-[calc(100vh-160px)] relative overflow-hidden">
-      {/* 頂部教練狀態與藍圖摘要 */}
-      <div className="flex-none p-1 pb-4">
-        <div style={{ backgroundColor: lightTheme.bg }} className="rounded-[32px] p-5 border border-black/5 shadow-sm flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <div className="w-11 h-11 rounded-2xl bg-black flex items-center justify-center text-[#CCFF00] shrink-0">
-                <Bot className="w-6 h-6" />
-              </div>
-              <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white animate-pulse" />
-            </div>
-            <div>
-              <h3 className="text-sm font-black text-black uppercase tracking-tight">AI 鋼鐵教練</h3>
-              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">IRONLOG AI COACH • 24/7 在線</p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button 
-              onClick={clearChat}
-              title="清除對話"
-              className="p-2.5 rounded-xl hover:bg-slate-100 transition-colors text-slate-400 hover:text-black"
-            >
-              <RefreshCw className="w-4 h-4" />
-            </button>
-          </div>
+      {/* 簡潔教練頭像與簡介 */}
+      <div className="flex-none p-1 pb-4 flex flex-col items-center justify-center text-center relative border-b border-black/[0.03] mb-2">
+        <div className="absolute right-1 top-1">
+          <button 
+            onClick={clearChat}
+            title="清除對話"
+            className="p-2 rounded-xl hover:bg-slate-100 transition-colors text-slate-400 hover:text-black"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+          </button>
         </div>
-      </div>
-
-      {/* 身體指標與教練同步提示 */}
-      <div className="flex-none px-1 pb-3">
-        <div className="bg-slate-100 rounded-2xl p-3.5 border border-black/5 flex items-center justify-between text-[11px] font-bold text-slate-600 gap-2">
-          <div className="flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
-            <span>身體指標與專屬建議已即時與 AI 教練完全同步。</span>
+        
+        <div className="relative mb-2.5 mt-1">
+          <div className="w-14 h-14 rounded-2xl bg-black flex items-center justify-center text-[#CCFF00] shadow-md border border-black/5">
+            <Bot className="w-7 h-7" />
           </div>
-          <div className="flex items-center gap-1.5 shrink-0 px-2.5 py-1 bg-white rounded-lg border border-black/5 text-[10px] text-black font-black">
-            <HeartPulse className="w-3.5 h-3.5 text-rose-500 animate-pulse" /> {latest.weight} KG
-          </div>
+          <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-white animate-pulse" />
         </div>
+        
+        <h3 className="text-sm font-black text-black uppercase tracking-tight">鋼鐵教練</h3>
+        <p className="text-[11px] text-slate-500 font-bold mt-1 max-w-sm px-4">
+          訓練、飲食、恢復，有任何問題都來問我吧!
+        </p>
       </div>
 
       {/* 聊天訊息線索 */}
