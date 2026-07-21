@@ -5,7 +5,7 @@ import { ExerciseSmallGif } from './ExerciseSmallGif';
 import { getMuscleGroup, getMuscleGroupDisplay, fetchExerciseGif, getExerciseMethod } from '../utils/fitnessMath';
 import { ORGANIZED_EXERCISES, EXERCISE_DATABASE } from './WorkoutView';
 import { 
-  LayoutGrid, Trash2, ArrowLeft, Plus, ChevronRight, X, Search, Edit2, 
+  LayoutGrid, Trash2, ArrowLeft, Plus, Minus, ChevronRight, X, Search, Edit2, 
   Check, Sparkles, Layers, BookOpen, ChevronLeft, Zap, Play, Save, 
   Target, PlusCircle, MinusCircle, Loader2, Timer, PlusSquare, Weight,
   PauseCircle, PlayCircle, Clock
@@ -313,16 +313,37 @@ const IntegratedWorkoutView: React.FC<IntegratedWorkoutViewProps> = ({
                       <span className="text-[10px] sm:text-[11px] font-black text-black uppercase shrink-0">kg</span>
                     </div>
 
-                    <div className="col-span-4 flex items-center justify-center gap-1 sm:gap-2">
+                    <div className="col-span-4 flex items-center justify-center gap-1 sm:gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newReps = Math.max(0, (set.reps || 0) - 1);
+                          updateSetData(exIdx, set.id, { reps: newReps }, sIdx);
+                        }}
+                        className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-slate-200 hover:bg-slate-300 active:scale-90 flex items-center justify-center text-black font-black shrink-0 transition-all border border-black/10"
+                        title="減 1 次"
+                      >
+                        <Minus className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[3]" />
+                      </button>
                       <input 
                         type="number" 
                         value={set.reps || ''} 
                         placeholder="0" 
                         onChange={e => updateSetData(exIdx, set.id, { reps: Number(e.target.value) }, sIdx)} 
                         style={{ color: '#000000' }}
-                        className="w-[44px] sm:w-[51px] bg-slate-100 rounded-xl py-2 sm:py-2.5 text-center text-[17px] sm:text-[19px] font-black outline-none border border-black/5 focus:border-black/20 transition-all shadow-inner [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield] appearance-none px-0.5" 
+                        className="w-[38px] sm:w-[46px] bg-slate-100 rounded-xl py-2 sm:py-2.5 text-center text-[16px] sm:text-[18px] font-black outline-none border border-black/5 focus:border-black/20 transition-all shadow-inner [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield] appearance-none px-0.5" 
                       />
-                      <span className="text-[10px] sm:text-[11px] font-black text-black uppercase shrink-0">rep</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newReps = (set.reps || 0) + 1;
+                          updateSetData(exIdx, set.id, { reps: newReps }, sIdx);
+                        }}
+                        className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-slate-200 hover:bg-slate-300 active:scale-90 flex items-center justify-center text-black font-black shrink-0 transition-all border border-black/10"
+                        title="加 1 次"
+                      >
+                        <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[3]" />
+                      </button>
                     </div>
 
                     <div className="col-span-2 flex justify-end">
@@ -714,16 +735,37 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
                                 <span className="text-[10px] sm:text-[11px] font-black text-black uppercase shrink-0">kg</span>
                               </div>
 
-                              <div className="col-span-4 flex items-center justify-center gap-1 sm:gap-2">
+                              <div className="col-span-4 flex items-center justify-center gap-1 sm:gap-1.5">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const newReps = Math.max(0, (set.reps || 0) - 1);
+                                    setMockSets(mockSets.map(s => s.id === set.id ? { ...s, reps: newReps } : s));
+                                  }}
+                                  className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-slate-200 hover:bg-slate-300 active:scale-90 flex items-center justify-center text-black font-black shrink-0 transition-all border border-black/10"
+                                  title="減 1 次"
+                                >
+                                  <Minus className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[3]" />
+                                </button>
                                 <input 
                                   type="number" 
                                   value={set.reps || ''} 
                                   placeholder="0" 
                                   onChange={e => setMockSets(mockSets.map(s => s.id === set.id ? { ...s, reps: Number(e.target.value) } : s))} 
                                   style={{ color: '#000000' }}
-                                  className="w-[44px] sm:w-[51px] bg-slate-100 rounded-xl py-2 sm:py-2.5 text-center text-[17px] sm:text-[19px] font-black outline-none border border-black/5 focus:border-black/20 transition-all shadow-inner [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield] appearance-none px-0.5" 
+                                  className="w-[38px] sm:w-[46px] bg-slate-100 rounded-xl py-2 sm:py-2.5 text-center text-[16px] sm:text-[18px] font-black outline-none border border-black/5 focus:border-black/20 transition-all shadow-inner [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield] appearance-none px-0.5" 
                                 />
-                                <span className="text-[10px] sm:text-[11px] font-black text-black uppercase shrink-0">rep</span>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const newReps = (set.reps || 0) + 1;
+                                    setMockSets(mockSets.map(s => s.id === set.id ? { ...s, reps: newReps } : s));
+                                  }}
+                                  className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-slate-200 hover:bg-slate-300 active:scale-90 flex items-center justify-center text-black font-black shrink-0 transition-all border border-black/10"
+                                  title="加 1 次"
+                                >
+                                  <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[3]" />
+                                </button>
                               </div>
 
                               <div className="col-span-2 flex justify-end">

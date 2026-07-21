@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { X, Check, Activity, Weight, Layers, Hash } from 'lucide-react';
+import { X, Check, Activity, Weight, Layers, Hash, Minus, Plus } from 'lucide-react';
 
 interface AddExerciseModalProps {
   isOpen: boolean;
@@ -94,15 +94,31 @@ export const AddExerciseModal: React.FC<AddExerciseModalProps> = ({ isOpen, onCl
                 <div className="flex items-center text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
                   <Hash className="w-3 h-3 mr-1" /> 次數
                 </div>
-                <input
-                  type="number"
-                  inputMode="numeric"
-                  placeholder="REP"
-                  className="w-full bg-black/50 border border-white/5 rounded-2xl px-5 py-4 text-white text-center font-black focus:outline-none focus:border-fuchsia-500 transition-all"
-                  value={reps}
-                  onChange={(e) => setReps(e.target.value)}
-                  required
-                />
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setReps(prev => String(Math.max(1, (Number(prev) || 0) - 1)))}
+                    className="w-11 h-11 bg-white/10 hover:bg-white/20 rounded-2xl flex items-center justify-center text-white font-black transition-all border border-white/10 shrink-0 active:scale-90"
+                  >
+                    <Minus className="w-4 h-4 stroke-[3]" />
+                  </button>
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    placeholder="REP"
+                    className="w-full bg-black/50 border border-white/5 rounded-2xl px-3 py-3 text-white text-center font-black focus:outline-none focus:border-fuchsia-500 transition-all text-lg"
+                    value={reps}
+                    onChange={(e) => setReps(e.target.value)}
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setReps(prev => String((Number(prev) || 0) + 1))}
+                    className="w-11 h-11 bg-white/10 hover:bg-white/20 rounded-2xl flex items-center justify-center text-white font-black transition-all border border-white/10 shrink-0 active:scale-90"
+                  >
+                    <Plus className="w-4 h-4 stroke-[3]" />
+                  </button>
+                </div>
              </div>
           </div>
 

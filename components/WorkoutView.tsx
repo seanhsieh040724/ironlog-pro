@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useContext, useEffect, useRef } from 'react';
 import { WorkoutSession, ExerciseEntry, SetEntry, MuscleGroup } from '../types';
 import { 
-  Plus, Trash2, Search, Save, PlusCircle, 
+  Plus, Minus, Trash2, Search, Save, PlusCircle, 
   Check, MinusCircle, Target, Sparkles, ChevronRight, ChevronLeft, Loader2, AlertCircle, BookOpen, PlusSquare, Play, Timer
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -366,7 +366,26 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                         <span className="text-[12px] sm:text-[13px] font-black text-black uppercase shrink-0">kg</span>
                       </div>
 
-                      <div className="col-span-4 flex items-center justify-center gap-1.5 sm:gap-2.5">
+                      <div className="col-span-4 flex items-center justify-center gap-1 sm:gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newReps = Math.max(0, (set.reps || 0) - 1);
+                            onUpdate({ 
+                              ...session, 
+                              exercises: session.exercises.map(ex => 
+                                ex.id === currentDetailEx!.id 
+                                  ? { ...ex, sets: ex.sets.map(s => s.id === set.id ? { ...s, reps: newReps } : s) } 
+                                  : ex
+                              ) 
+                            });
+                          }}
+                          className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-slate-200 hover:bg-slate-300 active:scale-90 flex items-center justify-center text-black font-black shrink-0 transition-all border border-black/10"
+                          title="減 1 次"
+                        >
+                          <Minus className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[3]" />
+                        </button>
+
                         <div className="relative">
                           <input 
                             type="number" 
@@ -374,15 +393,33 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                             placeholder="0" 
                             onChange={(e) => onUpdate({ ...session, exercises: session.exercises.map(ex => ex.id === currentDetailEx!.id ? { ...ex, sets: ex.sets.map(s => s.id === set.id ? { ...s, reps: Number(e.target.value) } : s) } : ex) })} 
                             style={{ color: '#000000' }}
-                            className="w-[53px] sm:w-[61px] bg-slate-100 rounded-xl py-2.5 sm:py-3 text-center text-[20px] sm:text-[23px] font-black outline-none border border-black/5 focus:border-black/20 transition-all shadow-inner [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield] appearance-none px-0.5" 
+                            className="w-[40px] sm:w-[48px] bg-slate-100 rounded-xl py-2 sm:py-2.5 text-center text-[18px] sm:text-[21px] font-black outline-none border border-black/5 focus:border-black/20 transition-all shadow-inner [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield] appearance-none px-0.5" 
                           />
                           {lastPerformedExercise && lastPerformedExercise.sets[index] && (
-                            <div className="absolute -bottom-[18px] left-1/2 -translate-x-1/2 text-[11px] sm:text-[12px] font-black text-black uppercase tracking-wider whitespace-nowrap">
+                            <div className="absolute -bottom-[18px] left-1/2 -translate-x-1/2 text-[10px] sm:text-[11px] font-black text-black uppercase tracking-wider whitespace-nowrap">
                               上次: {lastPerformedExercise.sets[index].reps}次
                             </div>
                           )}
                         </div>
-                        <span className="text-[12px] sm:text-[13px] font-black text-black uppercase shrink-0">rep</span>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newReps = (set.reps || 0) + 1;
+                            onUpdate({ 
+                              ...session, 
+                              exercises: session.exercises.map(ex => 
+                                ex.id === currentDetailEx!.id 
+                                  ? { ...ex, sets: ex.sets.map(s => s.id === set.id ? { ...s, reps: newReps } : s) } 
+                                  : ex
+                              ) 
+                            });
+                          }}
+                          className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-slate-200 hover:bg-slate-300 active:scale-90 flex items-center justify-center text-black font-black shrink-0 transition-all border border-black/10"
+                          title="加 1 次"
+                        >
+                          <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[3]" />
+                        </button>
                       </div>
 
                       <div className="col-span-2 flex justify-end">
