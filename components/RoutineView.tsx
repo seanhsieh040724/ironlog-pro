@@ -2,7 +2,7 @@ import React, { useState, useContext, useMemo, useEffect } from 'react';
 import { AppContext } from '../App';
 import { RoutineTemplate, MuscleGroup, ExerciseEntry, SetEntry, WorkoutSession } from '../types';
 import { ExerciseSmallGif } from './ExerciseSmallGif';
-import { getMuscleGroup, getMuscleGroupDisplay, fetchExerciseGif, getExerciseMethod, getExerciseGifUrl } from '../utils/fitnessMath';
+import { getMuscleGroup, getMuscleGroupDisplay, fetchExerciseGif, fetchExerciseGifSync, getExerciseMethod } from '../utils/fitnessMath';
 import { ORGANIZED_EXERCISES, EXERCISE_DATABASE } from './WorkoutView';
 import { 
   LayoutGrid, Trash2, ArrowLeft, Plus, ChevronRight, X, Search, Edit2, 
@@ -13,42 +13,47 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { lightTheme } from '../themeStyles';
 
+// 取得 GIF 網址邏輯 (由 fitnessMath 統一管理)
 const getHardcodedGif = (n: string) => {
-  if (!n) return null;
-  return getExerciseGifUrl(n);
+  return fetchExerciseGifSync(n) || null;
 };
 
 // 將組件移出 RoutineView 作用域，防止每次 render 時重新宣告組件導致跳轉
 const ExerciseGifDisplay: React.FC<{ name: string }> = ({ name }) => {
   const [localGifUrl, setLocalGifUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
     setIsLoading(true);
+    setHasError(false);
     fetchExerciseGif(name).then(url => {
       setLocalGifUrl(url);
     });
   }, [name]);
 
-  const displaySrc = getHardcodedGif(name) || localGifUrl || '';
+  const rawSrc = getHardcodedGif(name) || localGifUrl;
+  const displaySrc = (!hasError && rawSrc) ? rawSrc : `https://picsum.photos/seed/${encodeURIComponent(name)}/300/300`;
 
   return (
     <div style={{ backgroundColor: lightTheme.card }} className="relative overflow-hidden rounded-[24px] shadow-sm border border-black/5 min-h-[240px] flex items-center justify-center">
-      {isLoading && !getHardcodedGif(name) && (
+      {isLoading && !hasError && (
         <div style={{ backgroundColor: lightTheme.card }} className="absolute inset-0 flex flex-col items-center justify-center gap-4 z-10">
           <Loader2 className="w-8 h-8 animate-spin text-black" />
           <p className="text-[11px] font-black uppercase tracking-widest text-black">準備中...</p>
         </div>
       )}
-      {displaySrc && (
-        <img 
-          src={displaySrc} 
-          alt={name} 
-          className="w-full h-auto object-cover rounded-[15px] block"
-          onLoad={() => setIsLoading(false)}
-          referrerPolicy="no-referrer"
-        />
-      )}
+      <img 
+        src={displaySrc} 
+        alt={name} 
+        className="w-full h-auto object-cover rounded-[15px] block"
+        onLoad={() => setIsLoading(false)}
+        onError={() => {
+          setIsLoading(false);
+          setHasError(true);
+        }}
+        referrerPolicy="no-referrer"
+      />
     </div>
   );
 };
@@ -56,18 +61,12 @@ const ExerciseGifDisplay: React.FC<{ name: string }> = ({ name }) => {
 const RoutineExerciseRow: React.FC<{ name: string; sets: number; reps: number; muscleGroup: string; index: number }> = ({ name, sets, reps, muscleGroup, index }) => {
   const [gifUrl, setGifUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
+    setHasError(false);
     const loadGif = async () => {
-      const hardcoded = getHardcodedGif(name);
-      if (hardcoded) {
-        if (isMounted) {
-          setGifUrl(hardcoded);
-          setLoading(false);
-        }
-        return;
-      }
       setLoading(true);
       try {
         const url = await fetchExerciseGif(name);
@@ -82,19 +81,22 @@ const RoutineExerciseRow: React.FC<{ name: string; sets: number; reps: number; m
     return () => { isMounted = false; };
   }, [name]);
 
+  const displaySrc = (!hasError && (getHardcodedGif(name) || gifUrl)) ? (getHardcodedGif(name) || gifUrl!) : `https://picsum.photos/seed/${encodeURIComponent(name)}/100/100`;
+
   const muscleCn = getMuscleGroupDisplay(muscleGroup as MuscleGroup).cn;
 
   return (
     <div style={{ backgroundColor: lightTheme.bg }} className="p-3 border border-black/5 rounded-2xl shadow-sm flex items-center gap-4">
       {/* Small GIF on Left */}
       <div className="w-16 h-16 rounded-xl overflow-hidden bg-slate-100 shrink-0 flex items-center justify-center border border-black/5 relative">
-        {loading ? (
+        {loading && !hasError ? (
           <Loader2 className="w-4 h-4 animate-spin text-black/40" />
         ) : (
           <img 
-            src={gifUrl || `https://picsum.photos/seed/${name}/100/100`} 
+            src={displaySrc} 
             alt={name} 
             className="w-full h-full object-cover"
+            onError={() => setHasError(true)}
             referrerPolicy="no-referrer"
           />
         )}

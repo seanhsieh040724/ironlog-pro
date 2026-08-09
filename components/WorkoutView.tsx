@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ExerciseSmallGif } from './ExerciseSmallGif';
-import { getMuscleGroup, getMuscleGroupDisplay, fetchExerciseGif, getExerciseMethod, getExerciseGifUrl } from '../utils/fitnessMath';
+import { getMuscleGroup, getMuscleGroupDisplay, fetchExerciseGif, fetchExerciseGifSync, getExerciseMethod } from '../utils/fitnessMath';
 import { AppContext } from '../App';
 import { lightTheme, CardStyle, TextStyle, InputStyle, ActionButtonStyle } from '../themeStyles';
 
@@ -28,9 +28,9 @@ interface WorkoutViewProps {
   onFinish: () => void;
 }
 
+// 取得 GIF 網址邏輯 (由 fitnessMath 統一管理)
 const getHardcodedGif = (name: string) => {
-  if (!name) return null;
-  return getExerciseGifUrl(name);
+  return fetchExerciseGifSync(name) || null;
 };
 
 export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onFinish }) => {
@@ -40,6 +40,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
   const [searchTerm, setSearchTerm] = useState('');
   const [gifUrl, setGifUrl] = useState<string | null>(null);
   const [isGifLoading, setIsGifLoading] = useState(true);
+  const [detailImgError, setDetailImgError] = useState(false);
   const [elapsedTime, setElapsedTime] = useState<string>("00:00");
 
   const currentDetailEx = useMemo(() => session?.exercises.find(e => e.id === activeExerciseId), [session, activeExerciseId]);
@@ -74,6 +75,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
   useEffect(() => {
     if (currentDetailEx) {
       setIsGifLoading(true);
+      setDetailImgError(false);
       fetchExerciseGif(currentDetailEx.name).then(url => {
         setGifUrl(url);
         setTimeout(() => setIsGifLoading(false), 300);
@@ -142,7 +144,8 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
 
   if (!session) return null;
 
-  const displayGifSrc = currentDetailEx ? (getHardcodedGif(currentDetailEx.name) || gifUrl || '') : '';
+  const rawGifSrc = currentDetailEx ? (getHardcodedGif(currentDetailEx.name) || gifUrl) : null;
+  const displayGifSrc = currentDetailEx ? ((!detailImgError && rawGifSrc) ? rawGifSrc : `https://picsum.photos/seed/${encodeURIComponent(currentDetailEx.name)}/300/300`) : '';
 
   return (
     <div className="relative min-h-screen">
@@ -238,7 +241,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
 
             <div className="w-full relative px-1">
               <div style={{ backgroundColor: lightTheme.card }} className="relative overflow-hidden rounded-[24px] shadow-sm border border-black/5 min-h-[240px] flex items-center justify-center">
-                {isGifLoading && !getHardcodedGif(currentDetailEx?.name || '') ? (
+                {isGifLoading && !getHardcodedGif(currentDetailEx?.name || '') && !detailImgError ? (
                   <div className="flex flex-col items-center gap-4 py-12 text-black">
                     <Loader2 className="w-9 h-9 animate-spin text-black" />
                     <p className="text-[11px] font-black uppercase tracking-widest">載入動作中...</p>
@@ -249,6 +252,11 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                     alt={currentDetailEx?.name} 
                     className="w-full h-auto object-cover rounded-[15px] block"
                     onLoad={() => setIsGifLoading(false)}
+                    onError={() => {
+                      setIsGifLoading(false);
+                      setDetailImgError(true);
+                    }}
+                    referrerPolicy="no-referrer"
                   />
                 )}
               </div>
