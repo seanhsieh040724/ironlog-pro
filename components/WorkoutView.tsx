@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ExerciseSmallGif } from './ExerciseSmallGif';
-import { getMuscleGroup, getMuscleGroupDisplay, fetchExerciseGif, getExerciseMethod } from '../utils/fitnessMath';
+import { getMuscleGroup, getMuscleGroupDisplay, fetchExerciseGif, getExerciseMethod, getExerciseGifUrl } from '../utils/fitnessMath';
 import { AppContext } from '../App';
 import { lightTheme, CardStyle, TextStyle, InputStyle, ActionButtonStyle } from '../themeStyles';
 
@@ -28,22 +28,9 @@ interface WorkoutViewProps {
   onFinish: () => void;
 }
 
-// 移除本地定義的 ExerciseSmallGif 和重複的 getHardcodedGif
 const getHardcodedGif = (name: string) => {
-  if (name === '槓鈴臀推') return 'https://www.docteur-fitness.com/wp-content/uploads/2021/12/hips-thrust.gif';
-  if (name === '水平腿推機') return 'https://i.pinimg.com/originals/81/0f/96/810f969dcadba4d95912efa62e75ba61.gif';
-  if (name === '平板繩索飛鳥') return 'https://modusx.de/wp-content/uploads/cable-crossover-liegend.gif';
-  if (name === '站姿繩索夾胸') return 'https://images2.imgbox.com/84/e9/MDZXAjNh_o.gif';
-  if (name === '啞鈴平板飛鳥') return 'https://fitliferegime.com/wp-content/uploads/2023/06/Dumbbell-Fly.gif';
-  if (name === '啞鈴上斜飛鳥') return 'https://fitliferegime.com/wp-content/uploads/2023/06/Incline-Dumbbell-Fly.gif';
-  if (name === '器械上斜飛鳥') return 'https://liftmanual.com/wp-content/uploads/2023/04/lever-incline-fly.webp';
-  if (name === '上斜器械胸推') return 'https://liftmanual.com/wp-content/uploads/2023/04/lever-incline-chest-press.gif';
-  if (name === '雙槓撐體輔助') return 'https://www.docteur-fitness.com/wp-content/uploads/2022/04/dips-assiste-machine.gif';
-  if (name === '仰臥器械胸推') return 'https://images2.imgbox.com/7e/a4/OJA0HI9E_o.gif';
-  if (name === '器械下拉') return 'https://i.pinimg.com/originals/8c/de/6c/8cde6c7cab8d14552f7eb07871f649a4.gif';
-  if (name === '直臂下拉') return 'https://modusx.de/wp-content/uploads/ueberzuege-kabel-ruecken.gif';
-  if (name === '啞鈴上斜划船') return 'https://www.inspireusafoundation.org/wp-content/uploads/2022/10/dumbbell-incline-row.gif';
-  return null;
+  if (!name) return null;
+  return getExerciseGifUrl(name);
 };
 
 export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onFinish }) => {

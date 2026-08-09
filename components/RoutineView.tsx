@@ -2,7 +2,7 @@ import React, { useState, useContext, useMemo, useEffect } from 'react';
 import { AppContext } from '../App';
 import { RoutineTemplate, MuscleGroup, ExerciseEntry, SetEntry, WorkoutSession } from '../types';
 import { ExerciseSmallGif } from './ExerciseSmallGif';
-import { getMuscleGroup, getMuscleGroupDisplay, fetchExerciseGif, getExerciseMethod } from '../utils/fitnessMath';
+import { getMuscleGroup, getMuscleGroupDisplay, fetchExerciseGif, getExerciseMethod, getExerciseGifUrl } from '../utils/fitnessMath';
 import { ORGANIZED_EXERCISES, EXERCISE_DATABASE } from './WorkoutView';
 import { 
   LayoutGrid, Trash2, ArrowLeft, Plus, ChevronRight, X, Search, Edit2, 
@@ -13,22 +13,9 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { lightTheme } from '../themeStyles';
 
-// 取得寫死的 GIF 網址邏輯 (封裝為常數供外部使用)
 const getHardcodedGif = (n: string) => {
-  if (n === '槓鈴臀推') return 'https://www.docteur-fitness.com/wp-content/uploads/2021/12/hips-thrust.gif';
-  if (n === '水平腿推機') return 'https://i.pinimg.com/originals/81/0f/96/810f969dcadba4d95912efa62e75ba61.gif';
-  if (n === '平板繩索飛鳥') return 'https://modusx.de/wp-content/uploads/cable-crossover-liegend.gif';
-  if (n === '站姿繩索夾胸') return 'https://images2.imgbox.com/84/e9/MDZXAjNh_o.gif';
-  if (n === '啞鈴平板飛鳥') return 'https://fitliferegime.com/wp-content/uploads/2023/06/Dumbbell-Fly.gif';
-  if (n === '啞鈴上斜飛鳥') return 'https://fitliferegime.com/wp-content/uploads/2023/06/Incline-Dumbbell-Fly.gif';
-  if (n === '器械上斜飛鳥') return 'https://liftmanual.com/wp-content/uploads/2023/04/lever-incline-fly.webp';
-  if (n === '上斜器械胸推') return 'https://liftmanual.com/wp-content/uploads/2023/04/lever-incline-chest-press.gif';
-  if (n === '雙槓撐體輔助') return 'https://www.docteur-fitness.com/wp-content/uploads/2022/04/dips-assiste-machine.gif';
-  if (n === '仰臥器械胸推') return 'https://images2.imgbox.com/7e/a4/OJA0HI9E_o.gif';
-  if (n === '器械下拉') return 'https://i.pinimg.com/originals/8c/de/6c/8cde6c7cab8d14552f7eb07871f649a4.gif';
-  if (n === '直臂下拉') return 'https://modusx.de/wp-content/uploads/ueberzuege-kabel-ruecken.gif';
-  if (n === '啞鈴上斜划船') return 'https://www.inspireusafoundation.org/wp-content/uploads/2022/10/dumbbell-incline-row.gif';
-  return null;
+  if (!n) return null;
+  return getExerciseGifUrl(n);
 };
 
 // 將組件移出 RoutineView 作用域，防止每次 render 時重新宣告組件導致跳轉

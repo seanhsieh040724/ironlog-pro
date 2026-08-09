@@ -97,105 +97,21 @@ export const getMuscleGroup = (name: string): MuscleGroup => {
 };
 
 /**
- * Fix: Added missing fetchExerciseGif export.
- * Retrieves the demonstration GIF URL for a specific exercise from the registry.
+ * Generates the jsDelivr CDN URL for an exercise GIF, encoding Chinese characters properly.
  */
-export const fetchExerciseGif = async (name: string): Promise<string | null> => {
-  return EXERCISE_MEDIA_REGISTRY[name] || null;
+export const getExerciseGifUrl = (name: string): string => {
+  if (!name) return '';
+  return `https://cdn.jsdelivr.net/gh/seanhsieh040724/ironlog-pro@main/assets/${encodeURIComponent(name.trim())}.gif`;
 };
 
-const EXERCISE_MEDIA_REGISTRY: Record<string, string> = {
-  "啞鈴肩推": "https://www.docteur-fitness.com/wp-content/uploads/2022/02/developpe-epaule-halteres.gif",
-  "槓鈴肩推": "https://www.docteur-fitness.com/wp-content/uploads/2000/08/developpe-militaire-exercice-musculation.gif",
-  "阿諾肩推": "https://www.docteur-fitness.com/wp-content/uploads/2000/08/developpe-arnold-exercice-musculation.gif",
-  "器械肩推": "https://www.docteur-fitness.com/wp-content/uploads/2022/11/developpe-epaules-a-la-machine-shoulder-press.gif",
-  "史密斯機肩推": "https://www.docteur-fitness.com/wp-content/uploads/2022/08/developpe-epaules-smith-machine.gif",
-  "啞鈴側平舉": "https://www.docteur-fitness.com/wp-content/uploads/2000/08/elevations-laterales-exercice-musculation.gif",
-  "滑輪側平舉": "https://www.docteur-fitness.com/wp-content/uploads/2022/11/elevations-laterales-unilaterale-poulie.gif",
-  "器械側平舉": "https://www.docteur-fitness.com/wp-content/uploads/2022/02/elevation-laterale-machine.gif",
-  "啞鈴前平舉": "https://www.docteur-fitness.com/wp-content/uploads/2000/08/elevations-frontales-exercice-musculation.gif",
-  "蝴蝶機後三角飛鳥": "https://www.docteur-fitness.com/wp-content/uploads/2021/12/pec-deck-inverse.gif",
-  "滑輪面拉": "https://www.docteur-fitness.com/wp-content/uploads/2022/01/face-pull.gif",
-  "俯身啞鈴反向飛鳥": "https://www.docteur-fitness.com/wp-content/uploads/2021/12/oiseau-assis-sur-banc.gif",
-  "啞鈴上斜臥推": "https://www.docteur-fitness.com/wp-content/uploads/2000/06/developpe-incline-halteres-exercice-musculation.gif",
-  "槓鈴平板臥推": "https://www.docteur-fitness.com/wp-content/uploads/2022/01/developpe-couche-prise-inversee.gif",
-  "槓鈴上斜臥推": "https://www.docteur-fitness.com/wp-content/uploads/2021/10/developpe-incline-barre.gif",
-  "啞鈴平板臥推": "https://www.docteur-fitness.com/wp-content/uploads/2000/05/developpe-couche-halteres-exercice-musculation.gif",
-  "史密斯平板臥推": "https://www.docteur-fitness.com/wp-content/uploads/2022/08/developpe-couche-smith-machine.gif",
-  "坐姿器械推胸": "https://www.docteur-fitness.com/wp-content/uploads/2022/11/developpe-machine-assis-pectoraux.gif",
-  "蝴蝶機夾胸": "https://www.docteur-fitness.com/wp-content/uploads/2000/06/pec-deck-butterfly-exercice-musculation.gif",
-  "跪姿繩索夾胸": "https://www.docteur-fitness.com/wp-content/uploads/2023/07/ecarte-a-la-poulie-vis-a-vis-haute-a-genoux.gif",
-  "站姿繩索夾胸": "https://images2.imgbox.com/84/e9/MDZXAjNh_o.gif",
-  "器械上斜推胸": "https://www.docteur-fitness.com/wp-content/uploads/2000/06/developpe-incline-machine-convergente-exercice-musculation.gif",
-  "史密斯上斜臥推": "https://images2.imgbox.com/a6/82/teNBnFVf_o.gif",
-  "平板繩索飛鳥": "https://modusx.de/wp-content/uploads/cable-crossover-liegend.gif",
-  "啞鈴平板飛鳥": "https://fitliferegime.com/wp-content/uploads/2023/06/Dumbbell-Fly.gif",
-  "啞鈴上斜飛鳥": "https://fitliferegime.com/wp-content/uploads/2023/06/Incline-Dumbbell-Fly.gif",
-  "器械上斜飛鳥": "https://liftmanual.com/wp-content/uploads/2023/04/lever-incline-fly.webp",
-  "上斜器械胸推": "https://liftmanual.com/wp-content/uploads/2023/04/lever-incline-chest-press.gif",
-  "雙槓撐體輔助": "https://www.docteur-fitness.com/wp-content/uploads/2022/04/dips-assiste-machine.gif",
-  "仰臥器械胸推": "https://images2.imgbox.com/7e/a4/OJA0HI9E_o.gif",
-  "雙槓撐體": "https://i.pinimg.com/originals/e7/45/d6/e745d6fcd41963a8a6d36c4b66c009a9.gif",
-  "標準俯地挺身": "https://www.docteur-fitness.com/wp-content/uploads/2020/10/pompe-musculation.gif",
-  "槓鈴彎舉": "https://www.docteur-fitness.com/wp-content/uploads/2021/09/curl-barre.gif",
-  "啞鈴錘式彎舉": "https://www.docteur-fitness.com/wp-content/uploads/2022/09/curl-haltere-prise-neutre.gif",
-  "啞鈴交替彎舉": "https://www.docteur-fitness.com/wp-content/uploads/2022/08/curl-biceps-avec-halteres-alterne.gif",
-  "牧師椅彎舉": "https://www.docteur-fitness.com/wp-content/uploads/2022/01/curl-au-pupitre-barre-ez-larry-scott.gif",
-  "滑輪直桿彎舉": "https://www.docteur-fitness.com/wp-content/uploads/2021/10/curl-biceps-poulie-basse.gif",
-  "反手槓鈴彎舉": "https://www.docteur-fitness.com/wp-content/uploads/2022/04/curl-inverse-barre.gif",
-  "二頭肌器械彎舉": "https://www.docteur-fitness.com/wp-content/uploads/2022/01/curl-pupitre-machine-prechargee.gif",
-  "坐姿上斜啞鈴二頭彎舉": "https://images2.imgbox.com/10/61/MnRSbHQM_o.gif",
-  "坐姿啞鈴錘式彎舉": "https://images2.imgbox.com/36/9a/qhrweGoV_o.gif",
-  "站姿繩索錘式彎舉": "https://images2.imgbox.com/d2/24/f0Nsdujm_o.gif",
-  "單臂滑輪三頭下壓": "https://images2.imgbox.com/60/60/nYbTuXmO_o.gif",
-  "反手直桿下壓": "https://images2.imgbox.com/ab/d7/FfMWND7g_o.gif",
-  "滑輪繩索下壓": "https://www.aesthetics-blog.com/wp-content/uploads/2023/04/12271301-Cable-Standing-One-Arm-Tricep-Pushdown-Overhand-Grip_Upper-Arms_720.gif",
-  "窄握槓鈴臥推": "https://www.aesthetics-blog.com/wp-content/uploads/2021/10/00301301-Barbell-Close-Grip-Bench-Press_Upper-Arms_720.gif",
-  "仰臥槓鈴臂屈伸": "https://www.aesthetics-blog.com/wp-content/uploads/2019/08/00601301-Barbell-Lying-Triceps-Extension-Skull-Crusher_Triceps-SFIX_720.gif",
-  "啞鈴頸後臂屈伸": "https://www.docteur-fitness.com/wp-content/uploads/2022/12/extensions-des-triceps-assis-avec-haltere.gif",
-  "滑輪直桿過頭臂屈伸": "https://www.docteur-fitness.com/wp-content/uploads/2022/01/extension-triceps-incline-poulie-basse.gif",
-  "引體向上": "https://www.docteur-fitness.com/wp-content/uploads/2022/02/traction-musculation-dos.gif",
-  "滑輪下拉": "https://www.docteur-fitness.com/wp-content/uploads/2021/11/tirage-vertical-poitrine.gif",
-  "槓鈴划船": "https://www.docteur-fitness.com/wp-content/uploads/2021/09/rowing-barre.gif",
-  "啞鈴單臂划船": "https://www.docteur-fitness.com/wp-content/uploads/2021/08/rowing-haltere-un-bras.gif",
-  "坐姿划船機": "https://www.docteur-fitness.com/wp-content/uploads/2022/01/rowing-assis-machine-hammer-strenght.gif",
-  "T桿划船機": "https://www.docteur-fitness.com/wp-content/uploads/2022/01/rowing-t-bar-machine.gif",
-  "器械反握高位下拉": "https://www.docteur-fitness.com/wp-content/uploads/2022/01/tirage-avant-iso-laterale-hammer-strength.gif",
-  "傳統硬舉": "https://www.docteur-fitness.com/wp-content/uploads/2021/12/souleve-de-terre.gif",
-  "輔助引體向上機": "https://www.docteur-fitness.com/wp-content/uploads/2022/02/traction-assistee-machine.gif",
-  "V把坐姿划船": "https://www.docteur-fitness.com/wp-content/uploads/2022/02/tirage-horizontal-poulie.gif",
-  "寬握水平划船": "https://www.docteur-fitness.com/wp-content/uploads/2022/10/tirage-horizontal-prise-large.gif",
-  "滑輪反握下拉": "https://www.docteur-fitness.com/wp-content/uploads/2022/01/tirage-vertical-prise-inversee.gif",
-  "器械下拉": "https://i.pinimg.com/originals/8c/de/6c/8cde6c7cab8d14552f7eb07871f649a4.gif",
-  "直臂下拉": "https://modusx.de/wp-content/uploads/ueberzuege-kabel-ruecken.gif",
-  "啞鈴上斜划船": "https://www.inspireusafoundation.org/wp-content/uploads/2022/10/dumbbell-incline-row.gif",
-  "槓鈴深蹲": "https://www.docteur-fitness.com/wp-content/uploads/2021/11/homme-faisant-un-squat-avec-barre.gif",
-  "啞鈴高腳杯蹲": "https://www.docteur-fitness.com/wp-content/uploads/2000/06/squat-goblet-exercice-musculation.gif",
-  "上斜腿推機": "https://www.docteur-fitness.com/wp-content/uploads/2022/08/presse-a-cuisses-inclinee.gif",
-  "水平腿推機": "https://i.pinimg.com/originals/81/0f/96/810f969dcadba4d95912efa62e75ba61.gif",
-  "槓鈴臀推": "https://www.docteur-fitness.com/wp-content/uploads/2021/12/hips-thrust.gif",
-  "保加利亞啞鈴分腿蹲": "https://www.aesthetics-blog.com/wp-content/uploads/2023/02/04101301-Dumbbell-Single-Leg-Split-Squat_Thighs-FIX_720.gif",
-  "哈克深蹲": "https://www.docteur-fitness.com/wp-content/uploads/2022/01/hack-squat.gif",
-  "仰臥腿後勾": "https://www.docteur-fitness.com/wp-content/uploads/2021/10/leg-curl-allonge.gif",
-  "坐姿腿後勾": "https://www.docteur-fitness.com/wp-content/uploads/2022/02/leg-curl-assis-machine.gif",
-  "器械站姿提踵": "https://www.docteur-fitness.com/wp-content/uploads/2021/10/extension-mollets-debout-machine.gif",
-  "相撲硬舉": "https://www.docteur-fitness.com/wp-content/uploads/2021/10/souleve-de-terre-sumo.gif",
-  "六角槓硬舉": "https://www.docteur-fitness.com/wp-content/uploads/2021/10/souleve-de-terre-a-la-trap-bar.gif",
-  "器械腿外展": "https://static.wixstatic.com/media/2edbed_2c54524226684ddea7f4e2e08a472a3a~mv2.gif",
-  "器械腿內收": "https://images2.imgbox.com/c3/78/EkU9jm9Y_o.gif",
-  "仰臥起坐": "https://www.docteur-fitness.com/wp-content/uploads/2000/07/crunch-au-sol-exercice-musculation.gif",
-  "羅馬椅抬腿": "https://www.docteur-fitness.com/wp-content/uploads/2022/04/releve-jambes-chaise-romaine-abdominaux.gif",
-  "棒式": "https://www.docteur-fitness.com/wp-content/uploads/2022/05/planche-abdos.gif",
-  "俄羅斯轉體": "https://www.docteur-fitness.com/wp-content/uploads/2022/04/rotations-russes-obliques.gif",
-  "健腹輪": "https://www.docteur-fitness.com/wp-content/uploads/2022/02/roulette-abdominaux.gif",
-  "器械捲腹": "https://www.docteur-fitness.com/wp-content/uploads/2022/04/crunch-machine-abdos.gif",
-  "懸垂抬腿": "https://www.docteur-fitness.com/wp-content/uploads/2000/07/releve-de-genoux-suspendu-exercice-musculation.gif",
-  "登山者": "https://www.docteur-fitness.com/wp-content/uploads/2000/06/mountain-climber-exercice-musculation.gif",
-  "側棒式": "https://www.docteur-fitness.com/wp-content/uploads/2022/01/planche-laterale-obliques.gif",
-  "跪姿滑輪捲腹": "https://www.docteur-fitness.com/wp-content/uploads/2000/06/crunch-poulie-haute-exercice-musculation.gif",
-  "下斜捲腹": "https://www.docteur-fitness.com/wp-content/uploads/2022/02/sit-up-decline.gif",
-  "滑輪側捲腹": "https://www.docteur-fitness.com/wp-content/uploads/2022/04/flexions-laterales-poulie-basse.gif"
+export const fetchExerciseGif = async (name: string): Promise<string | null> => {
+  if (!name) return null;
+  return getExerciseGifUrl(name);
 };
+
+const EXERCISE_MEDIA_REGISTRY: Record<string, string> = new Proxy({}, {
+  get: (_target, prop: string) => getExerciseGifUrl(prop)
+});
 
 const EXERCISE_METHODS: Record<string, string> = {
   // 胸部 (Chest)
