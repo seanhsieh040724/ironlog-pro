@@ -2,7 +2,7 @@ import React, { useState, useContext, useMemo, useEffect } from 'react';
 import { AppContext } from '../App';
 import { RoutineTemplate, MuscleGroup, ExerciseEntry, SetEntry, WorkoutSession } from '../types';
 import { ExerciseSmallGif } from './ExerciseSmallGif';
-import { getMuscleGroup, getMuscleGroupDisplay, fetchExerciseGif, fetchExerciseGifSync, getExerciseMethod } from '../utils/fitnessMath';
+import { getMuscleGroup, getMuscleGroupDisplay, fetchExerciseGif, getExerciseMethod, getExerciseGifUrl } from '../utils/fitnessMath';
 import { ORGANIZED_EXERCISES, EXERCISE_DATABASE } from './WorkoutView';
 import { 
   LayoutGrid, Trash2, ArrowLeft, Plus, ChevronRight, X, Search, Edit2, 
@@ -13,47 +13,42 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { lightTheme } from '../themeStyles';
 
-// 取得 GIF 網址邏輯 (由 fitnessMath 統一管理)
 const getHardcodedGif = (n: string) => {
-  return fetchExerciseGifSync(n) || null;
+  if (!n) return null;
+  return getExerciseGifUrl(n);
 };
 
 // 將組件移出 RoutineView 作用域，防止每次 render 時重新宣告組件導致跳轉
 const ExerciseGifDisplay: React.FC<{ name: string }> = ({ name }) => {
   const [localGifUrl, setLocalGifUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
     setIsLoading(true);
-    setHasError(false);
     fetchExerciseGif(name).then(url => {
       setLocalGifUrl(url);
     });
   }, [name]);
 
-  const rawSrc = getHardcodedGif(name) || localGifUrl;
-  const displaySrc = (!hasError && rawSrc) ? rawSrc : `https://picsum.photos/seed/${encodeURIComponent(name)}/300/300`;
+  const displaySrc = getHardcodedGif(name) || localGifUrl || '';
 
   return (
     <div style={{ backgroundColor: lightTheme.card }} className="relative overflow-hidden rounded-[24px] shadow-sm border border-black/5 min-h-[240px] flex items-center justify-center">
-      {isLoading && !hasError && (
+      {isLoading && !getHardcodedGif(name) && (
         <div style={{ backgroundColor: lightTheme.card }} className="absolute inset-0 flex flex-col items-center justify-center gap-4 z-10">
           <Loader2 className="w-8 h-8 animate-spin text-black" />
           <p className="text-[11px] font-black uppercase tracking-widest text-black">準備中...</p>
         </div>
       )}
-      <img 
-        src={displaySrc} 
-        alt={name} 
-        className="w-full h-auto object-cover rounded-[15px] block"
-        onLoad={() => setIsLoading(false)}
-        onError={() => {
-          setIsLoading(false);
-          setHasError(true);
-        }}
-        referrerPolicy="no-referrer"
-      />
+      {displaySrc && (
+        <img 
+          src={displaySrc} 
+          alt={name} 
+          className="w-full h-auto object-cover rounded-[15px] block"
+          onLoad={() => setIsLoading(false)}
+          referrerPolicy="no-referrer"
+        />
+      )}
     </div>
   );
 };
@@ -61,12 +56,18 @@ const ExerciseGifDisplay: React.FC<{ name: string }> = ({ name }) => {
 const RoutineExerciseRow: React.FC<{ name: string; sets: number; reps: number; muscleGroup: string; index: number }> = ({ name, sets, reps, muscleGroup, index }) => {
   const [gifUrl, setGifUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
-    setHasError(false);
     const loadGif = async () => {
+      const hardcoded = getHardcodedGif(name);
+      if (hardcoded) {
+        if (isMounted) {
+          setGifUrl(hardcoded);
+          setLoading(false);
+        }
+        return;
+      }
       setLoading(true);
       try {
         const url = await fetchExerciseGif(name);
@@ -81,22 +82,19 @@ const RoutineExerciseRow: React.FC<{ name: string; sets: number; reps: number; m
     return () => { isMounted = false; };
   }, [name]);
 
-  const displaySrc = (!hasError && (getHardcodedGif(name) || gifUrl)) ? (getHardcodedGif(name) || gifUrl!) : `https://picsum.photos/seed/${encodeURIComponent(name)}/100/100`;
-
   const muscleCn = getMuscleGroupDisplay(muscleGroup as MuscleGroup).cn;
 
   return (
     <div style={{ backgroundColor: lightTheme.bg }} className="p-3 border border-black/5 rounded-2xl shadow-sm flex items-center gap-4">
       {/* Small GIF on Left */}
       <div className="w-16 h-16 rounded-xl overflow-hidden bg-slate-100 shrink-0 flex items-center justify-center border border-black/5 relative">
-        {loading && !hasError ? (
+        {loading ? (
           <Loader2 className="w-4 h-4 animate-spin text-black/40" />
         ) : (
           <img 
-            src={displaySrc} 
+            src={gifUrl || `https://picsum.photos/seed/${name}/100/100`} 
             alt={name} 
             className="w-full h-full object-cover"
-            onError={() => setHasError(true)}
             referrerPolicy="no-referrer"
           />
         )}
@@ -789,31 +787,31 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
       routines: [
         { id: 'ppl-1', name: 'PUSH A - 胸肩三頭力量 (Day 1)', exercises: [
           { id: 'p1', name: '槓鈴平板臥推', muscleGroup: 'chest', defaultSets: 5, defaultReps: 5, defaultWeight: 0 },
-          { id: 'p2', name: '啞鈴肩推', muscleGroup: 'shoulders', defaultSets: 3, defaultReps: 10, defaultWeight: 0 },
+          { id: 'p2', name: '坐姿啞鈴肩推', muscleGroup: 'shoulders', defaultSets: 3, defaultReps: 10, defaultWeight: 0 },
           { id: 'p3', name: '雙槓撐體', muscleGroup: 'chest', defaultSets: 3, defaultReps: 12, defaultWeight: 0 }
         ]},
         { id: 'ppl-2', name: 'PULL A - 背部二頭厚度 (Day 2)', exercises: [
           { id: 'pl1', name: '槓鈴划船', muscleGroup: 'back', defaultSets: 4, defaultReps: 8, defaultWeight: 0 },
           { id: 'pl2', name: '引體向上', muscleGroup: 'back', defaultSets: 3, defaultReps: 10, defaultWeight: 0 },
-          { id: 'pl3', name: '滑輪面拉', muscleGroup: 'shoulders', defaultSets: 3, defaultReps: 15, defaultWeight: 0 }
+          { id: 'pl3', name: '繩索面拉', muscleGroup: 'shoulders', defaultSets: 3, defaultReps: 15, defaultWeight: 0 }
         ]},
         { id: 'ppl-3', name: 'LEGS A - 下肢全能力量 (Day 3)', exercises: [
           { id: 'l1', name: '槓鈴深蹲', muscleGroup: 'quads', defaultSets: 5, defaultReps: 5, defaultWeight: 0 },
           { id: 'l2', name: '傳統硬舉', muscleGroup: 'back', defaultSets: 3, defaultReps: 5, defaultWeight: 0 },
-          { id: 'l3', name: '仰臥腿後勾', muscleGroup: 'quads', defaultSets: 3, defaultReps: 12, defaultWeight: 0 }
+          { id: 'l3', name: '俯臥腿後勾', muscleGroup: 'quads', defaultSets: 3, defaultReps: 12, defaultWeight: 0 }
         ]},
         { id: 'ppl-4', name: 'PUSH B - 胸肩三頭肥大 (Day 4)', exercises: [
           { id: 'pb1', name: '啞鈴上斜臥推', muscleGroup: 'chest', defaultSets: 4, defaultReps: 12, defaultWeight: 0 },
           { id: 'pb2', name: '啞鈴側平舉', muscleGroup: 'shoulders', defaultSets: 4, defaultReps: 15, defaultWeight: 0 },
-          { id: 'pb3', name: '滑輪繩索下壓', muscleGroup: 'arms', defaultSets: 3, defaultReps: 15, defaultWeight: 0 }
+          { id: 'pb3', name: '繩索下壓', muscleGroup: 'arms', defaultSets: 3, defaultReps: 15, defaultWeight: 0 }
         ]},
         { id: 'ppl-5', name: 'PULL B - 背部二頭寬度 (Day 5)', exercises: [
-          { id: 'plb1', name: '滑輪下拉', muscleGroup: 'back', defaultSets: 4, defaultReps: 12, defaultWeight: 0 },
-          { id: 'plb2', name: '坐姿划船機', muscleGroup: 'back', defaultSets: 4, defaultReps: 12, defaultWeight: 0 },
+          { id: 'plb1', name: '高位下拉', muscleGroup: 'back', defaultSets: 4, defaultReps: 12, defaultWeight: 0 },
+          { id: 'plb2', name: '坐姿器械划船', muscleGroup: 'back', defaultSets: 4, defaultReps: 12, defaultWeight: 0 },
           { id: 'plb3', name: '槓鈴彎舉', muscleGroup: 'arms', defaultSets: 3, defaultReps: 12, defaultWeight: 0 }
         ]},
         { id: 'ppl-6', name: 'LEGS B - 下肢肥大 (Day 6)', exercises: [
-          { id: 'lb1', name: '上斜腿推機', muscleGroup: 'quads', defaultSets: 4, defaultReps: 12, defaultWeight: 0 },
+          { id: 'lb1', name: '上斜器械腿推', muscleGroup: 'quads', defaultSets: 4, defaultReps: 12, defaultWeight: 0 },
           { id: 'lb2', name: '啞鈴高腳杯蹲', muscleGroup: 'quads', defaultSets: 3, defaultReps: 15, defaultWeight: 0 },
           { id: 'lb3', name: '器械站姿提踵', muscleGroup: 'quads', defaultSets: 3, defaultReps: 15, defaultWeight: 0 }
         ]}
@@ -831,24 +829,24 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
           { id: 'bc3', name: '蝴蝶機夾胸', muscleGroup: 'chest', defaultSets: 3, defaultReps: 15, defaultWeight: 0 }
         ]},
         { id: 'bs-2', name: 'DAY 2 - 背部寬度', exercises: [
-          { id: 'bb1', name: '滑輪下拉', muscleGroup: 'back', defaultSets: 4, defaultReps: 12, defaultWeight: 0 },
+          { id: 'bb1', name: '高位下拉', muscleGroup: 'back', defaultSets: 4, defaultReps: 12, defaultWeight: 0 },
           { id: 'bb2', name: '槓鈴划船', muscleGroup: 'back', defaultSets: 4, defaultReps: 10, defaultWeight: 0 },
-          { id: 'bb3', name: '啞鈴單臂划船', muscleGroup: 'back', defaultSets: 3, defaultReps: 12, defaultWeight: 0 }
+          { id: 'bb3', name: '單臂啞鈴划船', muscleGroup: 'back', defaultSets: 3, defaultReps: 12, defaultWeight: 0 }
         ]},
         { id: 'bs-3', name: 'DAY 3 - 肩部維度', exercises: [
-          { id: 'bs1', name: '啞鈴肩推', muscleGroup: 'shoulders', defaultSets: 4, defaultReps: 10, defaultWeight: 0 },
+          { id: 'bs1', name: '坐姿啞鈴肩推', muscleGroup: 'shoulders', defaultSets: 4, defaultReps: 10, defaultWeight: 0 },
           { id: 'bs2', name: '啞鈴側平舉', muscleGroup: 'shoulders', defaultSets: 4, defaultReps: 15, defaultWeight: 0 },
-          { id: 'bs3', name: '滑輪面拉', muscleGroup: 'shoulders', defaultSets: 3, defaultReps: 15, defaultWeight: 0 }
+          { id: 'bs3', name: '繩索面拉', muscleGroup: 'shoulders', defaultSets: 3, defaultReps: 15, defaultWeight: 0 }
         ]},
         { id: 'bs-4', name: 'DAY 4 - 腿部力量', exercises: [
           { id: 'bl1', name: '槓鈴深蹲', muscleGroup: 'quads', defaultSets: 4, defaultReps: 8, defaultWeight: 0 },
-          { id: 'bl2', name: '上斜腿推機', muscleGroup: 'quads', defaultSets: 4, defaultReps: 12, defaultWeight: 0 },
-          { id: 'bl3', name: '仰臥腿後勾', muscleGroup: 'quads', defaultSets: 3, defaultReps: 12, defaultWeight: 0 }
+          { id: 'bl2', name: '上斜器械腿推', muscleGroup: 'quads', defaultSets: 4, defaultReps: 12, defaultWeight: 0 },
+          { id: 'bl3', name: '俯臥腿後勾', muscleGroup: 'quads', defaultSets: 3, defaultReps: 12, defaultWeight: 0 }
         ]},
         { id: 'bs-5', name: 'DAY 5 - 手臂極限', exercises: [
           { id: 'ba1', name: '槓鈴彎舉', muscleGroup: 'arms', defaultSets: 4, defaultReps: 12, defaultWeight: 0 },
           { id: 'ba2', name: '窄握槓鈴臥推', muscleGroup: 'arms', defaultSets: 4, defaultReps: 10, defaultWeight: 0 },
-          { id: 'ba3', name: '滑輪繩索下壓', muscleGroup: 'arms', defaultSets: 3, defaultReps: 15, defaultWeight: 0 }
+          { id: 'ba3', name: '繩索下壓', muscleGroup: 'arms', defaultSets: 3, defaultReps: 15, defaultWeight: 0 }
         ]}
       ]
     },
@@ -861,20 +859,20 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
         { id: 'ul-1', name: 'UPPER A - 上肢力量 (Day 1)', exercises: [
           { id: 'u1', name: '槓鈴平板臥推', muscleGroup: 'chest', defaultSets: 4, defaultReps: 6, defaultWeight: 0 },
           { id: 'u2', name: '引體向上', muscleGroup: 'back', defaultSets: 4, defaultReps: 8, defaultWeight: 0 },
-          { id: 'u3', name: '槓鈴肩推', muscleGroup: 'shoulders', defaultSets: 3, defaultReps: 8, defaultWeight: 0 }
+          { id: 'u3', name: '站姿槓鈴肩推', muscleGroup: 'shoulders', defaultSets: 3, defaultReps: 8, defaultWeight: 0 }
         ]},
         { id: 'ul-2', name: 'LOWER A - 下肢力量 (Day 2)', exercises: [
           { id: 'lo1', name: '槓鈴深蹲', muscleGroup: 'quads', defaultSets: 4, defaultReps: 6, defaultWeight: 0 },
           { id: 'lo2', name: '六角槓硬舉', muscleGroup: 'quads', defaultSets: 3, defaultReps: 5, defaultWeight: 0 },
-          { id: 'lo3', name: '仰臥腿後勾', muscleGroup: 'quads', defaultSets: 3, defaultReps: 12, defaultWeight: 0 }
+          { id: 'lo3', name: '俯臥腿後勾', muscleGroup: 'quads', defaultSets: 3, defaultReps: 12, defaultWeight: 0 }
         ]},
         { id: 'ul-3', name: 'UPPER B - 上肢肥大 (Day 3)', exercises: [
           { id: 'ub1', name: '啞鈴上斜臥推', muscleGroup: 'chest', defaultSets: 4, defaultReps: 12, defaultWeight: 0 },
-          { id: 'ub2', name: '坐姿划船機', muscleGroup: 'back', defaultSets: 4, defaultReps: 12, defaultWeight: 0 },
+          { id: 'ub2', name: '坐姿器械划船', muscleGroup: 'back', defaultSets: 4, defaultReps: 12, defaultWeight: 0 },
           { id: 'ub3', name: '啞鈴側平舉', muscleGroup: 'shoulders', defaultSets: 4, defaultReps: 15, defaultWeight: 0 }
         ]},
         { id: 'ul-4', name: 'LOWER B - 下肢肥大 (Day 4)', exercises: [
-          { id: 'lob1', name: '上斜腿推機', muscleGroup: 'quads', defaultSets: 4, defaultReps: 12, defaultWeight: 0 },
+          { id: 'lob1', name: '上斜器械腿推', muscleGroup: 'quads', defaultSets: 4, defaultReps: 12, defaultWeight: 0 },
           { id: 'lob2', name: '啞鈴高腳杯蹲', muscleGroup: 'quads', defaultSets: 3, defaultReps: 15, defaultWeight: 0 },
           { id: 'lob3', name: '器械站姿提踵', muscleGroup: 'quads', defaultSets: 3, defaultReps: 15, defaultWeight: 0 }
         ]}
@@ -889,7 +887,7 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
         { id: 'fb-1', name: '全身基礎 A (Day 1)', exercises: [
           { id: 'f1', name: '啞鈴高腳杯蹲', muscleGroup: 'quads', defaultSets: 3, defaultReps: 12, defaultWeight: 0 },
           { id: 'f2', name: '標準俯地挺身', muscleGroup: 'chest', defaultSets: 3, defaultReps: 15, defaultWeight: 0 },
-          { id: 'f3', name: '坐姿划船機', muscleGroup: 'back', defaultSets: 3, defaultReps: 12, defaultWeight: 0 }
+          { id: 'f3', name: '坐姿器械划船', muscleGroup: 'back', defaultSets: 3, defaultReps: 12, defaultWeight: 0 }
         ]},
         { id: 'fb-2', name: '全身基礎 B (Day 2)', exercises: [
           { id: 'f21', name: '六角槓硬舉', muscleGroup: 'back', defaultSets: 3, defaultReps: 10, defaultWeight: 0 },
@@ -897,9 +895,9 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
           { id: 'f23', name: '棒式', muscleGroup: 'core', defaultSets: 3, defaultReps: 1, defaultWeight: 0 }
         ]},
         { id: 'fb-3', name: '全身基礎 C (Day 3)', exercises: [
-          { id: 'f31', name: '上斜腿推機', muscleGroup: 'quads', defaultSets: 3, defaultReps: 12, defaultWeight: 0 },
+          { id: 'f31', name: '上斜器械腿推', muscleGroup: 'quads', defaultSets: 3, defaultReps: 12, defaultWeight: 0 },
           { id: 'f32', name: '啞鈴上斜臥推', muscleGroup: 'chest', defaultSets: 3, defaultReps: 12, defaultWeight: 0 },
-          { id: 'f33', name: '滑輪下拉', muscleGroup: 'back', defaultSets: 3, defaultReps: 12, defaultWeight: 0 }
+          { id: 'f33', name: '高位下拉', muscleGroup: 'back', defaultSets: 3, defaultReps: 12, defaultWeight: 0 }
         ]}
       ]
     },
@@ -959,7 +957,7 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
           name: 'Day 1 - 推部力量與維度',
           exercises: [
             { id: 'w3-d1-e1', name: '槓鈴平板臥推', muscleGroup: 'chest', defaultSets: 4, defaultReps: 10, defaultWeight: 0 },
-            { id: 'w3-d1-e2', name: '啞鈴肩推', muscleGroup: 'shoulders', defaultSets: 3, defaultReps: 10, defaultWeight: 0 },
+            { id: 'w3-d1-e2', name: '坐姿啞鈴肩推', muscleGroup: 'shoulders', defaultSets: 3, defaultReps: 10, defaultWeight: 0 },
             { id: 'w3-d1-e3', name: '平板繩索飛鳥', muscleGroup: 'chest', defaultSets: 3, defaultReps: 12, defaultWeight: 0 }
           ]
         },
@@ -968,8 +966,8 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
           name: 'Day 2 - 拉部寬度與厚度',
           exercises: [
             { id: 'w3-d2-e1', name: '槓鈴划船', muscleGroup: 'back', defaultSets: 4, defaultReps: 10, defaultWeight: 0 },
-            { id: 'w3-d2-e2', name: '滑輪下拉', muscleGroup: 'back', defaultSets: 4, defaultReps: 12, defaultWeight: 0 },
-            { id: 'w3-d2-e3', name: '直臂下拉', muscleGroup: 'back', defaultSets: 3, defaultReps: 12, defaultWeight: 0 }
+            { id: 'w3-d2-e2', name: '高位下拉', muscleGroup: 'back', defaultSets: 4, defaultReps: 12, defaultWeight: 0 },
+            { id: 'w3-d2-e3', name: '滑輪直臂下拉', muscleGroup: 'back', defaultSets: 3, defaultReps: 12, defaultWeight: 0 }
           ]
         },
         {
@@ -978,7 +976,7 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
           exercises: [
             { id: 'w3-d3-e1', name: '槓鈴深蹲', muscleGroup: 'quads', defaultSets: 4, defaultReps: 10, defaultWeight: 0 },
             { id: 'w3-d3-e2', name: '槓鈴臀推', muscleGroup: 'quads', defaultSets: 3, defaultReps: 12, defaultWeight: 0 },
-            { id: 'w3-d3-e3', name: '水平腿推機', muscleGroup: 'quads', defaultSets: 3, defaultReps: 12, defaultWeight: 0 }
+            { id: 'w3-d3-e3', name: '水平器械腿推', muscleGroup: 'quads', defaultSets: 3, defaultReps: 12, defaultWeight: 0 }
           ]
         }
       ]
@@ -1001,7 +999,7 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
           name: 'Day 2 - 下肢 A 力量深蹲',
           exercises: [
             { id: 'w4-d2-e1', name: '槓鈴深蹲', muscleGroup: 'quads', defaultSets: 4, defaultReps: 8, defaultWeight: 0 },
-            { id: 'w4-d2-e2', name: '水平腿推機', muscleGroup: 'quads', defaultSets: 3, defaultReps: 10, defaultWeight: 0 },
+            { id: 'w4-d2-e2', name: '水平器械腿推', muscleGroup: 'quads', defaultSets: 3, defaultReps: 10, defaultWeight: 0 },
             { id: 'w4-d2-e3', name: '槓鈴臀推', muscleGroup: 'quads', defaultSets: 3, defaultReps: 12, defaultWeight: 0 }
           ]
         },
@@ -1010,8 +1008,8 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
           name: 'Day 3 - 上肢 B 肥大雕琢',
           exercises: [
             { id: 'w4-d3-e1', name: '上斜器械胸推', muscleGroup: 'chest', defaultSets: 4, defaultReps: 12, defaultWeight: 0 },
-            { id: 'w4-d3-e2', name: '器械下拉', muscleGroup: 'back', defaultSets: 4, defaultReps: 12, defaultWeight: 0 },
-            { id: 'w4-d3-e3', name: '直臂下拉', muscleGroup: 'back', defaultSets: 3, defaultReps: 15, defaultWeight: 0 }
+            { id: 'w4-d3-e2', name: '分動器械下拉', muscleGroup: 'back', defaultSets: 4, defaultReps: 12, defaultWeight: 0 },
+            { id: 'w4-d3-e3', name: '滑輪直臂下拉', muscleGroup: 'back', defaultSets: 3, defaultReps: 15, defaultWeight: 0 }
           ]
         },
         {
@@ -1019,7 +1017,7 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
           name: 'Day 4 - 下肢 B 肥大拉伸',
           exercises: [
             { id: 'w4-d4-e1', name: '傳統硬舉', muscleGroup: 'back', defaultSets: 3, defaultReps: 8, defaultWeight: 0 },
-            { id: 'w4-d4-e2', name: '啞鈴上斜划船', muscleGroup: 'back', defaultSets: 3, defaultReps: 12, defaultWeight: 0 },
+            { id: 'w4-d4-e2', name: '上斜啞鈴划船', muscleGroup: 'back', defaultSets: 3, defaultReps: 12, defaultWeight: 0 },
             { id: 'w4-d4-e3', name: '仰臥器械胸推', muscleGroup: 'chest', defaultSets: 3, defaultReps: 12, defaultWeight: 0 }
           ]
         }
@@ -1042,17 +1040,17 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
           id: 'w5-d2',
           name: 'Day 2 - 背部維度與厚度',
           exercises: [
-            { id: 'w5-d2-e1', name: '器械下拉', muscleGroup: 'back', defaultSets: 4, defaultReps: 12, defaultWeight: 0 },
+            { id: 'w5-d2-e1', name: '分動器械下拉', muscleGroup: 'back', defaultSets: 4, defaultReps: 12, defaultWeight: 0 },
             { id: 'w5-d2-e2', name: '引體向上', muscleGroup: 'back', defaultSets: 3, defaultReps: 8, defaultWeight: 0 },
-            { id: 'w5-d2-e3', name: '直臂下拉', muscleGroup: 'back', defaultSets: 3, defaultReps: 12, defaultWeight: 0 }
+            { id: 'w5-d2-e3', name: '滑輪直臂下拉', muscleGroup: 'back', defaultSets: 3, defaultReps: 12, defaultWeight: 0 }
           ]
         },
         {
           id: 'w5-d3',
           name: 'Day 3 - 肩部雕刻與立體感',
           exercises: [
-            { id: 'w5-d3-e1', name: '啞鈴肩推', muscleGroup: 'shoulders', defaultSets: 4, defaultReps: 10, defaultWeight: 0 },
-            { id: 'w5-d3-e2', name: '滑輪面拉', muscleGroup: 'shoulders', defaultSets: 3, defaultReps: 15, defaultWeight: 0 },
+            { id: 'w5-d3-e1', name: '坐姿啞鈴肩推', muscleGroup: 'shoulders', defaultSets: 4, defaultReps: 10, defaultWeight: 0 },
+            { id: 'w5-d3-e2', name: '繩索面拉', muscleGroup: 'shoulders', defaultSets: 3, defaultReps: 15, defaultWeight: 0 },
             { id: 'w5-d3-e3', name: '啞鈴側平舉', muscleGroup: 'shoulders', defaultSets: 4, defaultReps: 15, defaultWeight: 0 }
           ]
         },
@@ -1062,7 +1060,7 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
           exercises: [
             { id: 'w5-d4-e1', name: '槓鈴深蹲', muscleGroup: 'quads', defaultSets: 4, defaultReps: 8, defaultWeight: 0 },
             { id: 'w5-d4-e2', name: '槓鈴臀推', muscleGroup: 'quads', defaultSets: 3, defaultReps: 12, defaultWeight: 0 },
-            { id: 'w5-d4-e3', name: '水平腿推機', muscleGroup: 'quads', defaultSets: 3, defaultReps: 12, defaultWeight: 0 }
+            { id: 'w5-d4-e3', name: '水平器械腿推', muscleGroup: 'quads', defaultSets: 3, defaultReps: 12, defaultWeight: 0 }
           ]
         },
         {
