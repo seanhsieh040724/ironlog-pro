@@ -86,7 +86,7 @@ export const getMuscleGroupDisplay = (mg: MuscleGroup | string): { cn: string, e
 
 export const getMuscleGroup = (name: string): MuscleGroup => {
   const n = name.toLowerCase();
-  if (n.includes('彎舉') || n.includes('下壓') || n.includes('三頭') || n.includes('二頭') || n.includes('腕') || n.includes('臂屈伸') || n.includes('窄握') || n.includes('curl') || n.includes('tricep') || n.includes('bicep') || n.includes('arm')) return 'arms';
+  if (n.includes('彎舉') || n.includes('下壓') || n.includes('三頭') || n.includes('二頭') || n.includes('腕') || n.includes('臂屈伸') || n.includes('窄握') || n.includes('碎顱者') || n.includes('curl') || n.includes('tricep') || n.includes('bicep') || n.includes('arm')) return 'arms';
   if (n.includes('捲腹') || n.includes('起坐') || n.includes('抬腿') || n.includes('核心') || n.includes('棒式') || n.includes('abs') || n.includes('core') || n.includes('crunch') || n.includes('plank')) return 'core';
   if (n.includes('蹲') || n.includes('腿') || n.includes('squat') || n.includes('leg') || n.includes('踏車') || n.includes('quad') || n.includes('calve') || n.includes('臀推') || n.includes('thrust') || n.includes('hip') || n.includes('提踵') || n.includes('calf') || n.includes('相撲') || n.includes('sumo') || n.includes('六角槓') || n.includes('trap bar') || n.includes('臀')) return 'quads';
   if (n.includes('肩') || n.includes('平舉') || n.includes('聳肩') || n.includes('shoulder') || n.includes('press') || n.includes('lateral') || n.includes('面拉') || n.includes('後三角') || n.includes('反向飛鳥')) return 'shoulders';
@@ -294,11 +294,11 @@ const EXERCISE_METHODS: Record<string, string> = {
 
   "側棒式": "01 側臥並以單手肘支撐，另一手置於腰間，身體側向呈一直線，側面核心收緊。\n\n02 維持支撐姿勢，感受側腹肌群對抗重力的持續舒張與張力。\n\n03 感覺側腹（腹斜肌）強力收縮，將髖部持續推離地面，確保身體不向下塌陷。",
 
-  "跪姿滑輪捲腹": "01 跪在滑輪機前，雙手握住繩索並置於耳側，身體微前傾，背部微拱。\n\n02 緩慢讓滑輪拉力帶動軀幹向上回位，控制肌肉拉長速度，感受腹肌的舒張。\n\n03 感覺腹肌強力收縮，用力將手肘向膝蓋方向拉近，在底部深壓腹部。",
+  "cable跪姿捲腹": "01 跪在滑輪機前，雙手握住繩索並置於耳側，身體微前傾，背部微拱。\n\n02 緩慢讓滑輪拉力帶動軀幹向上回位，控制肌肉拉長速度，感受腹肌的舒張。\n\n03 感覺腹肌強力收縮，用力將手肘向膝蓋方向拉近，在底部深壓腹部。",
 
   "下斜捲腹": "01 躺在下斜凳上，雙腳勾住護擋固定身體，手部輕扶頭部兩側。\n\n02 緩慢將上半身向後下降，對抗重力控制節節，感受到腹部肌群深度的舒張。\n\n03 感覺腹肌收縮，將胸部向腿部方向捲起，專注於腹部上端的擠壓感受。",
 
-  "滑輪側捲腹": "01 側面面向滑輪機並握住把手，單手或雙手握把，維持站姿且核心鎖定。\n\n02 緩慢控制滑輪回收，讓軀幹向滑輪方向微側彎，感受另一側腹斜肌的舒張。\n\n03 感覺側腹肌群收縮，將軀幹向反方向下拉捲曲，強化腰側線條。"
+  "cable單側捲腹": "01 側面面向滑輪機並握住把手，單手或雙手握把，維持站姿且核心鎖定。\n\n02 緩慢控制滑輪回收，讓軀幹向滑輪方向微側彎，感受另一側腹斜肌的舒張。\n\n03 感覺側腹肌群收縮，將軀幹向反方向下拉捲曲，強化腰側線條。"
 };
 
 export const getExerciseMethod = (name: string): string => {
