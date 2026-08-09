@@ -7,16 +7,16 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ExerciseSmallGif } from './ExerciseSmallGif';
-import { getMuscleGroup, getMuscleGroupDisplay, fetchExerciseGif, fetchExerciseGifSync, getExerciseMethod } from '../utils/fitnessMath';
+import { getMuscleGroup, getMuscleGroupDisplay, fetchExerciseGif, getExerciseMethod, getExerciseGifUrl } from '../utils/fitnessMath';
 import { AppContext } from '../App';
 import { lightTheme, CardStyle, TextStyle, InputStyle, ActionButtonStyle } from '../themeStyles';
 
 export const ORGANIZED_EXERCISES: Record<string, string[]> = {
-  'chest': ['槓鈴平板臥推', '槓鈴上斜臥推', '啞鈴平板臥推', '啞鈴上斜臥推', '史密斯平板臥推', '坐姿器械推胸', '蝴蝶機夾胸', '跪姿繩索夾胸', '站姿繩索夾胸', '平板繩索飛鳥', '啞鈴平板飛鳥', '啞鈴上斜飛鳥', '器械上斜飛鳥', '上斜器械胸推', '雙槓撐體輔助', '仰臥器械胸推', '雙槓撐體', '標準俯地挺身', '器械上斜推胸', '史密斯上斜臥推'],
-  'back': ['引體向上', '滑輪下拉', '槓鈴划船', '啞鈴單臂划船', '坐姿划船機', 'T桿划船機', '器械反握高位下拉', '傳統硬舉', '輔助引體向上機', 'V把坐姿划船', '寬握水平划船', '滑輪反握下拉', '器械下拉', '直臂下拉', '啞鈴上斜划船'],
-  'shoulders': ['啞鈴肩推', '槓鈴肩推', '阿諾肩推', '器械肩推', '史密斯機肩推', '啞鈴側平舉', '滑輪側平舉', '器械側平舉', '啞鈴前平舉', '蝴蝶機後三角飛鳥', '滑輪面拉', '俯身啞鈴反向飛鳥'],
-  'legs': ['槓鈴深蹲', '啞鈴高腳杯蹲', '上斜腿推機', '水平腿推機', '槓鈴臀推', '保加利亞啞鈴分腿蹲', '哈克深蹲', '仰臥腿後勾', '坐姿腿後勾', '器械站姿提踵', '相撲硬舉', '器械腿外展', '器械腿內收', '六角槓硬舉'],
-  'arms': ['槓鈴彎舉', '反手槓鈴彎舉', '啞鈴交替彎舉', '啞鈴錘式彎舉', '牧師椅彎舉', '坐姿上斜啞鈴二頭彎舉', '坐姿啞鈴錘式彎舉', '站姿繩索錘式彎舉', '單臂滑輪三頭下壓', '反手直桿下壓', '滑輪繩索下壓', '窄握槓鈴臥推', '仰臥槓鈴臂屈伸', '啞鈴頸後臂屈伸', '滑輪直桿彎舉', '二頭肌器械彎舉', '滑輪直桿過頭臂屈伸'],
+  'chest': ['槓鈴平板臥推', '槓鈴上斜臥推', '啞鈴平板臥推', '啞鈴上斜臥推', '史密斯平板臥推', '坐姿器械胸推', '蝴蝶機夾胸', '跪姿繩索夾胸', '站姿繩索夾胸', '平板繩索飛鳥', '平板啞鈴飛鳥', '上斜啞鈴飛鳥', '上斜器械飛鳥', '上斜器械胸推', '雙槓撐體輔助', '仰臥器械胸推', '雙槓撐體', '標準俯地挺身', '器械上斜胸推', '史密斯上斜臥推'],
+  'back': ['引體向上', '高位下拉', '槓鈴划船', '單臂啞鈴划船', '坐姿器械划船', '俯臥T槓划船', '反握高位划船', '傳統硬舉', '引體向上輔助', 'V把坐姿划船', '寬距坐姿划船', '反握高位下拉', '分動器械下拉', '滑輪直臂下拉', '上斜啞鈴划船'],
+  'shoulders': ['坐姿啞鈴肩推', '站姿槓鈴肩推', '阿諾肩推', '器械肩推', '史密斯肩推', '啞鈴側平舉', '繩索單邊側平舉', '器械側平舉', '啞鈴前平舉', '蝴蝶機反向飛鳥', '繩索面拉', '俯身啞鈴反向飛鳥'],
+  'legs': ['槓鈴深蹲', '啞鈴高腳杯蹲', '上斜器械腿推', '水平器械腿推', '槓鈴臀推', '保加利亞啞鈴分腿蹲', '哈克深蹲', '俯臥腿後勾', '坐姿腿後勾', '器械站姿提踵', '相撲硬舉', '器械腿外展', '器械腿內收', '六角槓硬舉'],
+  'arms': ['槓鈴彎舉', '槓鈴反向彎舉', '啞鈴交替彎舉', '站姿啞鈴錘式彎舉', '牧師椅彎舉', '坐姿上斜啞鈴二頭彎舉', '坐姿啞鈴錘式彎舉', '站姿繩索錘式彎舉', '單臂滑輪三頭下壓', '反手直桿下壓', '繩索下壓', '窄握槓鈴臥推', '碎顱者', '啞鈴頸後臂屈伸', 'cable直槓彎舉', '器械牧師彎舉', 'cable直槓過頭臂屈伸'],
   'core': ['仰臥起坐', '羅馬椅抬腿', '棒式', '俄羅斯轉體', '健腹輪', '器械捲腹', '懸垂抬腿', '登山者', '側棒式', '跪姿滑輪捲腹', '下斜捲腹', '滑輪側捲腹']
 };
 
@@ -28,9 +28,9 @@ interface WorkoutViewProps {
   onFinish: () => void;
 }
 
-// 取得 GIF 網址邏輯 (由 fitnessMath 統一管理)
 const getHardcodedGif = (name: string) => {
-  return fetchExerciseGifSync(name) || null;
+  if (!name) return null;
+  return getExerciseGifUrl(name);
 };
 
 export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onFinish }) => {
@@ -40,7 +40,6 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
   const [searchTerm, setSearchTerm] = useState('');
   const [gifUrl, setGifUrl] = useState<string | null>(null);
   const [isGifLoading, setIsGifLoading] = useState(true);
-  const [detailImgError, setDetailImgError] = useState(false);
   const [elapsedTime, setElapsedTime] = useState<string>("00:00");
 
   const currentDetailEx = useMemo(() => session?.exercises.find(e => e.id === activeExerciseId), [session, activeExerciseId]);
@@ -75,7 +74,6 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
   useEffect(() => {
     if (currentDetailEx) {
       setIsGifLoading(true);
-      setDetailImgError(false);
       fetchExerciseGif(currentDetailEx.name).then(url => {
         setGifUrl(url);
         setTimeout(() => setIsGifLoading(false), 300);
@@ -144,8 +142,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
 
   if (!session) return null;
 
-  const rawGifSrc = currentDetailEx ? (getHardcodedGif(currentDetailEx.name) || gifUrl) : null;
-  const displayGifSrc = currentDetailEx ? ((!detailImgError && rawGifSrc) ? rawGifSrc : `https://picsum.photos/seed/${encodeURIComponent(currentDetailEx.name)}/300/300`) : '';
+  const displayGifSrc = currentDetailEx ? (getHardcodedGif(currentDetailEx.name) || gifUrl || '') : '';
 
   return (
     <div className="relative min-h-screen">
@@ -241,7 +238,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
 
             <div className="w-full relative px-1">
               <div style={{ backgroundColor: lightTheme.card }} className="relative overflow-hidden rounded-[24px] shadow-sm border border-black/5 min-h-[240px] flex items-center justify-center">
-                {isGifLoading && !getHardcodedGif(currentDetailEx?.name || '') && !detailImgError ? (
+                {isGifLoading && !getHardcodedGif(currentDetailEx?.name || '') ? (
                   <div className="flex flex-col items-center gap-4 py-12 text-black">
                     <Loader2 className="w-9 h-9 animate-spin text-black" />
                     <p className="text-[11px] font-black uppercase tracking-widest">載入動作中...</p>
@@ -252,11 +249,6 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                     alt={currentDetailEx?.name} 
                     className="w-full h-auto object-cover rounded-[15px] block"
                     onLoad={() => setIsGifLoading(false)}
-                    onError={() => {
-                      setIsGifLoading(false);
-                      setDetailImgError(true);
-                    }}
-                    referrerPolicy="no-referrer"
                   />
                 )}
               </div>
