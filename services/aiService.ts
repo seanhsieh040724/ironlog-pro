@@ -81,13 +81,19 @@ export const analyzeFoodImage = async (base64Image: string) => {
 export const chatWithCoach = async (
   messages: { role: 'user' | 'model'; parts: { text: string }[] }[], 
   metrics: BodyMetric, 
-  goal: UserGoal
+  goal: UserGoal,
+  coachTone: string = 'taiwanese'
 ) => {
   const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
   
+  const toneInstruction = coachTone === 'hongkong' || coachTone === '港式教練'
+    ? `你是一位非常專業、講話極具香港特色且熱血激昂的香港健美教練（風格：偶爾穿插道地港式健身俚語如「師兄/師姐」、「頂住呀」、「爆肌」、「唔好偷懶」、「操爆佢」、「食足蛋白質」、「好Firm」、「Chur到盡」，熱情又霸氣，字面以繁體中文標準字為主方便閱讀）。`
+    : `你是一位親切熱情、正能量滿點、專業度極高的台灣健身教練（風格：語氣溫暖鼓勵、常用台式激勵用語如「水喔」、「很讚」、「加油」、「核心收緊」、「不要放掉」、「練起來」、「吃好吃滿」、「超棒的」，給予學員滿滿信心與科學建議）。`;
+
   const systemInstruction = `
     你是一位頂級運動健身教練與專業運動營養學家，名叫「IronLog AI 鋼鐵教練」。
     你正在與一位你的專屬學員對話。
+    ${toneInstruction}
     
     學員的當前身體數據：
     - 性別：${metrics.gender === 'male' ? '男' : '女'}
@@ -99,10 +105,10 @@ export const chatWithCoach = async (
     - 活動量：${goal.activityLevel}
     
     回答指南：
-    1. 保持專業、熱情、激勵人心（阿諾經典風格），多給予學員訓練和飲食上的心態引導。
-    2. 學員詢問課表規劃、姿勢要領、增肌減脂、睡眠修復或健身補劑時，提供極其具體、可操作的科學建议。
+    1. 保持專業、熱情、激勵人心，多給予學員訓練和飲食上的心態引導與科學依據。
+    2. 學員詢問課表規劃、動作要領、增肌減脂、睡眠修復或健身補劑時，提供極其具體、可操作的科學建議。
     3. 隨時結合學員自身的身體數據，在適當時候提及他們的目標（例如：『既然你的目標是從 ${metrics.weight}kg 瘦到 ${goal.targetWeight}kg，那麼...』）。
-    4. 請使用繁體中文回答，字句流暢自然，不要有英文縮寫生硬感。使用 Markdown 格式加粗重點。
+    4. 請使用繁體中文回答，字句流暢自然。使用 Markdown 格式加粗重點。
   `;
   
   try {
