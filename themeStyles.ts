@@ -38,7 +38,7 @@ export const TextStyle = {
 
 // 霓虹綠強調色文字樣式
 export const AccentTextStyle = {
-  color: '#82CC00', // 稍微加深以提升在白底上的易讀性
+  color: '#CCFF00',
   fontWeight: '900'
 };
 

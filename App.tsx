@@ -219,7 +219,7 @@ const App: React.FC = () => {
               <motion.div 
                 animate={{ x: [-120, 120] }}
                 transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-                className="w-1/2 h-full bg-[#82CC00]"
+                className="w-1/2 h-full bg-[#CCFF00]"
               />
             </motion.div>
           </motion.div>
@@ -356,11 +356,11 @@ const App: React.FC = () => {
 };
 
 const TabButton = ({ active, onClick, icon, label }: any) => (
-  <button onClick={onClick} className={`flex flex-col items-center gap-1 transition-all w-[64px] ${active ? 'text-[#82CC00]' : 'text-black/60 hover:text-black'}`}>
-    <div className={`p-1.5 rounded-xl transition-all ${active ? 'bg-[#CCFF00]/10 shadow-[0_0_20px_rgba(204,255,0,0.1)]' : ''}`}>
+  <button onClick={onClick} className={`flex flex-col items-center gap-1 transition-all w-[64px] ${active ? 'text-black' : 'text-black/60 hover:text-black'}`}>
+    <div className={`p-1.5 rounded-xl transition-all ${active ? 'bg-[#CCFF00] text-black shadow-xs' : 'text-stone-500'}`}>
       {React.cloneElement(icon, { className: `w-5 h-5 ${active ? 'stroke-[2.5]' : 'stroke-2'}` })}
     </div>
-    <span className={`text-[9px] font-black tracking-tight leading-tight transition-all ${active ? 'text-black' : 'text-black/60'}`}>{label}</span>
+    <span className={`text-[9px] font-black tracking-tight leading-tight transition-all ${active ? 'text-black font-black' : 'text-black/60'}`}>{label}</span>
   </button>
 );
 
