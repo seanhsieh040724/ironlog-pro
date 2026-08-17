@@ -100,6 +100,7 @@ export const DietView: React.FC = () => {
   // 重新計算表單狀態
   const [recalcForm, setRecalcForm] = useState({
     weight: latest.weight || 75,
+    targetWeight: globalGoal.targetWeight || latest.weight || 75,
     height: latest.height || 178,
     age: latest.age || 26,
     gender: latest.gender || 'male',
@@ -217,6 +218,7 @@ export const DietView: React.FC = () => {
     const updatedGoal: UserGoal = {
       ...globalGoal,
       type: recalcForm.goalType as any,
+      targetWeight: Number(recalcForm.targetWeight) || Number(recalcForm.weight) || 75,
       activityLevel: recalcForm.activityLevel as any,
       proteinRatio: recalcForm.proteinRatio,
       carbRatio: recalcForm.carbRatio,
@@ -239,7 +241,7 @@ export const DietView: React.FC = () => {
     localStorage.setItem('ironlog_v3_metrics', JSON.stringify(newMetrics));
 
     setShowRecalcModal(false);
-    showToast('已更新每日熱量與營養素目標！');
+    showToast('已更新每日熱量與目標體重！');
   };
 
   // 手動新增食物
@@ -441,6 +443,7 @@ export const DietView: React.FC = () => {
                   onClick={() => {
                     setRecalcForm({
                       weight: latest.weight || 75,
+                      targetWeight: globalGoal.targetWeight || latest.weight || 75,
                       height: latest.height || 178,
                       age: latest.age || 26,
                       gender: latest.gender || 'male',
@@ -462,8 +465,22 @@ export const DietView: React.FC = () => {
                 <div className="text-5xl font-black text-[#82CC00] tracking-tight leading-none">
                   {targetCalories}
                 </div>
-                <div className="text-xs font-bold text-slate-500 mt-2">
-                  大卡 / 日
+                <div className="flex flex-wrap items-center gap-2 mt-2">
+                  <span className="text-xs font-bold text-slate-500">
+                    大卡 / 日
+                  </span>
+                  <span className="text-[11px] font-black px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700">
+                    目標體重：{globalGoal.targetWeight || latest.weight || 75} kg
+                  </span>
+                  {globalGoal.targetWeight && latest.weight > 0 && globalGoal.targetWeight !== latest.weight && (
+                    <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
+                      globalGoal.targetWeight < latest.weight ? 'bg-sky-100 text-sky-700' : 'bg-amber-100 text-amber-700'
+                    }`}>
+                      {globalGoal.targetWeight < latest.weight 
+                        ? `目標減重 ${(latest.weight - globalGoal.targetWeight).toFixed(1)} kg` 
+                        : `目標增重 ${(globalGoal.targetWeight - latest.weight).toFixed(1)} kg`}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
@@ -898,24 +915,60 @@ export const DietView: React.FC = () => {
                   </div>
                 </div>
 
-                {/* 體重、身高、年齡 */}
-                <div className="grid grid-cols-3 gap-2">
-                  <div>
-                    <label className="block text-[10px] text-slate-500 mb-1">體重 (KG)</label>
-                    <input
-                      type="number"
-                      value={recalcForm.weight}
-                      onChange={(e) => setRecalcForm({ ...recalcForm, weight: Number(e.target.value) })}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 font-bold text-center text-slate-900"
-                    />
+                {/* 體重數據：目前體重 & 目標體重 */}
+                <div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-[10px] text-slate-500 mb-1">目前體重 (KG)</label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        value={recalcForm.weight}
+                        onChange={(e) => setRecalcForm({ ...recalcForm, weight: Number(e.target.value) })}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-bold text-center text-slate-900 outline-none focus:border-black"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] text-[#82CC00] font-black mb-1">目標體重 (KG)</label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        value={recalcForm.targetWeight}
+                        onChange={(e) => setRecalcForm({ ...recalcForm, targetWeight: Number(e.target.value) })}
+                        className="w-full bg-[#CCFF00]/10 border border-[#82CC00]/50 rounded-xl p-2.5 font-black text-center text-slate-900 outline-none focus:border-black"
+                      />
+                    </div>
                   </div>
+
+                  {/* 體重差距動態提示 */}
+                  {recalcForm.weight > 0 && recalcForm.targetWeight > 0 && (
+                    <div className="mt-1.5 text-center">
+                      <span className={`inline-block text-[10px] font-black px-2.5 py-0.5 rounded-full ${
+                        recalcForm.targetWeight < recalcForm.weight 
+                          ? 'bg-sky-100 text-sky-700' 
+                          : recalcForm.targetWeight > recalcForm.weight
+                            ? 'bg-amber-100 text-amber-700'
+                            : 'bg-slate-100 text-slate-600'
+                      }`}>
+                        {recalcForm.targetWeight < recalcForm.weight
+                          ? `目標減重 ${(recalcForm.weight - recalcForm.targetWeight).toFixed(1)} KG`
+                          : recalcForm.targetWeight > recalcForm.weight
+                            ? `目標增重 ${(recalcForm.targetWeight - recalcForm.weight).toFixed(1)} KG`
+                            : '維持當前體重'}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* 身高 & 年齡 */}
+                <div className="grid grid-cols-2 gap-2">
                   <div>
                     <label className="block text-[10px] text-slate-500 mb-1">身高 (CM)</label>
                     <input
                       type="number"
                       value={recalcForm.height}
                       onChange={(e) => setRecalcForm({ ...recalcForm, height: Number(e.target.value) })}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 font-bold text-center text-slate-900"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 font-bold text-center text-slate-900 outline-none focus:border-black"
                     />
                   </div>
                   <div>
@@ -924,7 +977,7 @@ export const DietView: React.FC = () => {
                       type="number"
                       value={recalcForm.age}
                       onChange={(e) => setRecalcForm({ ...recalcForm, age: Number(e.target.value) })}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 font-bold text-center text-slate-900"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 font-bold text-center text-slate-900 outline-none focus:border-black"
                     />
                   </div>
                 </div>
@@ -949,6 +1002,32 @@ export const DietView: React.FC = () => {
                         }`}
                       >
                         {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 日常活動量係數 */}
+                <div>
+                  <label className="block text-[11px] text-slate-500 mb-1">日常活動量係數</label>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {[
+                      { label: '久坐 (1.2)', val: 1.2 },
+                      { label: '輕度 (1.375)', val: 1.375 },
+                      { label: '中度 (1.55)', val: 1.55 },
+                      { label: '高度 (1.725)', val: 1.725 },
+                    ].map(act => (
+                      <button
+                        key={act.val}
+                        type="button"
+                        onClick={() => setRecalcForm({ ...recalcForm, activityLevel: act.val as any })}
+                        className={`py-1.5 px-2 rounded-xl text-[11px] font-bold border transition-all ${
+                          recalcForm.activityLevel === act.val
+                            ? 'bg-black text-white border-black'
+                            : 'bg-slate-50 text-slate-700 border-slate-200'
+                        }`}
+                      >
+                        {act.label}
                       </button>
                     ))}
                   </div>
@@ -994,6 +1073,21 @@ export const DietView: React.FC = () => {
                       運動員 40/35/25
                     </button>
                   </div>
+                </div>
+
+                {/* 即時試算結果預覽卡 */}
+                <div className="bg-[#CCFF00]/15 p-3 rounded-2xl border border-[#82CC00]/30 text-center">
+                  <span className="text-[10px] font-bold text-slate-600 block">依據設定即時試算每日目標熱量</span>
+                  <span className="text-xl font-black text-slate-900 mt-0.5 block">
+                    {calculateSuggestedCalories(
+                      Number(recalcForm.weight) || 75,
+                      Number(recalcForm.height) || 178,
+                      Number(recalcForm.age) || 26,
+                      recalcForm.gender as any,
+                      recalcForm.goalType as any,
+                      recalcForm.activityLevel || 1.55
+                    )} <span className="text-xs font-bold text-slate-600">kcal / 日</span>
+                  </span>
                 </div>
               </div>
 
