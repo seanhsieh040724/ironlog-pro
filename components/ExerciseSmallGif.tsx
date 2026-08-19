@@ -1,42 +1,69 @@
-import React, { useState, useEffect } from 'react';
-import { fetchExerciseGif } from '../utils/fitnessMath';
-import { Loader2 } from 'lucide-react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { getExerciseGifSources, getMuscleGroup, getMuscleGroupDisplay } from '../utils/fitnessMath';
+import { Loader2, Dumbbell } from 'lucide-react';
 
 interface ExerciseSmallGifProps {
   name: string;
 }
 
 export const ExerciseSmallGif: React.FC<ExerciseSmallGifProps> = ({ name }) => {
-  const [gifUrl, setGifUrl] = useState<string | null>(null);
+  const sources = useMemo(() => getExerciseGifSources(name), [name]);
+  const [sourceIndex, setSourceIndex] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [failedAll, setFailedAll] = useState(false);
 
   useEffect(() => {
-    let isMounted = true;
-    const loadGif = async () => {
-      setLoading(true);
-      try {
-        const url = await fetchExerciseGif(name);
-        if (isMounted) setGifUrl(url);
-      } catch (error) {
-        console.error('Failed to fetch gif:', error);
-      } finally {
-        if (isMounted) setLoading(false);
-      }
-    };
-    loadGif();
-    return () => { isMounted = false; };
-  }, [name]);
+    setSourceIndex(0);
+    setLoading(true);
+    setFailedAll(false);
+  }, [name, sources]);
 
-  if (loading) {
-    return <div className="w-full h-full flex items-center justify-center bg-slate-50"><Loader2 className="w-4 h-4 animate-spin text-black" /></div>;
+  const currentSrc = sources[sourceIndex] || '';
+
+  const handleError = useCallback(() => {
+    if (sourceIndex + 1 < sources.length) {
+      setSourceIndex(prev => prev + 1);
+    } else {
+      setLoading(false);
+      setFailedAll(true);
+    }
+  }, [sourceIndex, sources.length]);
+
+  const handleLoad = useCallback(() => {
+    setLoading(false);
+    setFailedAll(false);
+  }, []);
+
+  if (failedAll) {
+    const mg = getMuscleGroup(name);
+    const disp = getMuscleGroupDisplay(mg);
+    return (
+      <div className="w-full h-full flex flex-col items-center justify-center bg-slate-100 text-slate-700 p-1 text-center select-none">
+        <Dumbbell className="w-4 h-4 text-slate-600 mb-0.5" />
+        <span className="text-[9px] font-black leading-tight line-clamp-1">{disp.cn}</span>
+      </div>
+    );
   }
 
   return (
-    <img 
-      src={gifUrl || `https://picsum.photos/seed/${name}/100/100`} 
-      alt={name} 
-      className="w-full h-full object-cover"
-      referrerPolicy="no-referrer"
-    />
+    <div className="w-full h-full relative overflow-hidden bg-slate-50 flex items-center justify-center">
+      {loading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-slate-50 z-10">
+          <Loader2 className="w-4 h-4 animate-spin text-black" />
+        </div>
+      )}
+      {currentSrc && (
+        <img
+          key={currentSrc}
+          src={currentSrc}
+          alt={name}
+          className="w-full h-full object-cover"
+          onLoad={handleLoad}
+          onError={handleError}
+          referrerPolicy="no-referrer"
+          loading="lazy"
+        />
+      )}
+    </div>
   );
 };

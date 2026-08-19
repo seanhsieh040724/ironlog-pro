@@ -97,11 +97,68 @@ export const getMuscleGroup = (name: string): MuscleGroup => {
 };
 
 /**
- * Generates the jsDelivr CDN URL for an exercise GIF, encoding Chinese characters properly.
+ * Immutable commit hashes that permanently host the complete set of exercise GIFs.
+ * Pinned to immutable Git trees to guarantee 100% availability and immunity to remote branch changes.
+ */
+export const IMMUTABLE_ASSET_COMMIT_SHA = 'f9b52cd29d489269f521ec339085567c0fe56b18';
+export const BACKUP_ASSET_COMMIT_SHA = 'a7f385c9aa6c1a24b9ce718e25ca0a101986df88';
+
+/**
+ * Exercise naming aliases for movements that share visual guides or variations
+ */
+export const EXERCISE_MEDIA_ALIASES: Record<string, string> = {
+  '跪姿繩索夾胸': '站姿繩索夾胸',
+  '上斜器械飛鳥': '上斜啞鈴飛鳥',
+  '史密斯上斜臥推': '槓鈴上斜臥推',
+  '史密斯平板臥推': '槓鈴平板臥推',
+  '史密斯肩推': '站姿槓鈴肩推',
+};
+
+/**
+ * Generates an ordered cascade of candidate asset URLs:
+ * 1. Primary: Local / Vercel public static asset path (/assets/[encodedName].gif)
+ * 2. Local / Vercel public static asset path (/assets/[rawName].gif)
+ * 3. Fallback: High-performance immutable jsDelivr CDN (Pinned to permanent commit hash)
+ * 4. Fallback: Fastly GitHub Raw CDN via immutable commit SHA
+ * 5. Alias URLs for visual fallback
+ */
+export const getExerciseGifSources = (name: string): string[] => {
+  if (!name) return [];
+  const cleanName = name.trim();
+  const encodedName = encodeURIComponent(cleanName);
+  
+  const sources: string[] = [
+    // 1. Primary: Local / Vercel public static asset path (URL-encoded)
+    `/assets/${encodedName}.gif`,
+    // 2. Local / Vercel public static asset path (Raw)
+    `/assets/${cleanName}.gif`,
+    // 3. Fallback: High-performance immutable jsDelivr CDN (Pinned to permanent commit)
+    `https://cdn.jsdelivr.net/gh/seanhsieh040724/ironlog-pro@${IMMUTABLE_ASSET_COMMIT_SHA}/assets/${encodedName}.gif`,
+    // 4. Fallback: Fastly-backed GitHub Raw with permanent commit
+    `https://raw.githubusercontent.com/seanhsieh040724/ironlog-pro/${IMMUTABLE_ASSET_COMMIT_SHA}/assets/${encodedName}.gif`
+  ];
+
+  // 5. Append alias fallback sources if alias exists
+  const alias = EXERCISE_MEDIA_ALIASES[cleanName];
+  if (alias && alias !== cleanName) {
+    const encodedAlias = encodeURIComponent(alias);
+    sources.push(
+      `/assets/${encodedAlias}.gif`,
+      `/assets/${alias}.gif`,
+      `https://cdn.jsdelivr.net/gh/seanhsieh040724/ironlog-pro@${IMMUTABLE_ASSET_COMMIT_SHA}/assets/${encodedAlias}.gif`
+    );
+  }
+
+  return sources;
+};
+
+/**
+ * Returns primary Vercel static asset URL for an exercise GIF.
  */
 export const getExerciseGifUrl = (name: string): string => {
   if (!name) return '';
-  return `https://cdn.jsdelivr.net/gh/seanhsieh040724/ironlog-pro@main/assets/${encodeURIComponent(name.trim())}.gif`;
+  const cleanName = name.trim();
+  return `/assets/${encodeURIComponent(cleanName)}.gif`;
 };
 
 export const fetchExerciseGif = async (name: string): Promise<string | null> => {
