@@ -144,9 +144,9 @@ export const CoachView: React.FC = () => {
       prompt: '請根據我的體態目標與每日熱量需求，推薦我今天健康又高蛋白的三餐與點心選擇（包含超商或外食選項）。'
     },
     {
-      icon: '🏃',
-      label: 'HYROX 建議',
-      prompt: '請給我關於 HYROX 混合體能競賽（功能性肌力＋耐力跑）的訓練策略、各關卡技巧與體能分配建議！'
+      icon: '🎯',
+      label: '動作指導建議',
+      prompt: '請為我提供重量訓練核心動作（如深蹲、硬舉、臥推、划船等）的標準發力要領、常見代償錯誤與受傷預防指導建議！'
     }
   ];
 
@@ -194,7 +194,7 @@ export const CoachView: React.FC = () => {
                 IronLog 教練
               </h2>
               <p className="text-sm font-bold text-slate-600 leading-relaxed">
-                關於訓練、飲食或 HYROX，隨時打字問我吧！
+                關於訓練、飲食或恢復，隨時打字問我吧！
               </p>
             </div>
           </motion.div>

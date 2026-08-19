@@ -28,8 +28,8 @@ export const SettingsView: React.FC = () => {
 
   // Account State
   const [profileImage, setProfileImage] = useState<string | null>(() => localStorage.getItem('ironlog_user_avatar'));
-  const [userName, setUserName] = useState<string>(() => localStorage.getItem('ironlog_user_name') || 'Sean Hsieh');
-  const [userEmail, setUserEmail] = useState<string>(() => localStorage.getItem('ironlog_user_email') || 'seanhsieh040724@gmail.com');
+  const [userName, setUserName] = useState<string>(() => localStorage.getItem('ironlog_user_name') || '');
+  const [userEmail, setUserEmail] = useState<string>(() => localStorage.getItem('ironlog_user_email') || '');
   const [isSubscribed, setIsSubscribed] = useState<boolean>(() => localStorage.getItem('ironlog_pro_subscribed') === 'true');
 
   // Preferences State
@@ -324,10 +324,17 @@ export const SettingsView: React.FC = () => {
             <div className="min-w-0 flex-1">
               <span className="text-xs text-slate-400 font-medium block">帳戶</span>
               <h2 className="text-[17px] font-bold text-slate-900 leading-snug break-all tracking-tight mt-0.5">
-                {userEmail}
+                {userName || userEmail ? (
+                  <>
+                    {userName && <span className="mr-1.5">{userName}</span>}
+                    {userEmail && <span className="text-xs text-slate-400 font-normal block sm:inline">{userEmail}</span>}
+                  </>
+                ) : (
+                  <span className="text-slate-400 font-normal">未設定姓名與 Email</span>
+                )}
               </h2>
               <span className="text-xs font-bold text-[#82CC00] mt-1 inline-block group-hover:underline">
-                點擊編輯個人資料
+                點擊設定個人資料
               </span>
             </div>
           </div>
@@ -493,7 +500,9 @@ export const SettingsView: React.FC = () => {
               </div>
               <div>
                 <h4 className="text-[15px] font-bold text-slate-900 leading-tight">重新計算 TDEE</h4>
-                <p className="text-xs text-slate-400 font-medium mt-0.5">重新填寫身體資料與活動量問卷</p>
+                <p className="text-xs text-slate-400 font-medium mt-0.5">
+                  目前 {latestMetric.weight || 75} kg · 目標 {globalGoal.targetWeight || latestMetric.weight || 75} kg · {calculatedCalories} kcal
+                </p>
               </div>
             </div>
 
@@ -726,17 +735,21 @@ export const SettingsView: React.FC = () => {
                 ))}
               </div>
 
-              <div className="bg-[#CCFF00]/10 p-4 rounded-2xl text-center border border-[#82CC00]/30">
-                <span className="text-xs text-slate-500 font-medium">目前的帳戶狀態</span>
-                <p className="text-base font-black text-black mt-0.5">
-                  {isSubscribed ? '🎉 已啟動 Pro 專業會員資格' : '免費版 (可隨時解鎖)'}
+              {/* 訂閱方案與價格 */}
+              <div className="bg-[#CCFF00]/10 p-4 rounded-2xl text-center border border-[#82CC00]/30 space-y-1">
+                <div className="flex items-baseline justify-center gap-1">
+                  <span className="text-2xl font-black text-slate-900">NT$ 100</span>
+                  <span className="text-xs font-bold text-slate-600">/ 每月 (台幣)</span>
+                </div>
+                <p className="text-[11px] font-bold text-slate-500">
+                  {isSubscribed ? '🎉 目前方案：Pro 專業版會員 (已生效)' : '隨時可取消 · 無綁約負擔'}
                 </p>
               </div>
 
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowProModal(false)}
-                  className="flex-1 py-3 bg-slate-100 text-slate-700 rounded-2xl font-bold text-sm"
+                  className="flex-1 py-3 bg-slate-100 text-slate-700 rounded-2xl font-bold text-sm hover:bg-slate-200 transition-colors"
                 >
                   返回
                 </button>
@@ -749,7 +762,7 @@ export const SettingsView: React.FC = () => {
                     isSubscribed ? 'bg-slate-200 hover:bg-slate-300 text-slate-800' : 'bg-[#CCFF00] hover:bg-[#b8e600]'
                   }`}
                 >
-                  {isSubscribed ? '停用 Pro 訂閱' : '立即解鎖 Pro'}
+                  {isSubscribed ? '停用 Pro 訂閱' : '每月 NT$100 立即解鎖'}
                 </button>
               </div>
             </motion.div>
@@ -945,7 +958,7 @@ export const SettingsView: React.FC = () => {
               </div>
 
               {/* 生理資料輸入 */}
-              <div className="space-y-3 text-xs">
+              <div className="space-y-3.5 text-xs font-bold text-slate-700">
                 <div>
                   <label className="font-bold text-slate-700 block mb-1">生理性別</label>
                   <div className="flex gap-2">
@@ -974,32 +987,69 @@ export const SettingsView: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-2">
-                  <div>
-                    <label className="font-bold text-slate-700 block mb-1">年齡 (歲)</label>
-                    <input
-                      type="number"
-                      value={tdeeForm.age || ''}
-                      onChange={(e) => setTdeeForm({ ...tdeeForm, age: Number(e.target.value) })}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 text-center font-bold text-slate-900"
-                    />
+                {/* 體重數據：目前體重 & 目標體重 */}
+                <div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="font-bold text-slate-700 block mb-1">目前體重 (kg)</label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        value={tdeeForm.weight || ''}
+                        onChange={(e) => setTdeeForm({ ...tdeeForm, weight: Number(e.target.value) })}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-center font-bold text-slate-900 outline-none focus:border-black"
+                      />
+                    </div>
+                    <div>
+                      <label className="font-black text-[#82CC00] block mb-1">目標體重 (kg)</label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        value={tdeeForm.targetWeight || ''}
+                        onChange={(e) => setTdeeForm({ ...tdeeForm, targetWeight: Number(e.target.value) })}
+                        className="w-full bg-[#CCFF00]/10 border border-[#82CC00]/50 rounded-xl p-2.5 text-center font-black text-slate-900 outline-none focus:border-black"
+                      />
+                    </div>
                   </div>
+
+                  {/* 體重差距動態提示 */}
+                  {tdeeForm.weight > 0 && tdeeForm.targetWeight > 0 && (
+                    <div className="mt-1.5 text-center">
+                      <span className={`inline-block text-[10px] font-black px-2.5 py-0.5 rounded-full ${
+                        tdeeForm.targetWeight < tdeeForm.weight 
+                          ? 'bg-sky-100 text-sky-700' 
+                          : tdeeForm.targetWeight > tdeeForm.weight
+                            ? 'bg-amber-100 text-amber-700'
+                            : 'bg-slate-100 text-slate-600'
+                      }`}>
+                        {tdeeForm.targetWeight < tdeeForm.weight
+                          ? `目標減重 ${(tdeeForm.weight - tdeeForm.targetWeight).toFixed(1)} kg`
+                          : tdeeForm.targetWeight > tdeeForm.weight
+                            ? `目標增重 ${(tdeeForm.targetWeight - tdeeForm.weight).toFixed(1)} kg`
+                            : '維持當前體重'}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* 身高 & 年齡 */}
+                <div className="grid grid-cols-2 gap-2">
                   <div>
                     <label className="font-bold text-slate-700 block mb-1">身高 (cm)</label>
                     <input
                       type="number"
                       value={tdeeForm.height || ''}
                       onChange={(e) => setTdeeForm({ ...tdeeForm, height: Number(e.target.value) })}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 text-center font-bold text-slate-900"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-center font-bold text-slate-900 outline-none focus:border-black"
                     />
                   </div>
                   <div>
-                    <label className="font-bold text-slate-700 block mb-1">體重 (kg)</label>
+                    <label className="font-bold text-slate-700 block mb-1">年齡 (歲)</label>
                     <input
                       type="number"
-                      value={tdeeForm.weight || ''}
-                      onChange={(e) => setTdeeForm({ ...tdeeForm, weight: Number(e.target.value) })}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 text-center font-bold text-slate-900"
+                      value={tdeeForm.age || ''}
+                      onChange={(e) => setTdeeForm({ ...tdeeForm, age: Number(e.target.value) })}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-center font-bold text-slate-900 outline-none focus:border-black"
                     />
                   </div>
                 </div>
@@ -1009,15 +1059,15 @@ export const SettingsView: React.FC = () => {
                   <label className="font-bold text-slate-700 block mb-1">體態目標</label>
                   <div className="grid grid-cols-3 gap-2">
                     {[
-                      { val: 'cut', label: '減脂' },
+                      { val: 'cut', label: '減脂 (-500)' },
                       { val: 'maintain', label: '維持體態' },
-                      { val: 'bulk', label: '增肌' }
+                      { val: 'bulk', label: '增肌 (+300)' }
                     ].map(opt => (
                       <button
                         key={opt.val}
                         type="button"
                         onClick={() => setTdeeForm({ ...tdeeForm, type: opt.val as any })}
-                        className={`py-2 rounded-xl font-bold border transition-all ${
+                        className={`py-2 rounded-xl font-bold border transition-all text-xs ${
                           tdeeForm.type === opt.val
                             ? 'bg-[#CCFF00] text-black border-[#82CC00]'
                             : 'bg-slate-50 text-slate-700 border-slate-200'
@@ -1049,6 +1099,21 @@ export const SettingsView: React.FC = () => {
                       </button>
                     ))}
                   </div>
+                </div>
+
+                {/* 即時試算 TDEE 預覽卡 */}
+                <div className="bg-[#CCFF00]/15 p-3 rounded-2xl border border-[#82CC00]/30 text-center">
+                  <span className="text-[10px] font-bold text-slate-600 block">依據輸入即時試算 TDEE 每日熱量</span>
+                  <span className="text-xl font-black text-slate-900 mt-0.5 block">
+                    {calculateSuggestedCalories(
+                      Number(tdeeForm.weight) || 75,
+                      Number(tdeeForm.height) || 178,
+                      Number(tdeeForm.age) || 26,
+                      tdeeForm.gender,
+                      tdeeForm.type,
+                      tdeeForm.activityLevel
+                    )} <span className="text-xs font-bold text-slate-600">kcal / 日</span>
+                  </span>
                 </div>
               </div>
 
