@@ -143,18 +143,18 @@ export const CalendarStrip: React.FC<CalendarStripProps> = ({ selectedDate, onDa
                   onClick={() => handleDateSelect(day)}
                   className={`
                     relative aspect-square rounded-xl flex flex-col items-center justify-center transition-all duration-200
-                    ${!isCurrentMonth ? 'opacity-20 scale-90' : 'opacity-100'}
+                    ${!isCurrentMonth ? 'opacity-30 scale-90' : 'opacity-100'}
                     ${isSelected 
                       ? 'bg-black text-white font-black shadow-md z-10 scale-105' 
                       : hasWorkout
-                        ? 'bg-[#CCFF00] text-black font-bold'
+                        ? 'bg-[#CCFF00] text-black font-black'
                         : isToday 
-                          ? 'bg-slate-100 text-black' 
-                          : 'hover:bg-slate-50 text-slate-400'
+                          ? 'bg-slate-100 text-black font-black' 
+                          : 'hover:bg-slate-100 text-black font-bold'
                     }
                   `}
                 >
-                  <span className={`text-base sm:text-lg ${isSelected ? 'scale-110' : ''}`}>
+                  <span className={`text-base sm:text-lg ${isSelected ? 'scale-110 font-black' : 'font-bold'}`}>
                     {format(day, 'd')}
                   </span>
                   

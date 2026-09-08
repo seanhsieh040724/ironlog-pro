@@ -255,7 +255,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
                     <span style={{ backgroundColor: lightTheme.card, color: lightTheme.text }} className="flex items-center gap-2 border border-black/5 px-3 py-1.5 rounded-xl text-sm font-black shadow-inner">
                       <Timer className="w-3.5 h-3.5 text-black" /> {dailyStats.totalMinutes} 分鐘
                     </span>
-                    <span style={{ backgroundColor: lightTheme.card, color: '#6E6E73' }} className="border border-black/5 px-3 py-1.5 rounded-xl text-sm font-black">
+                    <span style={{ backgroundColor: lightTheme.card, color: '#000000' }} className="border border-black/5 px-3 py-1.5 rounded-xl text-sm font-black text-black">
                       {dailyStats.totalExercises.length} 項動作
                     </span>
                   </div>
@@ -268,17 +268,14 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
               <div className="space-y-7">
                 {filteredHistory.map((session) => (
                   <div key={session.id} className="space-y-4">
-                    <div className="flex items-center justify-between px-2">
-                       <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                    <div className="flex items-center px-2">
+                       <span className="text-[10px] font-black text-black uppercase tracking-widest">
                          {format(new Date(session.startTime), 'HH:mm')} 開始
                        </span>
-                       <button onClick={() => handleDeleteSession(session.id)} className="text-slate-200 hover:text-red-400 active:scale-90 transition-all">
-                         <Trash2 className="w-4 h-4" />
-                       </button>
                     </div>
-                    <div className="space-y-6">
+                    <div className="space-y-3.5">
                       {session.exercises.map(ex => (
-                        <div key={ex.id} style={{ backgroundColor: lightTheme.card }} className="p-6 rounded-[32px] border border-black/5 shadow-sm space-y-6 relative overflow-hidden group">
+                        <div key={ex.id} style={{ backgroundColor: lightTheme.card }} className="p-3.5 sm:p-4 rounded-[22px] border border-black/5 shadow-xs space-y-3 relative overflow-hidden group">
                           {/* 刪除確認遮罩 */}
                           <AnimatePresence>
                             {confirmDelete?.exerciseId === ex.id && (
@@ -286,19 +283,19 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}
-                                className="absolute inset-0 z-[110] bg-red-500/95 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center"
+                                className="absolute inset-0 z-[110] bg-red-600/95 backdrop-blur-sm flex flex-col items-center justify-center p-4 text-center rounded-[22px]"
                               >
-                                <p className="text-white font-black text-xl mb-4 uppercase tracking-tighter">確定要刪除此動作？</p>
-                                <div className="flex gap-3 w-full">
+                                <p className="text-white font-black text-base sm:text-lg mb-3 uppercase tracking-tight">確定要刪除此動作？</p>
+                                <div className="flex gap-2.5 w-full max-w-[280px]">
                                   <button 
                                     onClick={() => executeDeleteExercise(session.id, ex.id)}
-                                    className="flex-1 bg-white text-red-500 py-3 rounded-2xl font-black uppercase text-sm active:scale-95 transition-all"
+                                    className="flex-1 bg-white text-red-600 py-2 sm:py-2.5 rounded-xl font-black uppercase text-xs sm:text-sm active:scale-95 transition-all shadow-sm"
                                   >
                                     確認刪除
                                   </button>
                                   <button 
                                     onClick={() => setConfirmDelete(null)}
-                                    className="flex-1 bg-black/20 text-white py-3 rounded-2xl font-black uppercase text-sm active:scale-95 transition-all"
+                                    className="flex-1 bg-black/30 text-white py-2 sm:py-2.5 rounded-xl font-black uppercase text-xs sm:text-sm active:scale-95 transition-all"
                                   >
                                     取消
                                   </button>
@@ -307,6 +304,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
                             )}
                           </AnimatePresence>
 
+                          {/* 動作卡片右上角紅色垃圾桶（更深紅色、清晰醒目） */}
                           <button 
                             type="button"
                             onClick={(e) => {
@@ -314,41 +312,45 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
                               e.stopPropagation();
                               setConfirmDelete({ sessionId: session.id, exerciseId: ex.id });
                             }}
-                            className="absolute top-3 right-3 w-12 h-12 flex items-center justify-center text-red-500/40 hover:text-red-500 active:scale-75 transition-all z-[100] cursor-pointer bg-red-50 rounded-full border border-red-100/50"
+                            className="absolute top-2.5 right-2.5 w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-red-600 hover:text-red-700 active:scale-75 transition-all z-[100] cursor-pointer bg-red-100 hover:bg-red-200/90 rounded-full border border-red-200 shadow-xs"
                             title="刪除此動作"
                           >
-                            <Trash2 className="w-5 h-5" />
+                            <Trash2 className="w-4 h-4 stroke-[2.3]" />
                           </button>
                           
-                          <div className="flex items-center gap-4">
-                            <div className="w-16 h-16 rounded-xl overflow-hidden bg-slate-100 shrink-0 flex items-center justify-center border border-black/5">
+                          {/* 動作名稱與 GIF（尺寸縮小，比照主頁動作欄位） */}
+                          <div className="flex items-center gap-3.5 pr-8">
+                            <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-xl overflow-hidden bg-slate-100 shrink-0 flex items-center justify-center border border-black/5">
                               <ExerciseSmallGif name={ex.name} />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <span style={{ color: lightTheme.text }} className="text-xl font-black uppercase tracking-tight leading-tight py-1 block">{ex.name}</span>
-                              <div className="text-[11px] font-black text-slate-400 uppercase tracking-widest mt-1">
+                              <span style={{ color: lightTheme.text }} className="text-[16px] font-black uppercase tracking-tight leading-snug py-0.5 block truncate">
+                                {ex.name}
+                              </span>
+                              <div className="text-[11px] font-black text-black uppercase tracking-wider mt-0.5">
                                 {getMuscleGroupDisplay(ex.muscleGroup).cn} • {ex.sets.length} 組
                               </div>
                             </div>
                           </div>
                           
-                          <div className="grid grid-cols-1 gap-2">
+                          {/* 各組數據列表（#1 改為黑色、間距收斂） */}
+                          <div className="grid grid-cols-1 gap-1.5">
                             {ex.sets.map((set, sIdx) => (
-                              <div key={set.id} className="flex items-center justify-between py-2.5 px-4 bg-white/50 rounded-2xl border border-black/[0.03]">
-                                <div className="flex items-center gap-3">
-                                  <span className="text-[11px] font-black text-slate-300 w-4">#{sIdx + 1}</span>
+                              <div key={set.id} className="flex items-center justify-between py-1.5 px-3 bg-white/60 rounded-xl border border-black/[0.03]">
+                                <div className="flex items-center gap-2.5">
+                                  <span className="text-[12px] font-black text-black w-6 shrink-0">#{sIdx + 1}</span>
                                   <div className="flex items-center gap-1">
-                                    <span style={{ color: lightTheme.text }} className="text-lg font-black">{set.weight}</span>
+                                    <span style={{ color: lightTheme.text }} className="text-base font-black">{set.weight}</span>
                                     <span className="text-[10px] font-black text-black uppercase">kg</span>
                                   </div>
                                 </div>
-                                <div className="flex items-center gap-4">
+                                <div className="flex items-center gap-3">
                                   <div className="flex items-center gap-1">
-                                    <span style={{ color: lightTheme.text }} className="text-lg font-black">{set.reps}</span>
+                                    <span style={{ color: lightTheme.text }} className="text-base font-black">{set.reps}</span>
                                     <span className="text-[10px] font-black text-black uppercase">reps</span>
                                   </div>
-                                  <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${set.completed ? 'bg-[#CCFF00] text-black' : 'bg-slate-100 text-slate-200'}`}>
-                                    <Check className="w-3.5 h-3.5 stroke-[4]" />
+                                  <div className={`w-5 h-5 rounded-md flex items-center justify-center ${set.completed ? 'bg-[#CCFF00] text-black' : 'bg-slate-100 text-slate-300'}`}>
+                                    <Check className="w-3 h-3 stroke-[3.5]" />
                                   </div>
                                 </div>
                               </div>
@@ -382,7 +384,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
               </div>
               <div>
                 <h3 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">訓練容量分布</h3>
-                <p className="text-xs text-slate-400 font-normal mt-0.5">累積負荷分析 • 依組數統計各肌群訓練量</p>
+                <p className="text-xs text-black font-semibold mt-0.5">累積負荷分析 • 依組數統計各肌群訓練量</p>
               </div>
            </div>
            {/* Week / Month Toggle */}
@@ -538,8 +540,11 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
                 <Clock className="w-5 h-5 text-black" />
               </div>
               <div>
-                <h3 className="text-base font-black uppercase tracking-tighter pr-2 text-black">每週訓練時數</h3>
-                <p className="text-[10px] font-black text-black opacity-50 uppercase tracking-widest mt-0.5">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-base font-black uppercase tracking-tighter text-black">每週訓練時數</h3>
+                  <span className="text-xs font-bold text-slate-500">（單位：分鐘）</span>
+                </div>
+                <p className="text-[10px] font-black text-black uppercase tracking-widest mt-0.5">
                   {format(chartWeekStart, 'yyyy.MM.dd')} - {format(endOfWeek(chartWeekStart, { weekStartsOn: 1 }), 'MM.dd')}
                 </p>
               </div>
@@ -570,7 +575,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
           <ResponsiveContainer width="100%" height="100%">
             <BarChart 
               data={weeklyActivityData} 
-              margin={{ top: 20, right: 10, left: -10, bottom: 10 }}
+              margin={{ top: 20, right: 12, left: -4, bottom: 10 }}
               barGap={0}
             >
               <CartesianGrid vertical={false} stroke="#F1F5F9" strokeDasharray="3 3" />
@@ -578,23 +583,26 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
                 dataKey="name" 
                 axisLine={{ stroke: '#E2E8F0', strokeWidth: 1 }}
                 tickLine={false}
-                tick={{ fontSize: 10, fontWeight: 900, fill: '#000000' }}
-                dy={10}
+                tick={{ fontSize: 16, fontWeight: 900, fill: '#000000' }}
+                dy={8}
               />
               <YAxis 
+                domain={[0, 180]}
+                ticks={[0, 30, 60, 90, 120, 150, 180]}
+                width={42}
                 axisLine={{ stroke: '#E2E8F0', strokeWidth: 1 }}
                 tickLine={false}
-                tick={{ fontSize: 10, fontWeight: 900, fill: '#000000' }}
-                dx={-5}
+                tick={{ fontSize: 11, fontWeight: 900, fill: '#000000' }}
+                dx={-4}
               />
               <Tooltip 
-                cursor={{ fill: 'rgba(0,0,0,0.02)' }}
+                cursor={{ fill: 'rgba(0,0,0,0.03)' }}
                 content={({ active, payload }) => {
                   if (active && payload && payload.length) {
                     return (
-                      <div className="bg-black text-white px-3 py-2 rounded-xl text-[10px] font-black shadow-xl border border-white/10">
-                        <p>{payload[0].payload.date}</p>
-                        <p className="text-[#CCFF00]">{payload[0].value} 分鐘</p>
+                      <div className="bg-black text-white px-3.5 py-2.5 rounded-xl text-xs font-black shadow-xl border border-white/10">
+                        <p className="text-slate-300">{payload[0].payload.date}（週{payload[0].payload.name}）</p>
+                        <p className="text-white font-extrabold text-sm mt-0.5">{payload[0].value} 分鐘</p>
                       </div>
                     );
                   }
@@ -603,13 +611,13 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
               />
               <Bar 
                 dataKey="minutes" 
-                radius={[8, 8, 8, 8]}
+                radius={[6, 6, 6, 6]}
                 barSize={32}
               >
                 {weeklyActivityData.map((entry, index) => (
                   <Cell 
                     key={`cell-${index}`} 
-                    fill={entry.isToday ? '#000000' : '#CCFF00'} 
+                    fill={entry.minutes > 0 ? '#000000' : 'transparent'} 
                   />
                 ))}
               </Bar>
@@ -617,10 +625,18 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
           </ResponsiveContainer>
         </div>
 
-        <div className="grid grid-cols-7 gap-0 pl-[45px] pr-2">
+        <div className="grid grid-cols-7 gap-0 pl-[38px] pr-[12px]">
            {weeklyActivityData.map((day, idx) => (
              <div key={idx} className="flex flex-col items-center">
-               <div className={`text-[8px] font-black uppercase text-black ${day.isToday ? 'opacity-100' : 'opacity-40'}`}>
+               <div 
+                 className={`text-[13px] sm:text-[14px] font-black tracking-tight ${
+                   day.minutes > 0 
+                     ? 'text-black' 
+                     : day.isToday 
+                       ? 'text-slate-800' 
+                       : 'text-slate-300'
+                 }`}
+               >
                  {day.minutes}m
                </div>
              </div>
