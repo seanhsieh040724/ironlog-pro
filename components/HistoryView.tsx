@@ -7,7 +7,7 @@ import { ExerciseSmallGif } from './ExerciseSmallGif';
 import { BodyMuscleMap, MuscleLoadInfo, LoadLevel } from './BodyMuscleMap';
 import { motion, AnimatePresence } from 'framer-motion';
 import { lightTheme } from '../themeStyles';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, Label } from 'recharts';
 
 interface HistoryViewProps {
   history: WorkoutSession[];
@@ -540,10 +540,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
                 <Clock className="w-5 h-5 text-black" />
               </div>
               <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="text-base font-black uppercase tracking-tighter text-black">每週訓練時數</h3>
-                  <span className="text-xs font-bold text-slate-500">（單位：分鐘）</span>
-                </div>
+                <h3 className="text-base font-black uppercase tracking-tighter text-black">每週訓練時數</h3>
                 <p className="text-[10px] font-black text-black uppercase tracking-widest mt-0.5">
                   {format(chartWeekStart, 'yyyy.MM.dd')} - {format(endOfWeek(chartWeekStart, { weekStartsOn: 1 }), 'MM.dd')}
                 </p>
@@ -575,7 +572,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
           <ResponsiveContainer width="100%" height="100%">
             <BarChart 
               data={weeklyActivityData} 
-              margin={{ top: 20, right: 12, left: -4, bottom: 10 }}
+              margin={{ top: 25, right: 12, left: -4, bottom: 10 }}
               barGap={0}
             >
               <CartesianGrid vertical={false} stroke="#F1F5F9" strokeDasharray="3 3" />
@@ -594,7 +591,16 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
                 tickLine={false}
                 tick={{ fontSize: 11, fontWeight: 900, fill: '#000000' }}
                 dx={-4}
-              />
+              >
+                <Label 
+                  value="分鐘" 
+                  position="top" 
+                  offset={10} 
+                  fill="#000000" 
+                  fontSize={11} 
+                  fontWeight={900} 
+                />
+              </YAxis>
               <Tooltip 
                 cursor={{ fill: 'rgba(0,0,0,0.03)' }}
                 content={({ active, payload }) => {
