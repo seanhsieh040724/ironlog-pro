@@ -1,4 +1,4 @@
-export type MuscleGroup = 'chest' | 'back' | 'quads' | 'hamstrings' | 'shoulders' | 'arms' | 'core' | 'glutes';
+export type MuscleGroup = 'chest' | 'back' | 'quads' | 'hamstrings' | 'shoulders' | 'arms' | 'core' | 'glutes' | 'fullbody';
 
 export interface SetEntry {
   id: string;

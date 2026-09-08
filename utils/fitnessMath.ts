@@ -79,7 +79,8 @@ export const getMuscleGroupDisplay = (mg: MuscleGroup | string): { cn: string, e
     shoulders: { cn: '肩部', en: 'SHOULDER' },
     arms: { cn: '手臂', en: 'ARMS' },
     core: { cn: '核心', en: 'CORE' },
-    glutes: { cn: '臀部', en: 'GLUTES' }
+    glutes: { cn: '臀部', en: 'GLUTES' },
+    fullbody: { cn: '全身', en: 'FULL BODY' }
   };
   return map[mg] || { cn: '腿部', en: 'LEGS' };
 };
@@ -370,7 +371,7 @@ export const calculateMuscleActivation = (history: WorkoutSession[]): Record<Mus
   const last7Days = Date.now() - (7 * 24 * 60 * 60 * 1000);
   const recentSessions = history.filter(s => s.startTime > last7Days);
   const scores: Record<MuscleGroup, number> = {
-    chest: 0, back: 0, quads: 0, hamstrings: 0, shoulders: 0, arms: 0, core: 0, glutes: 0
+    chest: 0, back: 0, quads: 0, hamstrings: 0, shoulders: 0, arms: 0, core: 0, glutes: 0, fullbody: 0
   };
   recentSessions.forEach(session => {
     session.exercises.forEach(ex => {

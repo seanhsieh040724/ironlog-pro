@@ -7,7 +7,8 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ExerciseSmallGif } from './ExerciseSmallGif';
-import { getMuscleGroup, getMuscleGroupDisplay, fetchExerciseGif, getExerciseMethod, getExerciseGifUrl } from '../utils/fitnessMath';
+import { ExerciseGifDisplay } from './ExerciseGifDisplay';
+import { getMuscleGroup, getMuscleGroupDisplay, getExerciseMethod } from '../utils/fitnessMath';
 import { AppContext } from '../App';
 import { lightTheme, CardStyle, TextStyle, InputStyle, ActionButtonStyle } from '../themeStyles';
 
@@ -28,18 +29,11 @@ interface WorkoutViewProps {
   onFinish: () => void;
 }
 
-const getHardcodedGif = (name: string) => {
-  if (!name) return null;
-  return getExerciseGifUrl(name);
-};
-
 export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onFinish }) => {
   const context = useContext(AppContext);
   const [activeExerciseId, setActiveExerciseId] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<string>('chest');
   const [searchTerm, setSearchTerm] = useState('');
-  const [gifUrl, setGifUrl] = useState<string | null>(null);
-  const [isGifLoading, setIsGifLoading] = useState(true);
   const [elapsedTime, setElapsedTime] = useState<string>("00:00");
 
   const currentDetailEx = useMemo(() => session?.exercises.find(e => e.id === activeExerciseId), [session, activeExerciseId]);
@@ -71,15 +65,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
     }
   }, [activeExerciseId]);
 
-  useEffect(() => {
-    if (currentDetailEx) {
-      setIsGifLoading(true);
-      fetchExerciseGif(currentDetailEx.name).then(url => {
-        setGifUrl(url);
-        setTimeout(() => setIsGifLoading(false), 300);
-      });
-    }
-  }, [currentDetailEx?.name]);
+
 
   useEffect(() => {
     let interval: number;
@@ -142,7 +128,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
 
   if (!session) return null;
 
-  const displayGifSrc = currentDetailEx ? (getHardcodedGif(currentDetailEx.name) || gifUrl || '') : '';
+
 
   return (
     <div className="relative min-h-screen">
@@ -237,21 +223,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
             </div>
 
             <div className="w-full relative px-1">
-              <div style={{ backgroundColor: lightTheme.card }} className="relative overflow-hidden rounded-[24px] shadow-sm border border-black/5 min-h-[240px] flex items-center justify-center">
-                {isGifLoading && !getHardcodedGif(currentDetailEx?.name || '') ? (
-                  <div className="flex flex-col items-center gap-4 py-12 text-black">
-                    <Loader2 className="w-9 h-9 animate-spin text-black" />
-                    <p className="text-[11px] font-black uppercase tracking-widest">載入動作中...</p>
-                  </div>
-                ) : (
-                  <img 
-                    src={displayGifSrc} 
-                    alt={currentDetailEx?.name} 
-                    className="w-full h-auto object-cover rounded-[15px] block"
-                    onLoad={() => setIsGifLoading(false)}
-                  />
-                )}
-              </div>
+              <ExerciseGifDisplay name={currentDetailEx?.name || ''} />
             </div>
 
             <div style={{ backgroundColor: lightTheme.card }} className="mx-1 p-6 rounded-[28px] border border-black/5 space-y-3.5 shadow-sm">

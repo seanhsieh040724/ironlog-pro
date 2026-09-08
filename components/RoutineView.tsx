@@ -2,7 +2,8 @@ import React, { useState, useContext, useMemo, useEffect } from 'react';
 import { AppContext } from '../App';
 import { RoutineTemplate, MuscleGroup, ExerciseEntry, SetEntry, WorkoutSession } from '../types';
 import { ExerciseSmallGif } from './ExerciseSmallGif';
-import { getMuscleGroup, getMuscleGroupDisplay, fetchExerciseGif, getExerciseMethod, getExerciseGifUrl } from '../utils/fitnessMath';
+import { ExerciseGifDisplay } from './ExerciseGifDisplay';
+import { getMuscleGroup, getMuscleGroupDisplay, getExerciseMethod } from '../utils/fitnessMath';
 import { ORGANIZED_EXERCISES, EXERCISE_DATABASE } from './WorkoutView';
 import { 
   LayoutGrid, Trash2, ArrowLeft, Plus, ChevronRight, X, Search, Edit2, 
@@ -12,45 +13,6 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { lightTheme } from '../themeStyles';
-
-const getHardcodedGif = (n: string) => {
-  if (!n) return null;
-  return getExerciseGifUrl(n);
-};
-
-const ExerciseGifDisplay: React.FC<{ name: string }> = ({ name }) => {
-  const [localGifUrl, setLocalGifUrl] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    setIsLoading(true);
-    fetchExerciseGif(name).then(url => {
-      setLocalGifUrl(url);
-    });
-  }, [name]);
-
-  const displaySrc = getHardcodedGif(name) || localGifUrl || '';
-
-  return (
-    <div style={{ backgroundColor: lightTheme.card }} className="relative overflow-hidden rounded-[24px] shadow-sm border border-black/5 min-h-[240px] flex items-center justify-center">
-      {isLoading && !getHardcodedGif(name) && (
-        <div style={{ backgroundColor: lightTheme.card }} className="absolute inset-0 flex flex-col items-center justify-center gap-4 z-10">
-          <Loader2 className="w-8 h-8 animate-spin text-black" />
-          <p className="text-[11px] font-black uppercase tracking-widest text-black">準備中...</p>
-        </div>
-      )}
-      {displaySrc && (
-        <img 
-          src={displaySrc} 
-          alt={name} 
-          className="w-full h-auto object-cover rounded-[15px] block"
-          onLoad={() => setIsLoading(false)}
-          referrerPolicy="no-referrer"
-        />
-      )}
-    </div>
-  );
-};
 
 interface IntegratedWorkoutViewProps {
   routine: RoutineTemplate;
@@ -322,8 +284,6 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
   const [selectedExName, setSelectedExName] = useState<string | null>(null);
   
   const [mockSets, setMockSets] = useState<SetEntry[]>([]);
-  const [gifUrl, setGifUrl] = useState<string | null>(null);
-  const [isGifLoading, setIsGifLoading] = useState(false);
   
   // 參考 IMG_9161.PNG 的狀態：每週天數 (2, 3, 4, 5), 性別 (男/女), 新手安全模式 (開關)
   const [weeklyDays, setWeeklyDays] = useState<number>(2);
@@ -338,11 +298,6 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
       setMockSets(Array.from({ length: 4 }).map(() => ({
         id: crypto.randomUUID(), weight: 0, reps: 10, completed: false
       })));
-      setIsGifLoading(true);
-      fetchExerciseGif(selectedExName).then(url => {
-        setGifUrl(url);
-        setTimeout(() => setIsGifLoading(false), 300);
-      });
     }
   }, [selectedExName]);
 
