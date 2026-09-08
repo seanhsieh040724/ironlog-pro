@@ -580,7 +580,7 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
                     </>
                   ) : (
                     <div className="flex-1 overflow-y-auto no-scrollbar space-y-6 pb-28">
-                      <div className="w-full relative px-1">
+                      <div className="w-full relative px-1 max-w-[340px] mx-auto">
                         <ExerciseGifDisplay name={selectedExName} />
                       </div>
 
