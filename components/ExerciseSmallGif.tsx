@@ -46,7 +46,7 @@ export const ExerciseSmallGif: React.FC<ExerciseSmallGifProps> = ({ name }) => {
   }
 
   return (
-    <div className="w-full h-full relative overflow-hidden bg-slate-50 flex items-center justify-center">
+    <div className="w-full h-full max-w-full max-h-full aspect-square relative overflow-hidden bg-slate-50 flex items-center justify-center">
       {loading && (
         <div className="absolute inset-0 flex items-center justify-center bg-slate-50 z-10">
           <Loader2 className="w-4 h-4 animate-spin text-black" />
@@ -57,7 +57,7 @@ export const ExerciseSmallGif: React.FC<ExerciseSmallGifProps> = ({ name }) => {
           key={currentSrc}
           src={currentSrc}
           alt={name}
-          className="w-full h-full object-cover"
+          className="w-full h-full max-w-full max-h-full aspect-square object-cover select-none"
           onLoad={handleLoad}
           onError={handleError}
           referrerPolicy="no-referrer"

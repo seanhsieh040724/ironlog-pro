@@ -320,7 +320,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
                           
                           {/* 動作名稱與 GIF（尺寸縮小，比照主頁動作欄位） */}
                           <div className="flex items-center gap-3.5 pr-8">
-                            <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-xl overflow-hidden bg-slate-100 shrink-0 flex items-center justify-center border border-black/5">
+                            <div className="w-14 h-14 min-w-[56px] min-h-[56px] max-w-[56px] max-h-[56px] aspect-square rounded-xl overflow-hidden bg-slate-100 shrink-0 flex items-center justify-center border border-black/5">
                               <ExerciseSmallGif name={ex.name} />
                             </div>
                             <div className="flex-1 min-w-0">
