@@ -1,8 +1,23 @@
 import { GoogleGenAI } from "@google/genai";
 import { BodyMetric, UserGoal } from "../types";
 
+const getGeminiClient = () => {
+  const apiKey = process.env.GEMINI_API_KEY || process.env.API_KEY || '';
+  return new GoogleGenAI({
+    apiKey,
+    httpOptions: {
+      headers: {
+        'User-Agent': 'aistudio-build',
+      },
+    },
+  });
+};
+
+// 採用目前支援的多模態 Flash 模型清單，優先使用極速穩定的 gemini-3.6-flash，遇高負載自動切換備援模型
+const FLASH_MODELS = ['gemini-3.6-flash', 'gemini-3.8-flash', 'gemini-flash-latest', 'gemini-3.1-flash-lite'];
+
 export const generateDietarySuggestions = async (metrics: BodyMetric, goal: UserGoal) => {
-  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+  const ai = getGeminiClient();
   
   const prompt = `
     你是一位專業的運動營養師。請根據以下使用者的身體數據與目標，提供詳細的飲食建議與分析。
@@ -31,20 +46,25 @@ export const generateDietarySuggestions = async (metrics: BodyMetric, goal: User
     請用繁體中文回答，語氣要專業且給予鼓勵，並以 Markdown 格式呈現。
   `;
 
-  try {
-    const response = await ai.models.generateContent({
-      model: "gemini-3.5-flash",
-      contents: prompt,
-    });
-    return response.text || "無法生成建議，請稍後再試。";
-  } catch (error) {
-    console.error("AI Analysis Error:", error);
-    return "AI 分析服務暫時無法使用，請檢查網路或稍後再試。";
+  for (const model of FLASH_MODELS) {
+    try {
+      const response = await ai.models.generateContent({
+        model,
+        contents: prompt,
+      });
+      if (response.text) {
+        return response.text;
+      }
+    } catch (error) {
+      console.warn(`Dietary suggestion with ${model} failed, trying next:`, error);
+    }
   }
+
+  return "AI 分析服務暫時無法使用，請檢查網路或稍後再試。";
 };
 
 export const analyzeFoodImage = async (base64Image: string) => {
-  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+  const ai = getGeminiClient();
   
   const prompt = `
     你是一位專業的AI運動營養師與食物熱量估算專家。請分析這張食物照片並提供詳細的熱量與營養素估算。
@@ -57,25 +77,46 @@ export const analyzeFoodImage = async (base64Image: string) => {
     5. **給使用者的健康吃法調整或健身搭配建議**（例如：建議多補充膳食纖維，或適合在重訓後食用）。
   `;
   
-  const base64DataOnly = base64Image.includes(",") ? base64Image.split(",")[1] : base64Image;
+  let mimeType = "image/jpeg";
+  let base64DataOnly = base64Image;
+
+  if (base64Image.startsWith("data:")) {
+    const commaIndex = base64Image.indexOf(",");
+    if (commaIndex !== -1) {
+      const header = base64Image.substring(0, commaIndex);
+      base64DataOnly = base64Image.substring(commaIndex + 1);
+      const match = header.match(/^data:([^;]+);base64/);
+      if (match && match[1]) {
+        mimeType = match[1];
+      }
+    }
+  }
 
   const imagePart = {
     inlineData: {
-      mimeType: "image/jpeg",
-      data: base64DataOnly
-    }
+      mimeType,
+      data: base64DataOnly,
+    },
   };
 
-  try {
-    const response = await ai.models.generateContent({
-      model: "gemini-3.5-flash",
-      contents: [imagePart, prompt],
-    });
-    return response.text || "無法分析此圖片，請再試一次。";
-  } catch (error) {
-    console.error("Gemini Image Analysis Error:", error);
-    return "食物影像分析失敗，請檢查 API 金鑰設定或重新上傳照片。";
+  let lastError: any = null;
+  for (const model of FLASH_MODELS) {
+    try {
+      const response = await ai.models.generateContent({
+        model,
+        contents: [imagePart, prompt],
+      });
+      if (response.text) {
+        return response.text;
+      }
+    } catch (error: any) {
+      console.warn(`Gemini food image analysis with ${model} failed, trying fallback:`, error?.message || error);
+      lastError = error;
+    }
   }
+
+  console.error("Gemini Image Analysis Error (all models failed):", lastError);
+  return "食物影像分析失敗，請檢查網路連線或重新上傳照片。";
 };
 
 export const chatWithCoach = async (
@@ -84,7 +125,7 @@ export const chatWithCoach = async (
   goal: UserGoal,
   coachTone: string = 'taiwanese'
 ) => {
-  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+  const ai = getGeminiClient();
   
   const toneInstruction = coachTone === 'hongkong' || coachTone === '港式教練'
     ? `你是一位非常專業、講話極具香港特色且熱血激昂的香港健美教練（風格：偶爾穿插道地港式健身俚語如「師兄/師姐」、「頂住呀」、「爆肌」、「唔好偷懶」、「操爆佢」、「食足蛋白質」、「好Firm」、「Chur到盡」，熱情又霸氣，字面以繁體中文標準字為主方便閱讀）。`
@@ -111,17 +152,22 @@ export const chatWithCoach = async (
     4. 請使用繁體中文回答，字句流暢自然。使用 Markdown 格式加粗重點。
   `;
   
-  try {
-    const response = await ai.models.generateContent({
-      model: "gemini-3.5-flash",
-      contents: messages,
-      config: {
-        systemInstruction,
+  for (const model of FLASH_MODELS) {
+    try {
+      const response = await ai.models.generateContent({
+        model,
+        contents: messages,
+        config: {
+          systemInstruction,
+        }
+      });
+      if (response.text) {
+        return response.text;
       }
-    });
-    return response.text || "我收到了你的訊息，但我正在進行高強度深蹲，可以請你再傳送一次嗎？";
-  } catch (error) {
-    console.error("AI Coach Chat Error:", error);
-    return "AI 鋼鐵教練正在跑步機上狂奔，暫時無法回應，請確認金鑰設定並稍候。";
+    } catch (error) {
+      console.warn(`AI Coach Chat with ${model} failed, trying fallback:`, error);
+    }
   }
+
+  return "AI 鋼鐵教練正在跑步機上狂奔，暫時無法回應，請確認網路連線並稍候再試。";
 };

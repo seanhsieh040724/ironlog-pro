@@ -310,15 +310,53 @@ export const DietView: React.FC = () => {
     showToast('已複製今日營養攝取摘要至剪貼簿！');
   };
 
-  // 圖片 AI 辨識分析
+  // 圖片 AI 辨識分析（加入手機端照片自動適度縮放壓縮，避免數位相機原始 10MB+ 超大圖導致傳輸逾時或記憶體溢出）
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setSelectedImage(reader.result as string);
+      reader.onload = (event) => {
+        const rawResult = event.target?.result as string;
+        if (!rawResult) return;
+
+        // 使用 Canvas 將手機端高畫質相片等比例縮放至最高邊長 1200px 並轉為高品質 JPEG
+        const img = new Image();
+        img.onload = () => {
+          try {
+            const canvas = document.createElement('canvas');
+            const MAX_DIM = 1200;
+            let { width, height } = img;
+            if (width > MAX_DIM || height > MAX_DIM) {
+              if (width > height) {
+                height = Math.round((height * MAX_DIM) / width);
+                width = MAX_DIM;
+              } else {
+                width = Math.round((width * MAX_DIM) / height);
+                height = MAX_DIM;
+              }
+            }
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+              ctx.drawImage(img, 0, 0, width, height);
+              const compressedBase64 = canvas.toDataURL('image/jpeg', 0.85);
+              setSelectedImage(compressedBase64);
+              return;
+            }
+          } catch (err) {
+            console.warn('Image compression fallback:', err);
+          }
+          setSelectedImage(rawResult);
+        };
+        img.onerror = () => {
+          setSelectedImage(rawResult);
+        };
+        img.src = rawResult;
       };
       reader.readAsDataURL(file);
+      // 清除 input 數值，方便連續重拍或選擇同一檔名
+      e.target.value = '';
     }
   };
 
