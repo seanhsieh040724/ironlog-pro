@@ -222,7 +222,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
               </h2>
             </div>
 
-            <div className="w-full relative px-1 max-w-[340px] mx-auto">
+            <div className="w-full relative px-1">
               <ExerciseGifDisplay name={currentDetailEx?.name || ''} />
             </div>
 

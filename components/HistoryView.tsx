@@ -1,13 +1,119 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { WorkoutSession, MuscleGroup, ExerciseEntry, SetEntry } from '../types';
-import { getMuscleGroupDisplay, getMuscleGroup } from '../utils/fitnessMath';
-import { Activity, BarChart3, Trash2, CalendarDays, Timer, Save, Check, ChevronLeft, ChevronRight, Clock, ArrowLeft, X } from 'lucide-react';
+import { getMuscleGroupDisplay, getMuscleGroup, getExerciseGifSources } from '../utils/fitnessMath';
+import { Activity, BarChart3, Trash2, CalendarDays, Timer, Save, Check, ChevronLeft, ChevronRight, Clock, ArrowLeft, X, Loader2, Dumbbell } from 'lucide-react';
 import { isSameDay, format, startOfWeek, endOfWeek, eachDayOfInterval, subWeeks, addWeeks, startOfMonth, endOfMonth, startOfYear } from 'date-fns';
-import { ExerciseSmallGif } from './ExerciseSmallGif';
 import { BodyMuscleMap, MuscleLoadInfo, LoadLevel } from './BodyMuscleMap';
 import { motion, AnimatePresence } from 'framer-motion';
 import { lightTheme } from '../themeStyles';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, Label } from 'recharts';
+
+/**
+ * 專屬於「當日總訓練」列表的小型動作 GIF 元件
+ * 採用行內嚴格寬高鎖定與 WebKit 遮罩，確保在所有手機端（iOS Safari / Android Chrome）均不溢出或異常放大
+ */
+const DailyWorkoutExerciseGif: React.FC<{ name: string }> = ({ name }) => {
+  const sources = useMemo(() => getExerciseGifSources(name), [name]);
+  const [sourceIndex, setSourceIndex] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [failedAll, setFailedAll] = useState(false);
+
+  useEffect(() => {
+    setSourceIndex(0);
+    setLoading(true);
+    setFailedAll(false);
+  }, [name, sources]);
+
+  const currentSrc = sources[sourceIndex] || '';
+
+  const handleError = useCallback(() => {
+    if (sourceIndex + 1 < sources.length) {
+      setSourceIndex(prev => prev + 1);
+    } else {
+      setLoading(false);
+      setFailedAll(true);
+    }
+  }, [sourceIndex, sources.length]);
+
+  const handleLoad = useCallback(() => {
+    setLoading(false);
+    setFailedAll(false);
+  }, []);
+
+  if (failedAll) {
+    const mg = getMuscleGroup(name);
+    const disp = getMuscleGroupDisplay(mg);
+    return (
+      <div 
+        style={{
+          width: '54px',
+          height: '54px',
+          minWidth: '54px',
+          maxWidth: '54px',
+          minHeight: '54px',
+          maxHeight: '54px',
+          flexShrink: 0,
+          borderRadius: '14px'
+        }}
+        className="flex flex-col items-center justify-center bg-slate-100 text-slate-700 p-1 text-center select-none border border-black/5 shrink-0"
+      >
+        <Dumbbell className="w-4 h-4 text-slate-600 mb-0.5" />
+        <span className="text-[9px] font-black leading-tight line-clamp-1">{disp.cn}</span>
+      </div>
+    );
+  }
+
+  return (
+    <div 
+      style={{ 
+        width: '54px', 
+        height: '54px', 
+        minWidth: '54px', 
+        minHeight: '54px', 
+        maxWidth: '54px', 
+        maxHeight: '54px',
+        flexShrink: 0,
+        overflow: 'hidden',
+        position: 'relative',
+        borderRadius: '14px',
+        WebkitMaskImage: '-webkit-radial-gradient(white, black)',
+        isolation: 'isolate'
+      }}
+      className="bg-slate-100 border border-black/5 shrink-0 flex items-center justify-center"
+    >
+      {loading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-slate-50 z-10">
+          <Loader2 className="w-4 h-4 animate-spin text-black" />
+        </div>
+      )}
+      {currentSrc && (
+        <img
+          key={currentSrc}
+          src={currentSrc}
+          alt={name}
+          width={54}
+          height={54}
+          style={{ 
+            width: '54px', 
+            height: '54px', 
+            minWidth: '54px', 
+            minHeight: '54px', 
+            maxWidth: '54px', 
+            maxHeight: '54px',
+            objectFit: 'cover',
+            display: 'block',
+            borderRadius: '14px'
+          }}
+          className="object-cover select-none"
+          onLoad={handleLoad}
+          onError={handleError}
+          referrerPolicy="no-referrer"
+          loading="lazy"
+        />
+      )}
+    </div>
+  );
+};
 
 interface HistoryViewProps {
   history: WorkoutSession[];
@@ -318,14 +424,9 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
                             <Trash2 className="w-4 h-4 stroke-[2.3]" />
                           </button>
                           
-                          {/* 動作名稱與 GIF（尺寸縮小，比照主頁動作欄位） */}
+                          {/* 動作名稱與 GIF（嚴格尺寸鎖定，專為當日總訓練防溢出與防超大設計） */}
                           <div className="flex items-center gap-3.5 pr-8">
-                            <div 
-                              style={{ width: '56px', height: '56px', minWidth: '56px', minHeight: '56px', maxWidth: '56px', maxHeight: '56px', flexShrink: 0 }}
-                              className="w-14 h-14 min-w-[56px] min-h-[56px] max-w-[56px] max-h-[56px] aspect-square rounded-xl overflow-hidden bg-slate-100 shrink-0 flex items-center justify-center border border-black/5"
-                            >
-                              <ExerciseSmallGif name={ex.name} />
-                            </div>
+                            <DailyWorkoutExerciseGif name={ex.name} />
                             <div className="flex-1 min-w-0">
                               <span style={{ color: lightTheme.text }} className="text-[16px] font-black uppercase tracking-tight leading-snug py-0.5 block truncate">
                                 {ex.name}

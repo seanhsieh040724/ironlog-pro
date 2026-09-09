@@ -11,8 +11,8 @@ interface ExerciseGifDisplayProps {
 
 export const ExerciseGifDisplay: React.FC<ExerciseGifDisplayProps> = ({
   name,
-  className = "w-full h-full max-h-[190px] sm:max-h-[230px] object-contain rounded-[18px] block mx-auto",
-  containerClassName = "relative overflow-hidden rounded-[24px] shadow-sm border border-black/5 h-[190px] sm:h-[230px] max-h-[190px] sm:max-h-[230px] w-full flex items-center justify-center bg-slate-50"
+  className = "w-full h-auto object-cover rounded-[15px] block",
+  containerClassName = "relative overflow-hidden rounded-[24px] shadow-sm border border-black/5 min-h-[240px] flex items-center justify-center"
 }) => {
   const sources = useMemo(() => getExerciseGifSources(name), [name]);
   const [sourceIndex, setSourceIndex] = useState(0);
@@ -89,7 +89,6 @@ export const ExerciseGifDisplay: React.FC<ExerciseGifDisplayProps> = ({
           key={currentSrc}
           src={currentSrc}
           alt={name}
-          style={{ maxHeight: '190px', width: '100%', objectFit: 'contain' }}
           className={className}
           onLoad={handleLoad}
           onError={handleError}
