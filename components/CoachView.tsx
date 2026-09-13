@@ -3,7 +3,7 @@ import { AppContext } from '../App';
 import { BodyMetric, UserGoal } from '../types';
 import { chatWithCoach } from '../services/aiService';
 import { 
-  Send, Loader2, Sparkles, User, Trash2, Copy, Check, Sparkle, Bot
+  Send, Loader2, Sparkles, User, Trash2, Copy, Check, Sparkle, Bot, RotateCcw
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Markdown from 'react-markdown';
@@ -81,16 +81,50 @@ export const CoachView: React.FC = () => {
     setInputMessage('');
     setIsTyping(true);
 
-    // 扣除額度 (最低保留 0，不鎖死使用)
-    setAiQuota(prev => Math.max(0, prev - 1));
+    // 若非 Pro 會員則扣除額度 (最低保留 0，不鎖死使用)
+    const isPro = localStorage.getItem('ironlog_pro_subscribed') === 'true';
+    if (!isPro) {
+      setAiQuota(prev => Math.max(0, prev - 1));
+    }
 
-    const formattedMessagesForGemini = [...messages, userMsg].map(m => ({
-      role: m.role,
-      parts: [{ text: m.text }]
-    }));
+    // 過濾歷史中的錯誤提示訊息，避免錯誤紀錄干擾後續 AI 生成
+    const ERROR_PHRASES = [
+      '正在跑步機上狂奔',
+      '連線繁忙',
+      '無法回應',
+      '請檢查網路',
+      '暫時無法使用'
+    ];
+
+    const validHistory = messages.filter(
+      m => !ERROR_PHRASES.some(phrase => m.text.includes(phrase))
+    );
+
+    // 格式化對話紀錄，確保 Gemini API 規範：第一則必為 user 且嚴格交替
+    const cleanHistory: { role: 'user' | 'model'; parts: { text: string }[] }[] = [];
+    for (const msg of [...validHistory, userMsg]) {
+      if (cleanHistory.length === 0 && msg.role === 'model') {
+        continue;
+      }
+      const last = cleanHistory[cleanHistory.length - 1];
+      if (last && last.role === msg.role) {
+        last.parts[0].text += `\n${msg.text}`;
+      } else {
+        cleanHistory.push({
+          role: msg.role,
+          parts: [{ text: msg.text }]
+        });
+      }
+    }
 
     try {
-      const aiResponseText = await chatWithCoach(formattedMessagesForGemini, latest, goal, 'taiwanese');
+      const aiResponseText = await chatWithCoach(cleanHistory, latest, goal, 'taiwanese');
+
+      // 檢查是否回傳了失敗提示，若失敗則補回額度
+      const isFailed = ERROR_PHRASES.some(phrase => aiResponseText.includes(phrase));
+      if (isFailed) {
+        setAiQuota(prev => prev + 1);
+      }
 
       const modelMsg: ChatMessage = {
         id: crypto.randomUUID(),
@@ -102,10 +136,11 @@ export const CoachView: React.FC = () => {
       setMessages(prev => [...prev, modelMsg]);
     } catch (err) {
       console.error(err);
+      setAiQuota(prev => prev + 1);
       const errorMsg: ChatMessage = {
         id: crypto.randomUUID(),
         role: 'model',
-        text: '教練目前連線繁忙，請稍後再試一次！',
+        text: 'AI 鋼鐵教練正在跑步機上狂奔，暫時無法回應，請確認網路連線並稍候再試。',
         timestamp: Date.now()
       };
       setMessages(prev => [...prev, errorMsg]);
@@ -233,22 +268,40 @@ export const CoachView: React.FC = () => {
                       </span>
 
                       {isModel && (
-                        <button
-                          onClick={() => handleCopyMessage(m.id, m.text)}
-                          className="text-[10px] text-slate-400 hover:text-black flex items-center gap-1 font-bold transition-colors"
-                        >
-                          {copiedMessageId === m.id ? (
-                            <>
-                              <Check className="w-3 h-3 text-[#82CC00]" />
-                              <span className="text-[#82CC00]">已複製</span>
-                            </>
-                          ) : (
-                            <>
-                              <Copy className="w-3 h-3" />
-                              <span>複製建議</span>
-                            </>
+                        <div className="flex items-center gap-2">
+                          {(m.text.includes('正在跑步機上狂奔') || m.text.includes('連線繁忙') || m.text.includes('稍候再試')) && (
+                            <button
+                              onClick={() => {
+                                const msgIndex = messages.findIndex(msg => msg.id === m.id);
+                                const prevUserMsg = [...messages.slice(0, msgIndex)].reverse().find(msg => msg.role === 'user');
+                                if (prevUserMsg) {
+                                  setMessages(prev => prev.filter(msg => msg.id !== m.id));
+                                  handleSendMessage(prevUserMsg.text);
+                                }
+                              }}
+                              className="text-[10px] text-amber-700 hover:text-amber-900 bg-amber-50 px-2 py-0.5 rounded-md flex items-center gap-1 font-bold transition-colors"
+                            >
+                              <RotateCcw className="w-2.5 h-2.5" />
+                              <span>重試</span>
+                            </button>
                           )}
-                        </button>
+                          <button
+                            onClick={() => handleCopyMessage(m.id, m.text)}
+                            className="text-[10px] text-slate-400 hover:text-black flex items-center gap-1 font-bold transition-colors"
+                          >
+                            {copiedMessageId === m.id ? (
+                              <>
+                                <Check className="w-3 h-3 text-[#82CC00]" />
+                                <span className="text-[#82CC00]">已複製</span>
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="w-3 h-3" />
+                                <span>複製建議</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -300,16 +353,25 @@ export const CoachView: React.FC = () => {
           ))}
         </div>
 
-        {/* 剩餘 AI 額度標示 (與截圖完全一致) */}
+        {/* 剩餘 AI 額度標示 */}
         <div className="flex items-center justify-between px-1 text-[11px] font-bold text-slate-400">
-          <span>剩餘 AI 額度：{aiQuota}</span>
-          {aiQuota <= 2 && (
-            <button
-              onClick={() => setAiQuota(10)}
-              className="text-[#82CC00] hover:underline font-black"
-            >
-              補充額度
-            </button>
+          {localStorage.getItem('ironlog_pro_subscribed') === 'true' ? (
+            <span className="text-[#82CC00] font-black flex items-center gap-1">
+              <Sparkles className="w-3 h-3 text-[#82CC00]" />
+              <span>Pro 尊榮版：AI 無限次使用</span>
+            </span>
+          ) : (
+            <>
+              <span>剩餘 AI 額度：{aiQuota}</span>
+              {aiQuota <= 2 && (
+                <button
+                  onClick={() => setAiQuota(10)}
+                  className="text-[#82CC00] hover:underline font-black"
+                >
+                  補充額度
+                </button>
+              )}
+            </>
           )}
         </div>
 

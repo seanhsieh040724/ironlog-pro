@@ -5,16 +5,11 @@ const getGeminiClient = () => {
   const apiKey = process.env.GEMINI_API_KEY || process.env.API_KEY || '';
   return new GoogleGenAI({
     apiKey,
-    httpOptions: {
-      headers: {
-        'User-Agent': 'aistudio-build',
-      },
-    },
   });
 };
 
-// 採用目前支援的多模態 Flash 模型清單，優先使用極速穩定的 gemini-3.6-flash，遇高負載自動切換備援模型
-const FLASH_MODELS = ['gemini-3.6-flash', 'gemini-3.8-flash', 'gemini-flash-latest', 'gemini-3.1-flash-lite'];
+// 採用目前支援且相容於瀏覽器端的多模態 Flash 模型清單，遇高負載自動切換備援模型
+const FLASH_MODELS = ['gemini-3.6-flash', 'gemini-3.1-flash-lite', 'gemini-3.8-flash'];
 
 export const generateDietarySuggestions = async (metrics: BodyMetric, goal: UserGoal) => {
   const ai = getGeminiClient();
@@ -159,6 +154,7 @@ export const chatWithCoach = async (
         contents: messages,
         config: {
           systemInstruction,
+          maxOutputTokens: 2048,
         }
       });
       if (response.text) {
