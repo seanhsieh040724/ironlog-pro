@@ -2,6 +2,7 @@ import React, { useContext, useState, useEffect, useRef } from 'react';
 import { AppContext } from '../App';
 import { BodyMetric, UserGoal } from '../types';
 import { chatWithCoach } from '../services/aiService';
+import { useEntitlement } from '../services/storeKitBridge';
 import { 
   Send, Loader2, Sparkles, User, Trash2, Copy, Check, Sparkle, Bot, RotateCcw
 } from 'lucide-react';
@@ -17,6 +18,7 @@ interface ChatMessage {
 
 export const CoachView: React.FC = () => {
   const context = useContext(AppContext);
+  const entitlement = useEntitlement();
   const chatEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   
@@ -82,8 +84,7 @@ export const CoachView: React.FC = () => {
     setIsTyping(true);
 
     // 若非 Pro 會員則扣除額度 (最低保留 0，不鎖死使用)
-    const isPro = localStorage.getItem('ironlog_pro_subscribed') === 'true';
-    if (!isPro) {
+    if (!entitlement.isPro) {
       setAiQuota(prev => Math.max(0, prev - 1));
     }
 
@@ -355,7 +356,7 @@ export const CoachView: React.FC = () => {
 
         {/* 剩餘 AI 額度標示 */}
         <div className="flex items-center justify-between px-1 text-[11px] font-bold text-slate-400">
-          {localStorage.getItem('ironlog_pro_subscribed') === 'true' ? (
+          {entitlement.isPro ? (
             <span className="text-[#82CC00] font-black flex items-center gap-1">
               <Sparkles className="w-3 h-3 text-[#82CC00]" />
               <span>Pro 尊榮版：AI 無限次使用</span>

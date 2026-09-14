@@ -76,6 +76,50 @@ export interface Achievement {
 
 export type AppTab = 'routines' | 'history' | 'workout' | 'diet' | 'coach' | 'settings';
 
+export type SubscriptionStatus = 
+  | 'inactive'
+  | 'active'
+  | 'pending'
+  | 'expired'
+  | 'revoked'
+  | 'unknown';
+
+export interface StoreKitProduct {
+  id: string;
+  displayName: string;
+  description: string;
+  displayPrice: string;
+  price: number;
+  currencyCode: string;
+  subscriptionPeriod?: {
+    unit: 'day' | 'week' | 'month' | 'year';
+    value: number;
+  };
+}
+
+export interface EntitlementInfo {
+  isPro: boolean;
+  status: SubscriptionStatus;
+  productId: string | null;
+  expirationDate: number | null;
+  willAutoRenew: boolean;
+  isSandbox?: boolean;
+  originalPurchaseDate?: number | null;
+}
+
+export interface PurchaseResult {
+  success: boolean;
+  entitlement?: EntitlementInfo;
+  userCancelled?: boolean;
+  error?: string;
+}
+
+export interface RestoreResult {
+  success: boolean;
+  entitlement?: EntitlementInfo;
+  error?: string;
+}
+
 declare global {
   interface Window {
     webkit?: {
@@ -83,7 +127,11 @@ declare global {
         notificationHandler?: {
           postMessage: (message: any) => void;
         };
+        storeKitHandler?: {
+          postMessage: (message: any) => void;
+        };
       };
     };
+    __IRONLOG_STOREKIT_CALLBACK__?: (payload: any) => void;
   }
 }

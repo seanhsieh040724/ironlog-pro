@@ -1,12 +1,20 @@
 import React, { useContext, useMemo, useState, useRef, useEffect } from 'react';
 import { AppContext } from '../App';
-import { BodyMetric, UserGoal } from '../types';
+import { BodyMetric, UserGoal, StoreKitProduct } from '../types';
 import { calculateSuggestedCalories, calculateMacros } from '../utils/fitnessMath';
+import { 
+  useEntitlement,
+  getProducts,
+  purchase,
+  restorePurchases,
+  isNativeStoreKitAvailable,
+  DEFAULT_PRO_PRODUCT_ID
+} from '../services/storeKitBridge';
 import { 
   User, Camera, Edit3, Check, Award, Trophy, Crown, Flame, Sparkles, Calendar,
   Globe, Scale, Download, Trash2, ChevronRight, CheckCircle2,
   Lock, X, UserCheck, Utensils, Calculator, FileText,
-  Smartphone, CreditCard, ShieldCheck, Loader2, ScanFace
+  Loader2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -20,6 +28,18 @@ export const SettingsView: React.FC = () => {
   const setGlobalGoal = context?.setGoal || (() => {});
   const setBodyMetrics = context?.setBodyMetrics || (() => {});
 
+  // StoreKit 2 & 會員狀態（由 StoreKit Bridge 統一管理）
+  const entitlement = useEntitlement();
+  const isSubscribed = entitlement.isPro;
+  const isNativeAvailable = isNativeStoreKitAvailable();
+  const [products, setProducts] = useState<StoreKitProduct[]>([]);
+  const [isStoreKitLoading, setIsStoreKitLoading] = useState(false);
+  const [storeKitMessage, setStoreKitMessage] = useState<{ text: string; type: 'info' | 'error' | 'success' } | null>(null);
+
+  useEffect(() => {
+    getProducts().then(setProducts).catch(console.error);
+  }, []);
+
   // Current latest body metric
   const latestMetric: BodyMetric = useMemo(() => {
     const first = bodyMetrics[0];
@@ -31,7 +51,6 @@ export const SettingsView: React.FC = () => {
   const [profileImage, setProfileImage] = useState<string | null>(() => localStorage.getItem('ironlog_user_avatar'));
   const [userName, setUserName] = useState<string>(() => localStorage.getItem('ironlog_user_name') || '');
   const [userEmail, setUserEmail] = useState<string>(() => localStorage.getItem('ironlog_user_email') || '');
-  const [isSubscribed, setIsSubscribed] = useState<boolean>(() => localStorage.getItem('ironlog_pro_subscribed') === 'true');
 
   // Preferences State
   const [weightUnit, setWeightUnit] = useState<string>(() => localStorage.getItem('ironlog_weight_unit') || 'kg');
@@ -41,9 +60,6 @@ export const SettingsView: React.FC = () => {
   // Modals
   const [showEditProfileModal, setShowEditProfileModal] = useState(false);
   const [showProModal, setShowProModal] = useState(false);
-  const [showApplePaySheet, setShowApplePaySheet] = useState(false);
-  const [paymentStep, setPaymentStep] = useState<'sheet' | 'authenticating' | 'processing' | 'done'>('sheet');
-  const [showSuccessToast, setShowSuccessToast] = useState(false);
   const [showLanguageModal, setShowLanguageModal] = useState(false);
   const [showNutritionModal, setShowNutritionModal] = useState(false);
   const [showTdeeModal, setShowTdeeModal] = useState(false);
@@ -258,77 +274,56 @@ export const SettingsView: React.FC = () => {
     setShowTdeeModal(false);
   };
 
-  const playApplePaySuccessSound = () => {
-    try {
-      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-      if (!AudioCtx) return;
-      const ctx = new AudioCtx();
-      const now = ctx.currentTime;
-      
-      const osc1 = ctx.createOscillator();
-      const gain1 = ctx.createGain();
-      osc1.type = 'sine';
-      osc1.frequency.setValueAtTime(1046.5, now);
-      gain1.gain.setValueAtTime(0.18, now);
-      gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
-      osc1.connect(gain1);
-      gain1.connect(ctx.destination);
-      osc1.start(now);
-      osc1.stop(now + 0.35);
+  const handlePurchase = async (productId: string = DEFAULT_PRO_PRODUCT_ID) => {
+    if (!isNativeAvailable) {
+      setStoreKitMessage({
+        type: 'info',
+        text: '目前處於 Web 預覽環境，尚未連接 iOS App Store 原生 StoreKit 2。請在 iOS 原生 App 中執行 Apple 原生購買。'
+      });
+      return;
+    }
 
-      const osc2 = ctx.createOscillator();
-      const gain2 = ctx.createGain();
-      osc2.type = 'sine';
-      osc2.frequency.setValueAtTime(1318.5, now + 0.09);
-      gain2.gain.setValueAtTime(0.22, now + 0.09);
-      gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.55);
-      osc2.connect(gain2);
-      gain2.connect(ctx.destination);
-      osc2.start(now + 0.09);
-      osc2.stop(now + 0.55);
-    } catch (e) {
-      console.log('Audio playback error', e);
+    setIsStoreKitLoading(true);
+    setStoreKitMessage(null);
+    try {
+      const res = await purchase(productId);
+      if (res.success) {
+        setStoreKitMessage({ type: 'success', text: '🎉 訂閱成功！Pro 尊榮版已生效。' });
+      } else {
+        if (!res.userCancelled) {
+          setStoreKitMessage({ type: 'error', text: res.error || '購買未能完成' });
+        }
+      }
+    } catch (e: any) {
+      setStoreKitMessage({ type: 'error', text: e?.message || '購買失敗' });
+    } finally {
+      setIsStoreKitLoading(false);
     }
   };
 
-  const handleStartPayment = (authType: 'faceid' | 'password' = 'faceid') => {
-    if (paymentStep !== 'sheet') return;
-    
-    setPaymentStep('authenticating');
-    
-    // 模擬 iPhone Face ID 辨識動畫
-    setTimeout(() => {
-      setPaymentStep('processing');
-      
-      // 模擬 App Store / Apple Pay 交易處理
-      setTimeout(() => {
-        setPaymentStep('done');
-        playApplePaySuccessSound();
-        if (typeof navigator !== 'undefined' && navigator.vibrate) {
-          navigator.vibrate([40, 80, 40]);
-        }
-        
-        // 正式開通 Pro 尊榮版訂閱
-        setIsSubscribed(true);
-        localStorage.setItem('ironlog_pro_subscribed', 'true');
-        window.dispatchEvent(new Event('storage'));
-        
-        // 完成後關閉付款頁面並顯示成功通知
-        setTimeout(() => {
-          setShowApplePaySheet(false);
-          setPaymentStep('sheet');
-          setShowSuccessToast(true);
-          setTimeout(() => setShowSuccessToast(false), 5000);
-        }, 1600);
-      }, 1100);
-    }, 1200);
-  };
+  const handleRestore = async () => {
+    if (!isNativeAvailable) {
+      setStoreKitMessage({
+        type: 'info',
+        text: '目前處於 Web 預覽環境，尚未連接 iOS 原生 StoreKit 2。'
+      });
+      return;
+    }
 
-  const toggleSubscription = () => {
-    const nextSub = !isSubscribed;
-    setIsSubscribed(nextSub);
-    localStorage.setItem('ironlog_pro_subscribed', String(nextSub));
-    window.dispatchEvent(new Event('storage'));
+    setIsStoreKitLoading(true);
+    setStoreKitMessage(null);
+    try {
+      const res = await restorePurchases();
+      if (res.success) {
+        setStoreKitMessage({ type: 'success', text: '🎉 已成功恢復您的 Pro 訂閱！' });
+      } else {
+        setStoreKitMessage({ type: 'error', text: res.error || '未找到有效購買紀錄' });
+      }
+    } catch (e: any) {
+      setStoreKitMessage({ type: 'error', text: e?.message || '恢復購買失敗' });
+    } finally {
+      setIsStoreKitLoading(false);
+    }
   };
 
   const handleExportData = () => {
@@ -761,7 +756,7 @@ export const SettingsView: React.FC = () => {
         )}
       </AnimatePresence>
 
-      {/* 2. Pro 方案升級 Modal */}
+      {/* 2. Pro 方案升級 Modal (由 StoreKit 2 接管) */}
       <AnimatePresence>
         {showProModal && (
           <motion.div
@@ -774,7 +769,7 @@ export const SettingsView: React.FC = () => {
               initial={{ scale: 0.95, y: 15 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.95, y: 15 }}
-              className="bg-white rounded-[32px] p-7 max-w-sm w-full shadow-2xl space-y-6 relative"
+              className="bg-white rounded-[32px] p-7 max-w-sm w-full shadow-2xl space-y-5 relative"
             >
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-2">
@@ -784,14 +779,17 @@ export const SettingsView: React.FC = () => {
                   <h3 className="text-lg font-black text-slate-900">IronLog Pro 尊榮版</h3>
                 </div>
                 <button 
-                  onClick={() => setShowProModal(false)}
+                  onClick={() => {
+                    setShowProModal(false);
+                    setStoreKitMessage(null);
+                  }}
                   className="p-1 rounded-full text-slate-400 hover:text-slate-700"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
-              <div className="space-y-3 py-2">
+              <div className="space-y-2.5 py-1">
                 {[
                   '無限次 AI 食物熱量拍照與營養分析',
                   '專屬 AI 鋼鐵教練（支援港式 / 台式雙語氣即時諮詢）',
@@ -806,226 +804,90 @@ export const SettingsView: React.FC = () => {
                 ))}
               </div>
 
-              {/* 訂閱方案與價格 */}
-              <div className="bg-[#CCFF00]/10 p-4 rounded-2xl text-center border border-[#82CC00]/30 space-y-1">
+              {/* 訂閱方案與價格 (來自 StoreKit 2 商品資訊) */}
+              <div className="bg-[#CCFF00]/10 p-4 rounded-2xl text-center border border-[#82CC00]/30 space-y-1.5">
                 <div className="flex items-baseline justify-center gap-1">
-                  <span className="text-2xl font-black text-slate-900">NT$ 100</span>
-                  <span className="text-xs font-bold text-slate-600">/ 每月 (台幣)</span>
+                  <span className="text-2xl font-black text-slate-900">
+                    {products[0]?.displayPrice || 'NT$ 100'}
+                  </span>
+                  <span className="text-xs font-bold text-slate-600">/ 每月 (自動續訂)</span>
                 </div>
                 <p className="text-[11px] font-bold text-slate-500">
-                  {isSubscribed ? '🎉 目前方案：Pro 專業版會員 (已生效)' : '隨時可取消 · 無綁約負擔'}
+                  {isSubscribed ? '🎉 目前方案：Pro 專業版會員 (已生效)' : '隨時可至 Apple ID 取消 · App Store 自動續訂'}
                 </p>
+
+                {/* 環境與原生橋接狀態標籤 */}
+                <div className="pt-1">
+                  {isNativeAvailable ? (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-black text-emerald-700 bg-emerald-100/80 px-2.5 py-0.5 rounded-full">
+                      <CheckCircle2 className="w-3 h-3" />
+                      已連接 iOS StoreKit 2 原生付費
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-black text-amber-800 bg-amber-100/90 px-2.5 py-0.5 rounded-full border border-amber-200">
+                      尚未連接 Apple App Store (Web 預覽環境)
+                    </span>
+                  )}
+                </div>
               </div>
 
-              <div className="flex gap-3">
+              {storeKitMessage && (
+                <div className={`p-3 rounded-xl text-xs font-bold leading-relaxed ${
+                  storeKitMessage.type === 'error' ? 'bg-rose-50 text-rose-600 border border-rose-200' :
+                  storeKitMessage.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+                  'bg-slate-100 text-slate-700 border border-slate-200'
+                }`}>
+                  {storeKitMessage.text}
+                </div>
+              )}
+
+              <div className="flex gap-2.5">
                 <button
-                  onClick={() => setShowProModal(false)}
+                  onClick={() => {
+                    setShowProModal(false);
+                    setStoreKitMessage(null);
+                  }}
                   className="flex-1 py-3 bg-slate-100 text-slate-700 rounded-2xl font-bold text-sm hover:bg-slate-200 transition-colors"
                 >
                   返回
                 </button>
-                <button
-                  onClick={() => {
-                    if (isSubscribed) {
-                      toggleSubscription();
-                      setShowProModal(false);
-                    } else {
-                      setShowProModal(false);
-                      setPaymentStep('sheet');
-                      setShowApplePaySheet(true);
-                    }
-                  }}
-                  className={`flex-1 py-3 text-black font-black rounded-2xl text-sm shadow-md transition-all ${
-                    isSubscribed ? 'bg-slate-200 hover:bg-slate-300 text-slate-800' : 'bg-[#CCFF00] hover:bg-[#b8e600]'
-                  }`}
-                >
-                  {isSubscribed ? '停用 Pro 訂閱' : '每月 NT$100 立即解鎖'}
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* 2.1 iPhone 相應的 Apple Pay / In-App Purchase 付費畫面 */}
-      <AnimatePresence>
-        {showApplePaySheet && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/70 z-[1100] flex flex-col justify-end sm:items-center sm:justify-center p-0 sm:p-4 backdrop-blur-xs"
-            onClick={(e) => {
-              if (e.target === e.currentTarget && paymentStep !== 'processing' && paymentStep !== 'authenticating') {
-                setShowApplePaySheet(false);
-                setPaymentStep('sheet');
-              }
-            }}
-          >
-            <motion.div
-              initial={{ y: '100%' }}
-              animate={{ y: 0 }}
-              exit={{ y: '100%' }}
-              transition={{ type: 'spring', damping: 28, stiffness: 280 }}
-              className="bg-[#1C1C1E] text-white w-full sm:max-w-md rounded-t-[36px] sm:rounded-[36px] shadow-2xl overflow-hidden border-t sm:border border-white/10 relative pb-8 sm:pb-6"
-            >
-              {/* iPhone iOS 頂部滑動橫條 (Home / Sheet Indicator) */}
-              <div className="w-10 h-1 bg-white/25 rounded-full mx-auto mt-2.5 mb-1.5" />
-
-              {/* 頂部標題列 */}
-              <div className="flex items-center justify-between px-6 py-2.5 border-b border-white/10">
-                <div className="flex items-center gap-2">
-                  <span className="text-xl font-bold tracking-tight text-white flex items-center gap-1">
-                    <span className="text-2xl leading-none"></span>Pay
-                  </span>
-                  <span className="text-[10px] uppercase tracking-wider text-white/60 font-bold px-2 py-0.5 rounded-full bg-white/10 border border-white/10">
-                    App Store 訂閱
-                  </span>
-                </div>
-                {paymentStep !== 'processing' && paymentStep !== 'authenticating' && (
+                {isSubscribed ? (
                   <button
-                    onClick={() => {
-                      setShowApplePaySheet(false);
-                      setPaymentStep('sheet');
-                    }}
-                    className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 flex items-center justify-center text-white/70 hover:text-white transition-all"
+                    disabled
+                    className="flex-1 py-3 bg-slate-200 text-slate-600 font-black rounded-2xl text-sm cursor-default"
                   >
-                    <X className="w-4 h-4" />
+                    已開通 Pro 會員
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => handlePurchase(products[0]?.id || DEFAULT_PRO_PRODUCT_ID)}
+                    disabled={isStoreKitLoading}
+                    className={`flex-1 py-3 text-black font-black rounded-2xl text-sm shadow-md transition-all flex items-center justify-center gap-1.5 ${
+                      isNativeAvailable
+                        ? 'bg-[#CCFF00] hover:bg-[#b8e600] active:scale-[0.98]'
+                        : 'bg-slate-200 hover:bg-slate-300 text-slate-700'
+                    }`}
+                  >
+                    {isStoreKitLoading ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : isNativeAvailable ? (
+                      <span>{products[0]?.displayPrice || 'NT$ 100'} / 月 立即訂閱</span>
+                    ) : (
+                      <span>App Store 購買 (需原生環境)</span>
+                    )}
                   </button>
                 )}
               </div>
 
-              {/* 主要內容區域 */}
-              <div className="p-6 space-y-4">
-                {/* App 資訊卡片 */}
-                <div className="flex items-center gap-3.5 bg-white/5 p-3.5 rounded-2xl border border-white/5">
-                  <img
-                    src="https://i.postimg.cc/P5H3QSkC/Gemini-Generated-Image-38bzpo38bzpo38bz.png"
-                    alt="IronLog Pro"
-                    className="w-13 h-13 rounded-2xl shadow-md border border-white/10 object-cover shrink-0"
-                  />
-                  <div className="min-w-0 flex-1">
-                    <h4 className="text-[15px] font-bold text-white truncate">IronLog Pro - 健身追蹤</h4>
-                    <p className="text-xs text-white/60 truncate">IronLog Fitness Co., Ltd.</p>
-                    <div className="flex items-center gap-1.5 mt-1 text-[11px] font-bold text-[#CCFF00]">
-                      <Sparkles className="w-3 h-3" />
-                      <span>尊榮版月費方案 (1 個月)</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 費用與帳號卡片 (iOS 錢包風格) */}
-                <div className="bg-white/5 rounded-2xl p-4 space-y-3 border border-white/5 text-xs">
-                  <div className="flex justify-between items-center">
-                    <span className="text-white/60">方案內容</span>
-                    <span className="font-semibold text-white">IronLog Pro 自動續訂</span>
-                  </div>
-                  <div className="flex justify-between items-center border-t border-white/5 pt-2.5">
-                    <span className="text-white/60">訂閱費用</span>
-                    <div className="text-right">
-                      <span className="text-xl font-black text-white tracking-tight">NT$ 100</span>
-                      <span className="text-[11px] text-white/60 ml-1">/ 月</span>
-                    </div>
-                  </div>
-                  <div className="flex justify-between items-center border-t border-white/5 pt-2.5">
-                    <span className="text-white/60">Apple 帳號</span>
-                    <span className="font-medium text-white/90 truncate max-w-[210px]">
-                      {userEmail || 'seanhsieh040724@gmail.com'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center border-t border-white/5 pt-2.5">
-                    <span className="text-white/60">付款卡片</span>
-                    <div className="flex items-center gap-1.5 font-medium text-white/90">
-                      <span className="px-1.5 py-0.5 rounded bg-white/10 text-[10px] font-bold">Pay</span>
-                      <span>中國信託 Commercial (•••• 8820)</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Apple 條款說明 */}
-                <p className="text-[11px] text-white/40 leading-relaxed text-center px-2">
-                  確認購買後款項將計入 Apple ID 帳戶。訂閱將以每月 NT$ 100 自動續訂，可於各期結束前至少 24 小時至「設定 &gt; Apple ID &gt; 訂閱項目」取消。
-                </p>
-
-                {/* 驗證互動區域 */}
-                {paymentStep === 'sheet' && (
-                  <div className="space-y-3 pt-1">
-                    {/* 模擬 iPhone 側邊按鈕指示條 */}
-                    <div
-                      onClick={() => handleStartPayment('faceid')}
-                      className="bg-white/10 hover:bg-white/15 active:scale-[0.99] transition-all p-3.5 rounded-2xl flex items-center justify-between cursor-pointer border border-white/10 group"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center text-[#CCFF00] group-hover:scale-110 transition-transform">
-                          <Smartphone className="w-5 h-5" />
-                        </div>
-                        <div>
-                          <div className="text-xs font-bold text-white flex items-center gap-2">
-                            <span>按兩下側邊按鈕以付款</span>
-                            <span className="relative flex h-2 w-2">
-                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#CCFF00] opacity-75"></span>
-                              <span className="relative inline-flex rounded-full h-2 w-2 bg-[#CCFF00]"></span>
-                            </span>
-                          </div>
-                          <div className="text-[11px] text-white/50">iPhone 側鍵確認或點擊此處直接驗證</div>
-                        </div>
-                      </div>
-                      <span className="text-xs font-bold text-[#CCFF00] px-2.5 py-1 rounded-lg bg-[#CCFF00]/10 border border-[#CCFF00]/30">
-                        確認
-                      </span>
-                    </div>
-
-                    {/* 主確認按鈕 */}
-                    <button
-                      onClick={() => handleStartPayment('faceid')}
-                      className="w-full py-3.5 bg-white text-black hover:bg-white/90 active:scale-[0.98] rounded-2xl font-black text-sm flex items-center justify-center gap-2 shadow-lg transition-all"
-                    >
-                      <ScanFace className="w-5 h-5 text-black" />
-                      <span>以 Face ID 確認付款 (NT$ 100)</span>
-                    </button>
-
-                    {/* 次要按鈕 */}
-                    <button
-                      onClick={() => handleStartPayment('password')}
-                      className="w-full py-2 bg-transparent hover:bg-white/5 text-white/60 hover:text-white rounded-xl font-bold text-xs transition-colors text-center"
-                    >
-                      使用 Apple ID 密碼購買
-                    </button>
-                  </div>
-                )}
-
-                {paymentStep === 'authenticating' && (
-                  <div className="py-8 flex flex-col items-center justify-center space-y-4">
-                    <div className="relative w-20 h-20 flex items-center justify-center">
-                      <div className="absolute inset-0 border-2 border-[#CCFF00] rounded-2xl animate-pulse" />
-                      <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center text-[#CCFF00]">
-                        <ScanFace className="w-8 h-8 animate-bounce" />
-                      </div>
-                    </div>
-                    <div className="text-center space-y-1">
-                      <p className="text-sm font-bold text-white">正在使用 Face ID 驗證...</p>
-                      <p className="text-xs text-white/50">請注視您的 iPhone 螢幕</p>
-                    </div>
-                  </div>
-                )}
-
-                {paymentStep === 'processing' && (
-                  <div className="py-8 flex flex-col items-center justify-center space-y-3">
-                    <Loader2 className="w-10 h-10 text-[#CCFF00] animate-spin" />
-                    <p className="text-sm font-bold text-white">正在處理 App Store 付款交易...</p>
-                    <p className="text-xs text-white/50">請稍候，即將完成授權</p>
-                  </div>
-                )}
-
-                {paymentStep === 'done' && (
-                  <div className="py-7 flex flex-col items-center justify-center space-y-3">
-                    <div className="w-16 h-16 rounded-full bg-[#007AFF] text-white flex items-center justify-center shadow-lg shadow-[#007AFF]/40">
-                      <Check className="w-9 h-9 stroke-[3]" />
-                    </div>
-                    <p className="text-base font-black text-white">完成 (Done)</p>
-                    <p className="text-xs text-white/70">付款成功！已為您開通 IronLog Pro 尊榮版</p>
-                  </div>
-                )}
+              {/* 恢復購買 (Restore Purchases) 按鈕 */}
+              <div className="text-center pt-0.5">
+                <button
+                  onClick={handleRestore}
+                  disabled={isStoreKitLoading}
+                  className="text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors underline"
+                >
+                  {isStoreKitLoading ? '處理中...' : '恢復已購買的訂閱 (Restore Purchases)'}
+                </button>
               </div>
             </motion.div>
           </motion.div>
@@ -1515,26 +1377,6 @@ export const SettingsView: React.FC = () => {
                 我知道了
               </button>
             </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* 8. iPhone Apple Pay 付款成功通知 Toast */}
-      <AnimatePresence>
-        {showSuccessToast && (
-          <motion.div
-            initial={{ opacity: 0, y: -30, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -20, scale: 0.95 }}
-            className="fixed top-5 inset-x-4 max-w-sm mx-auto z-[1500] bg-[#18392B] text-white px-4 py-3.5 rounded-2xl shadow-2xl border border-[#82CC00]/50 flex items-center gap-3"
-          >
-            <div className="w-9 h-9 rounded-xl bg-[#CCFF00] text-black flex items-center justify-center font-black shrink-0 shadow-sm">
-              <Sparkles className="w-5 h-5 text-black" />
-            </div>
-            <div className="text-xs min-w-0 flex-1">
-              <p className="font-black text-[#CCFF00] text-[13px]">🎉 訂閱成功！Pro 尊榮版已生效</p>
-              <p className="text-slate-200 text-[11px] mt-0.5">無限次 AI 食物熱量分析與專屬教練功能已全數開通！</p>
-            </div>
           </motion.div>
         )}
       </AnimatePresence>
