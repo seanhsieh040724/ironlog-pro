@@ -1,4 +1,8 @@
-// !$*UTF8*$!
+#!/usr/bin/env python3
+import os
+import re
+
+pbx_content = """// !$*UTF8*$!
 {
 	archiveVersion = 1;
 	classes = {
@@ -272,3 +276,9 @@
 	};
 	rootObject = 1100000128C0000100000001 /* Project object */;
 }
+"""
+
+with open("ios/IronLog.xcodeproj/project.pbxproj", "w", encoding="utf-8") as f:
+    f.write(pbx_content)
+
+print(f"Generated project.pbxproj successfully! Size: {len(pbx_content)} bytes.")

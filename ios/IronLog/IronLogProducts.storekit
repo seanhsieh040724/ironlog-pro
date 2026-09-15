@@ -1,0 +1,71 @@
+{
+  "identifier" : "B53E9F81",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+
+  ],
+  "settings" : {
+    "_failTransactionsEnabled" : false,
+    "_locale" : "zh_TW",
+    "_storefront" : "TWN",
+    "_storeKitErrors" : [
+
+    ]
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "21458920",
+      "localizations" : [
+        {
+          "description" : "IronLog Pro 尊榮版訂閱群組",
+          "displayName" : "IronLog Pro 尊榮版",
+          "locale" : "zh_Hant"
+        },
+        {
+          "description" : "IronLog Pro Subscriptions",
+          "displayName" : "IronLog Pro",
+          "locale" : "en_US"
+        }
+      ],
+      "name" : "IronLog Pro Subscriptions",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "100",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "6478901234",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "無限次 AI 食物熱量拍照與營養分析、專屬 AI 鋼鐵教練、完整雲端圖表",
+              "displayName" : "IronLog Pro 尊榮版 (月費)",
+              "locale" : "zh_Hant"
+            },
+            {
+              "description" : "Unlimited AI Food Nutrition scanner and AI Coach",
+              "displayName" : "IronLog Pro Monthly",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "com.ironlog.pro.monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "IronLog Pro Monthly",
+          "subscriptionGroupID" : "21458920",
+          "type" : "RecurringSubscription"
+        }
+      ]
+    }
+  ],
+  "version" : {
+    "major" : 3,
+    "minor" : 0
+  }
+}
