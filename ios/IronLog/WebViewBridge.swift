@@ -19,7 +19,8 @@ import WebKit
  * - restoreResult
  * - error
  */
-public class WebViewBridge: NSObject, WKScriptMessageHandler {
+@MainActor
+public final class WebViewBridge: NSObject, WKScriptMessageHandler {
     public static let shared = WebViewBridge()
     
     public weak var webView: WKWebView?
@@ -31,18 +32,17 @@ public class WebViewBridge: NSObject, WKScriptMessageHandler {
     
     // 綁定 StoreKitManager 的會員權益推播
     private func setupEntitlementObserver() {
-        Task { @MainActor in
-            StoreKitManager.shared.onEntitlementUpdated = { [weak self] entitlement in
-                self?.sendCallbackToJS(payload: [
-                    "action": "entitlement_updated",
-                    "data": entitlement.toDictionary()
-                ])
-            }
+        StoreKitManager.shared.onEntitlementUpdated = { [weak self] entitlement in
+            self?.sendCallbackToJS(payload: [
+                "action": "entitlement_updated",
+                "data": entitlement.toDictionary()
+            ])
         }
     }
     
     // MARK: - WKScriptMessageHandler
-    public func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+    // nonisolated 滿足 WKScriptMessageHandler 協定要求，並安全調度至 @MainActor
+    nonisolated public func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
         guard message.name == "storeKitHandler" else { return }
         guard let body = message.body as? [String: Any],
               let action = body["action"] as? String else {
@@ -52,13 +52,12 @@ public class WebViewBridge: NSObject, WKScriptMessageHandler {
         
         let requestId = body["requestId"] as? String
         
-        Task { @MainActor in
-            await handleAction(action: action, requestId: requestId, payload: body)
+        Task { @MainActor [weak self] in
+            await self?.handleAction(action: action, requestId: requestId, payload: body)
         }
     }
     
     // MARK: - 處理 React 端呼叫的 Actions
-    @MainActor
     private func handleAction(action: String, requestId: String?, payload: [String: Any]) async {
         switch action {
         case "getProducts":
@@ -141,11 +140,9 @@ public class WebViewBridge: NSObject, WKScriptMessageHandler {
         
         let jsCode = "if (window.__IRONLOG_STOREKIT_CALLBACK__) { window.__IRONLOG_STOREKIT_CALLBACK__(\(jsonString)); }"
         
-        DispatchQueue.main.async { [weak self] in
-            self?.webView?.evaluateJavaScript(jsCode) { _, error in
-                if let error = error {
-                    print("[WebViewBridge] evaluateJavaScript error: \(error.localizedDescription)")
-                }
+        self.webView?.evaluateJavaScript(jsCode) { _, error in
+            if let error = error {
+                print("[WebViewBridge] evaluateJavaScript error: \(error.localizedDescription)")
             }
         }
     }

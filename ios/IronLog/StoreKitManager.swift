@@ -5,7 +5,7 @@ import StoreKit
  * EntitlementInfo
  * 供原生與 Web 統一使用的會員權益結構
  */
-public struct EntitlementInfo: Codable, Equatable {
+public struct EntitlementInfo: Codable, Equatable, Sendable {
     public var isPro: Bool
     public var status: String // "active" | "inactive" | "expired" | "revoked" | "pending"
     public var productId: String?
@@ -42,7 +42,7 @@ public struct EntitlementInfo: Codable, Equatable {
  * StoreKitProductDTO
  * 供前端渲染訂閱方案名稱、本地化價格與週期的規格
  */
-public struct StoreKitProductDTO: Codable {
+public struct StoreKitProductDTO: Codable, Sendable {
     public let id: String
     public let displayName: String
     public let description: String
@@ -51,7 +51,7 @@ public struct StoreKitProductDTO: Codable {
     public let currencyCode: String
     public let subscriptionPeriod: SubscriptionPeriodDTO?
 
-    public struct SubscriptionPeriodDTO: Codable {
+    public struct SubscriptionPeriodDTO: Codable, Sendable {
         public let unit: String // "day" | "week" | "month" | "year"
         public let value: Int
     }
@@ -88,17 +88,17 @@ public struct StoreKitProductDTO: Codable {
  * 7. 判斷目前 Pro entitlement 並提供回調通知
  */
 @MainActor
-public class StoreKitManager: ObservableObject {
+public final class StoreKitManager: ObservableObject {
     public static let shared = StoreKitManager()
     
-    // 預設訂閱產品 ID
-    public static let defaultProProductId = "com.ironlog.pro.monthly"
+    // 預設訂閱產品 ID (nonisolated 供所有 context 存取)
+    nonisolated public static let defaultProProductId = "com.ironlog.pro.monthly"
     
     @Published public private(set) var currentEntitlement: EntitlementInfo = .inactive
     @Published public private(set) var availableProducts: [Product] = []
     
     // 會員狀態更新監聽器
-    public var onEntitlementUpdated: ((EntitlementInfo) -> Void)?
+    public var onEntitlementUpdated: (@Sendable @MainActor (EntitlementInfo) -> Void)?
     
     private var transactionListenerTask: Task<Void, Never>? = nil
 
@@ -118,10 +118,11 @@ public class StoreKitManager: ObservableObject {
     
     // MARK: - 1. 背景交易監聽 (Transaction.updates)
     private func listenForTransactions() -> Task<Void, Never> {
-        Task.detached(priority: .background) {
+        Task { [weak self] in
             for await result in Transaction.updates {
+                guard let self = self else { return }
                 do {
-                    let transaction = try self.checkVerified(result)
+                    let transaction = try Self.checkVerified(result)
                     
                     // 根據官方要求，處理完畢後必須調用 finish()
                     await transaction.finish()
@@ -177,8 +178,13 @@ public class StoreKitManager: ObservableObject {
     
     // MARK: - 3. 喚起 StoreKit 2 系統原生購買 (Product.purchase())
     public func purchase(productId: String = defaultProProductId) async throws -> (success: Bool, userCancelled: Bool, entitlement: EntitlementInfo?) {
-        // 先在記憶體中找，找不到則嘗試從 App Store 獲取
-        guard let product = availableProducts.first(where: { $0.id == productId }) ?? (try await fetchProducts(productIds: [productId])).first else {
+        // 先在記憶體中尋找，未快取則自 App Store 獲取
+        var targetProduct = availableProducts.first(where: { $0.id == productId })
+        if targetProduct == nil {
+            let fetched = try await fetchProducts(productIds: [productId])
+            targetProduct = fetched.first
+        }
+        guard let product = targetProduct else {
             throw NSError(domain: "StoreKitManager", code: 404, userInfo: [NSLocalizedDescriptionKey: "找不到商品: \(productId)"])
         }
         
@@ -186,7 +192,7 @@ public class StoreKitManager: ObservableObject {
         
         switch purchaseResult {
         case .success(let verification):
-            let transaction = try checkVerified(verification)
+            let transaction = try Self.checkVerified(verification)
             
             // 交易成功，結束交易
             await transaction.finish()
@@ -222,7 +228,7 @@ public class StoreKitManager: ObservableObject {
         
         for await result in Transaction.currentEntitlements {
             do {
-                let transaction = try checkVerified(result)
+                let transaction = try Self.checkVerified(result)
                 
                 // 檢查是否是 IronLog Pro 商品
                 if transaction.productID == Self.defaultProProductId {
@@ -240,9 +246,18 @@ public class StoreKitManager: ObservableObject {
                             isProActive = true
                             
                             var willAutoRenew = true
-                            // 讀取訂閱續訂狀態
-                            if let subscriptionStatus = try? await transaction.subscriptionStatus {
-                                willAutoRenew = subscriptionStatus.renewalInfo.willAutoRenew
+                            // 讀取訂閱續訂狀態 (透過 Product.SubscriptionInfo.status)
+                            if let subscriptionGroupID = transaction.subscriptionGroupID {
+                                if let statuses = try? await Product.SubscriptionInfo.status(for: subscriptionGroupID) {
+                                    for status in statuses {
+                                        switch status.renewalInfo {
+                                        case .verified(let renewalInfo):
+                                            willAutoRenew = renewalInfo.willAutoRenew
+                                        case .unverified(let renewalInfo, _):
+                                            willAutoRenew = renewalInfo.willAutoRenew
+                                        }
+                                    }
+                                }
                             }
                             
                             activeEntitlement = EntitlementInfo(
@@ -274,7 +289,8 @@ public class StoreKitManager: ObservableObject {
     }
     
     // MARK: - 6. JWS 憑證簽名校驗 (VerificationResult)
-    private func checkVerified<T>(_ result: VerificationResult<T>) throws -> T {
+    // nonisolated static 確保能在任何 Actor / 背景 Task 中安全調用，無隔離限制
+    nonisolated private static func checkVerified<T>(_ result: VerificationResult<T>) throws -> T {
         switch result {
         case .unverified(_, let error):
             throw error

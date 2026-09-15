@@ -1,3 +1,4 @@
+import Foundation
 import UserNotifications
 import WebKit
 
@@ -5,7 +6,8 @@ import WebKit
  * NotificationManager.swift
  * 處理計時器倒數結束之本機推播通知
  */
-public class NotificationManager: NSObject, WKScriptMessageHandler {
+@MainActor
+public final class NotificationManager: NSObject, WKScriptMessageHandler {
     public static let shared = NotificationManager()
     
     // 請求權限
@@ -20,11 +22,18 @@ public class NotificationManager: NSObject, WKScriptMessageHandler {
     }
     
     // 處理來自 JavaScript 的訊息
-    public func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+    // nonisolated 滿足 WKScriptMessageHandler 協定要求
+    nonisolated public func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
         guard message.name == "notificationHandler",
               let body = message.body as? [String: Any],
               let action = body["action"] as? String else { return }
         
+        Task { @MainActor [weak self] in
+            self?.handleAction(action: action, body: body)
+        }
+    }
+    
+    private func handleAction(action: String, body: [String: Any]) {
         switch action {
         case "requestPermission":
             requestPermission()

@@ -23,6 +23,7 @@ struct ContentView: View {
 struct IronLogWebViewContainer: UIViewRepresentable {
     let url: URL
 
+    @MainActor
     func makeUIView(context: Context) -> WKWebView {
         let contentController = WKUserContentController()
         
@@ -55,6 +56,7 @@ struct IronLogWebViewContainer: UIViewRepresentable {
         return webView
     }
 
+    @MainActor
     func updateUIView(_ uiView: WKWebView, context: Context) {
         // 更新時不重複 load
     }
