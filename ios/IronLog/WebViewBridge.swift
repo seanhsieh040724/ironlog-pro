@@ -41,8 +41,7 @@ public final class WebViewBridge: NSObject, WKScriptMessageHandler {
     }
     
     // MARK: - WKScriptMessageHandler
-    // nonisolated 滿足 WKScriptMessageHandler 協定要求，並安全調度至 @MainActor
-    nonisolated public func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+    public func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
         guard message.name == "storeKitHandler" else { return }
         guard let body = message.body as? [String: Any],
               let action = body["action"] as? String else {

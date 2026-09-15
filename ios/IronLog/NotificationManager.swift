@@ -22,8 +22,7 @@ public final class NotificationManager: NSObject, WKScriptMessageHandler {
     }
     
     // 處理來自 JavaScript 的訊息
-    // nonisolated 滿足 WKScriptMessageHandler 協定要求
-    nonisolated public func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+    public func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
         guard message.name == "notificationHandler",
               let body = message.body as? [String: Any],
               let action = body["action"] as? String else { return }
