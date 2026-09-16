@@ -8,7 +8,6 @@ import {
   purchase,
   restorePurchases,
   isNativeStoreKitAvailable,
-  useNativeStoreKitAvailable,
   DEFAULT_PRO_PRODUCT_ID
 } from '../services/storeKitBridge';
 import { 
@@ -32,14 +31,14 @@ export const SettingsView: React.FC = () => {
   // StoreKit 2 & 會員狀態（由 StoreKit Bridge 統一管理）
   const entitlement = useEntitlement();
   const isSubscribed = entitlement.isPro;
-  const isNativeAvailable = useNativeStoreKitAvailable();
+  const isNativeAvailable = isNativeStoreKitAvailable();
   const [products, setProducts] = useState<StoreKitProduct[]>([]);
   const [isStoreKitLoading, setIsStoreKitLoading] = useState(false);
   const [storeKitMessage, setStoreKitMessage] = useState<{ text: string; type: 'info' | 'error' | 'success' } | null>(null);
 
   useEffect(() => {
     getProducts().then(setProducts).catch(console.error);
-  }, [isNativeAvailable]);
+  }, []);
 
   // Current latest body metric
   const latestMetric: BodyMetric = useMemo(() => {
@@ -276,8 +275,7 @@ export const SettingsView: React.FC = () => {
   };
 
   const handlePurchase = async (productId: string = DEFAULT_PRO_PRODUCT_ID) => {
-    const isBridgeReady = isNativeAvailable || isNativeStoreKitAvailable();
-    if (!isBridgeReady) {
+    if (!isNativeAvailable) {
       setStoreKitMessage({
         type: 'info',
         text: '目前處於 Web 預覽環境，尚未連接 iOS App Store 原生 StoreKit 2。請在 iOS 原生 App 中執行 Apple 原生購買。'
@@ -304,8 +302,7 @@ export const SettingsView: React.FC = () => {
   };
 
   const handleRestore = async () => {
-    const isBridgeReady = isNativeAvailable || isNativeStoreKitAvailable();
-    if (!isBridgeReady) {
+    if (!isNativeAvailable) {
       setStoreKitMessage({
         type: 'info',
         text: '目前處於 Web 預覽環境，尚未連接 iOS 原生 StoreKit 2。'

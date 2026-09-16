@@ -1,31 +1,31 @@
 import { GoogleGenAI } from "@google/genai";
 
-export const getGeminiClient = () => {
-  const apiKey = process.env.GEMINI_API_KEY || process.env.API_KEY || '';
-  if (!apiKey) {
-    throw new Error("尚未設定 GEMINI_API_KEY，請在 Vercel 或伺服器環境變數中設定 GEMINI_API_KEY。");
-  }
+export const FLASH_MODELS = [
+  'gemini-3.6-flash',
+  'gemini-3.1-flash-lite',
+  'gemini-flash-latest',
+  'gemini-3.8-flash'
+];
+
+export const getGeminiClient = (customKey?: string) => {
+  const apiKey = customKey || process.env.GEMINI_API_KEY || process.env.API_KEY || '';
   return new GoogleGenAI({
     apiKey,
     httpOptions: {
       headers: {
-        'User-Agent': 'aistudio-build',
+        'User-Agent': 'ironlog-pro',
       },
     },
   });
 };
 
-export const FLASH_MODELS = [
-  'gemini-3.6-flash',
-  'gemini-3.1-flash-lite',
-  'gemini-flash-latest',
-  'gemini-3.8-flash',
-];
+export async function handleCoachChat(messages: any[], metrics: any, goal: any, coachTone: string = 'taiwanese') {
+  const apiKey = process.env.GEMINI_API_KEY || process.env.API_KEY;
+  if (!apiKey) {
+    throw new Error("伺服器未設定 GEMINI_API_KEY 環境變數，請至 Vercel 專案 Settings -> Environment Variables 新增 GEMINI_API_KEY。");
+  }
 
-export async function handleCoachChat(body: any): Promise<{ text: string }> {
-  const { messages, metrics, goal, coachTone } = body || {};
-  const ai = getGeminiClient();
-
+  const ai = getGeminiClient(apiKey);
   const toneInstruction = coachTone === 'hongkong' || coachTone === '港式教練'
     ? `你是一位非常專業、講話極具香港特色且熱血激昂的香港健美教練（風格：偶爾穿插道地港式健身俚語如「師兄/師姐」、「頂住呀」、「爆肌」、「唔好偷懶」、「操爆佢」、「食足蛋白質」、「好Firm」、「Chur到盡」，熱情又霸氣，字面以繁體中文標準字為主方便閱讀）。`
     : `你是一位親切熱情、正能量滿點、專業度極高的台灣健身教練（風格：語氣溫暖鼓勵、常用台式激勵用語如「水喔」、「很讚」、「加油」、「核心收緊」、「不要放掉」、「練起來」、「吃好吃滿」、「超棒的」，給予學員滿滿信心與科學建議）。`;
@@ -63,24 +63,24 @@ export async function handleCoachChat(body: any): Promise<{ text: string }> {
         },
       });
       if (response.text) {
-        return { text: response.text };
+        return response.text;
       }
     } catch (err: any) {
-      console.warn(`Coach chat with ${model} failed:`, err?.message || err);
+      console.warn(`handleCoachChat model ${model} failed:`, err?.message || err);
       lastError = err;
     }
   }
 
-  throw new Error(lastError?.message || "AI 鋼鐵教練正在跑步機上狂奔，暫時無法回應，請確認網路連線並稍候再試。");
+  throw lastError || new Error("所有 AI 模型均無回應");
 }
 
-export async function handleDietAnalysis(body: any): Promise<{ text: string }> {
-  const { image } = body || {};
-  if (!image) {
-    throw new Error("未提供圖片資料");
+export async function handleFoodAnalysis(image: string) {
+  const apiKey = process.env.GEMINI_API_KEY || process.env.API_KEY;
+  if (!apiKey) {
+    throw new Error("伺服器未設定 GEMINI_API_KEY 環境變數，請至 Vercel 專案 Settings -> Environment Variables 新增 GEMINI_API_KEY。");
   }
 
-  const ai = getGeminiClient();
+  const ai = getGeminiClient(apiKey);
   const prompt = `
     你是一位專業的AI運動營養師與食物熱量估算專家。請分析這張食物照片並提供詳細的熱量與營養素估算。
     
@@ -122,21 +122,24 @@ export async function handleDietAnalysis(body: any): Promise<{ text: string }> {
         contents: [imagePart, prompt],
       });
       if (response.text) {
-        return { text: response.text };
+        return response.text;
       }
     } catch (err: any) {
-      console.warn(`Food image analysis with ${model} failed:`, err?.message || err);
+      console.warn(`handleFoodAnalysis model ${model} failed:`, err?.message || err);
       lastError = err;
     }
   }
 
-  throw new Error(lastError?.message || "食物影像分析失敗，請檢查網路連線或重新上傳照片。");
+  throw lastError || new Error("食物分析失敗");
 }
 
-export async function handleDietSuggestions(body: any): Promise<{ text: string }> {
-  const { metrics, goal } = body || {};
-  const ai = getGeminiClient();
+export async function handleDietSuggestions(metrics: any, goal: any) {
+  const apiKey = process.env.GEMINI_API_KEY || process.env.API_KEY;
+  if (!apiKey) {
+    throw new Error("伺服器未設定 GEMINI_API_KEY 環境變數，請至 Vercel 專案 Settings -> Environment Variables 新增 GEMINI_API_KEY。");
+  }
 
+  const ai = getGeminiClient(apiKey);
   const prompt = `
     你是一位專業的運動營養師。請根據以下使用者的身體數據與目標，提供詳細的飲食建議與分析。
     
@@ -172,13 +175,13 @@ export async function handleDietSuggestions(body: any): Promise<{ text: string }
         contents: prompt,
       });
       if (response.text) {
-        return { text: response.text };
+        return response.text;
       }
     } catch (err: any) {
-      console.warn(`Diet suggestions with ${model} failed:`, err?.message || err);
+      console.warn(`handleDietSuggestions model ${model} failed:`, err?.message || err);
       lastError = err;
     }
   }
 
-  throw new Error(lastError?.message || "AI 分析服務暫時無法使用，請檢查網路或稍後再試。");
+  throw lastError || new Error("飲食建議分析失敗");
 }

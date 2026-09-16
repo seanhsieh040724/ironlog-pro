@@ -13,7 +13,7 @@ import { Dumbbell, History, LayoutGrid, Calendar, Apple, Bot, Settings } from 'l
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
 import { ContainerStyle, lightTheme } from './themeStyles';
-import { isNativeStoreKitAvailable, getCurrentEntitlements, initStoreKitStartup } from './utils/storeKit';
+import { isNativeStoreKitAvailable, getCurrentEntitlements } from './utils/storeKit';
 
 export interface AppContextType {
   history: WorkoutSession[];
@@ -83,8 +83,11 @@ const App: React.FC = () => {
       window.webkit.messageHandlers.notificationHandler.postMessage({ action: 'requestPermission' });
     }
 
-    // 冷啟動探測與同步 StoreKit 2 會員資格（支援 iOS WKWebView 非同步載入）
-    initStoreKitStartup();
+    if (isNativeStoreKitAvailable()) {
+      getCurrentEntitlements().catch((err) => {
+        console.warn('[StoreKit] Failed to initialize entitlements on startup:', err);
+      });
+    }
 
     setIsLoaded(true);
   }, []);
