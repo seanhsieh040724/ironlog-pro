@@ -2,14 +2,11 @@ import SwiftUI
 import WebKit
 
 struct ContentView: View {
-    // 預設可切換載入本機開發伺服器或打包靜態網頁
+    // 統一載入 IronLog Pro 正式 Vercel 網址
     @State private var webAppURL: URL = {
-        #if DEBUG
-        // 開發環境預設網址 (可根據實際部署或本機埠修改)
-        if let url = URL(string: "https://ais-dev-nleeauluuw4jalqbcojlpq-78996542335.asia-northeast1.run.app") {
+        if let url = URL(string: "https://iron-log-pro.vercel.app") {
             return url
         }
-        #endif
         return Bundle.main.url(forResource: "index", withExtension: "html", subdirectory: "dist") ?? URL(string: "about:blank")!
     }()
 
