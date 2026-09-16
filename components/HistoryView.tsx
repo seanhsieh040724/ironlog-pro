@@ -1,12 +1,14 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { WorkoutSession, MuscleGroup, ExerciseEntry, SetEntry } from '../types';
 import { getMuscleGroupDisplay, getMuscleGroup, getExerciseGifSources } from '../utils/fitnessMath';
-import { Activity, BarChart3, Trash2, CalendarDays, Timer, Save, Check, ChevronLeft, ChevronRight, Clock, ArrowLeft, X, Loader2, Dumbbell } from 'lucide-react';
+import { Activity, BarChart3, Trash2, CalendarDays, Timer, Save, Check, ChevronLeft, ChevronRight, Clock, ArrowLeft, X, Loader2, Dumbbell, Lock, Sparkles } from 'lucide-react';
 import { isSameDay, format, startOfWeek, endOfWeek, eachDayOfInterval, subWeeks, addWeeks, startOfMonth, endOfMonth, startOfYear } from 'date-fns';
 import { BodyMuscleMap, MuscleLoadInfo, LoadLevel } from './BodyMuscleMap';
 import { motion, AnimatePresence } from 'framer-motion';
 import { lightTheme } from '../themeStyles';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, Label } from 'recharts';
+import { useEntitlement } from '../services/storeKitBridge';
+import { ProPaywall } from './ProPaywall';
 
 /**
  * 專屬於「當日總訓練」列表的小型動作 GIF 元件
@@ -123,6 +125,8 @@ interface HistoryViewProps {
 }
 
 export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate, onUpdateHistory, onSaveAsRoutine }) => {
+  const entitlement = useEntitlement();
+  const [showPaywall, setShowPaywall] = useState(false);
   const [analysisPeriod, setAnalysisPeriod] = useState<'week' | 'month'>('week');
   const [selectedVolumeMuscle, setSelectedVolumeMuscle] = useState<MuscleGroup | null>(null);
   const [chartWeekOffset, setChartWeekOffset] = useState(0);
@@ -479,7 +483,41 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
         </AnimatePresence>
       </div>
 
-      <div className="bg-white rounded-[32px] sm:rounded-[36px] p-5 sm:p-7 border border-slate-100 shadow-sm space-y-5 overflow-hidden">
+      <div className="bg-white rounded-[32px] sm:rounded-[36px] p-5 sm:p-7 border border-slate-100 shadow-sm space-y-5 overflow-hidden relative">
+        {/* Pro 鎖定遮罩 (未訂閱者顯示) */}
+        {!entitlement.isPro && (
+          <div 
+            onClick={() => setShowPaywall(true)}
+            className="absolute inset-0 z-30 bg-white/80 backdrop-blur-[3px] flex flex-col items-center justify-center p-6 text-center cursor-pointer transition-all hover:bg-white/75 group"
+          >
+            <div className="w-14 h-14 rounded-2xl bg-black text-[#CCFF00] flex items-center justify-center mb-3 shadow-lg group-hover:scale-105 transition-transform">
+              <Lock className="w-7 h-7 stroke-[2.5]" />
+            </div>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#CCFF00] text-black text-xs font-black shadow-xs mb-2">
+              <Sparkles className="w-3.5 h-3.5 text-black" />
+              <span>IronLog Pro 專屬功能</span>
+            </div>
+            <h4 className="text-base font-black text-slate-900 mb-1">
+              訓練容量分布與肌群熱力圖
+            </h4>
+            <p className="text-xs text-slate-600 font-medium max-w-xs mb-4">
+              升級 Pro 解鎖肌肉群容量分佈、肌力成長趨勢與進階訓練分析
+            </p>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowPaywall(true);
+              }}
+              className="py-2.5 px-5 bg-black hover:bg-slate-800 text-[#CCFF00] rounded-xl font-black text-xs shadow-md active:scale-95 transition-all flex items-center gap-2"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>升級 Pro 解鎖完整分析</span>
+            </button>
+          </div>
+        )}
+
+        <div className={!entitlement.isPro ? 'filter blur-xs pointer-events-none select-none opacity-50 space-y-5' : 'space-y-5'}>
         {/* Header */}
         <div className="flex justify-between items-center">
            <div className="flex items-center gap-3 sm:gap-3.5">
@@ -487,7 +525,14 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
                 <BarChart3 className="w-5 h-5 text-slate-900" />
               </div>
               <div>
-                <h3 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">訓練容量分布</h3>
+                <div className="flex items-center gap-1.5">
+                  <h3 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">訓練容量分布</h3>
+                  {!entitlement.isPro && (
+                    <span className="text-[10px] font-black text-black bg-[#CCFF00] px-2 py-0.5 rounded-full flex items-center gap-1">
+                      <Lock className="w-2.5 h-2.5" /> Pro
+                    </span>
+                  )}
+                </div>
                 <p className="text-xs text-black font-semibold mt-0.5">累積負荷分析 • 依組數統計各肌群訓練量</p>
               </div>
            </div>
@@ -634,6 +679,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
             </motion.div>
           )}
         </AnimatePresence>
+        </div>
       </div>
 
       {/* 每週運動時間圖表 */}
@@ -753,6 +799,14 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
            ))}
         </div>
       </div>
+
+      {/* Pro Paywall Modal */}
+      <ProPaywall
+        isOpen={showPaywall}
+        onClose={() => setShowPaywall(false)}
+        featureTitle="訓練容量分布與趨勢分析"
+        featureDescription="升級 Pro 解鎖肌肉群容量分佈、肌力成長趨勢與進階訓練分析。"
+      />
     </div>
   );
 };

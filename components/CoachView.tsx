@@ -3,8 +3,9 @@ import { AppContext } from '../App';
 import { BodyMetric, UserGoal } from '../types';
 import { chatWithCoach } from '../services/aiService';
 import { useEntitlement } from '../services/storeKitBridge';
+import { ProPaywall } from './ProPaywall';
 import { 
-  Send, Loader2, Sparkles, User, Trash2, Copy, Check, Sparkle, Bot, RotateCcw
+  Send, Loader2, Sparkles, User, Trash2, Copy, Check, Lock, RotateCcw
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Markdown from 'react-markdown';
@@ -30,16 +31,14 @@ export const CoachView: React.FC = () => {
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
+  const [showPaywall, setShowPaywall] = useState<boolean>(false);
 
-  // AI 剩餘額度 (預設 10 次，支援持久化)
-  const [aiQuota, setAiQuota] = useState<number>(() => {
-    try {
-      const saved = localStorage.getItem('ironlog_coach_ai_quota');
-      return saved !== null ? Number(saved) : 10;
-    } catch {
-      return 10;
+  // 當使用者訂閱為 Pro 時，自動關閉 Paywall
+  useEffect(() => {
+    if (entitlement.isPro) {
+      setShowPaywall(false);
     }
-  });
+  }, [entitlement.isPro]);
 
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
     const saved = localStorage.getItem('ironlog_coach_chat_history');
@@ -59,10 +58,6 @@ export const CoachView: React.FC = () => {
     scrollToBottom();
   }, [messages]);
 
-  useEffect(() => {
-    localStorage.setItem('ironlog_coach_ai_quota', String(aiQuota));
-  }, [aiQuota]);
-
   const scrollToBottom = () => {
     setTimeout(() => {
       chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -71,6 +66,12 @@ export const CoachView: React.FC = () => {
 
   const handleSendMessage = async (textToSend: string) => {
     if (!textToSend.trim() || isTyping) return;
+
+    // 嚴格 Pro 權限檢驗：未訂閱者完全不能呼叫 /api/coach，直接開啟 Paywall 並結束
+    if (!entitlement.isPro) {
+      setShowPaywall(true);
+      return;
+    }
 
     const userMsg: ChatMessage = {
       id: crypto.randomUUID(),
@@ -82,11 +83,6 @@ export const CoachView: React.FC = () => {
     setMessages(prev => [...prev, userMsg]);
     setInputMessage('');
     setIsTyping(true);
-
-    // 若非 Pro 會員則扣除額度 (最低保留 0，不鎖死使用)
-    if (!entitlement.isPro) {
-      setAiQuota(prev => Math.max(0, prev - 1));
-    }
 
     // 過濾歷史中的錯誤提示訊息，避免錯誤紀錄干擾後續 AI 生成
     const ERROR_PHRASES = [
@@ -121,12 +117,6 @@ export const CoachView: React.FC = () => {
     try {
       const aiResponseText = await chatWithCoach(cleanHistory, latest, goal, 'taiwanese');
 
-      // 檢查是否回傳了失敗提示，若失敗則補回額度
-      const isFailed = ERROR_PHRASES.some(phrase => aiResponseText.includes(phrase));
-      if (isFailed) {
-        setAiQuota(prev => prev + 1);
-      }
-
       const modelMsg: ChatMessage = {
         id: crypto.randomUUID(),
         role: 'model',
@@ -137,7 +127,6 @@ export const CoachView: React.FC = () => {
       setMessages(prev => [...prev, modelMsg]);
     } catch (err) {
       console.error(err);
-      setAiQuota(prev => prev + 1);
       const errorMsg: ChatMessage = {
         id: crypto.randomUUID(),
         role: 'model',
@@ -337,46 +326,58 @@ export const CoachView: React.FC = () => {
         )}
       </div>
 
-      {/* 底部功能區 (2x2 快捷按鈕 + 額度標示 + 輸入框) */}
+      {/* 底部功能區 (2x2 快捷按鈕 + 會員狀態標示 + 輸入框) */}
       <div className="flex-none pt-2 border-t border-black/5 space-y-2.5 px-1">
-        {/* 4 個快捷問題按鈕 (2x2 網格，與截圖完全一致) */}
+        {/* 4 個快捷問題按鈕 (2x2 網格) */}
         <div className="grid grid-cols-2 gap-2">
           {quickActions.map((action, idx) => (
             <button
               key={idx}
-              onClick={() => handleSendMessage(action.prompt)}
+              onClick={() => {
+                if (!entitlement.isPro) {
+                  setShowPaywall(true);
+                  return;
+                }
+                handleSendMessage(action.prompt);
+              }}
               disabled={isTyping}
               className="py-3 px-3 rounded-2xl border border-slate-300 hover:border-[#18392B] bg-white hover:bg-[#CCFF00]/10 text-slate-900 font-bold text-xs md:text-sm flex items-center justify-center gap-1.5 transition-all active:scale-98 shadow-2xs disabled:opacity-50"
             >
               <span className="text-sm">{action.icon}</span>
               <span className="truncate">{action.label}</span>
+              {!entitlement.isPro && (
+                <Lock className="w-3 h-3 text-slate-400 shrink-0 ml-0.5" />
+              )}
             </button>
           ))}
         </div>
 
-        {/* 剩餘 AI 額度標示 */}
-        <div className="flex items-center justify-between px-1 text-[11px] font-bold text-slate-400">
+        {/* AI 教練會員狀態標示 */}
+        <div className="flex items-center justify-between px-1 text-[11px] font-bold">
           {entitlement.isPro ? (
             <span className="text-[#82CC00] font-black flex items-center gap-1">
               <Sparkles className="w-3 h-3 text-[#82CC00]" />
-              <span>Pro 尊榮版：AI 無限次使用</span>
+              <span>Pro 尊榮版：AI 鋼鐵教練無限次對話使用中</span>
             </span>
           ) : (
-            <>
-              <span>剩餘 AI 額度：{aiQuota}</span>
-              {aiQuota <= 2 && (
-                <button
-                  onClick={() => setAiQuota(10)}
-                  className="text-[#82CC00] hover:underline font-black"
-                >
-                  補充額度
-                </button>
-              )}
-            </>
+            <button
+              type="button"
+              onClick={() => setShowPaywall(true)}
+              className="flex items-center justify-between w-full text-slate-500 hover:text-black transition-colors"
+            >
+              <span className="flex items-center gap-1">
+                <Lock className="w-3 h-3 text-slate-600" />
+                <span>AI 鋼鐵教練為 Pro 專屬功能</span>
+              </span>
+              <span className="text-black bg-[#CCFF00] hover:bg-[#b8e600] px-2.5 py-0.5 rounded-full font-black text-[10px] flex items-center gap-1 shadow-2xs transition-all active:scale-95">
+                <Sparkles className="w-2.5 h-2.5 text-black" />
+                <span>升級 Pro 解鎖</span>
+              </span>
+            </button>
           )}
         </div>
 
-        {/* 輸入框與發送按鈕 (圓角長條 + 右側墨綠色圓形發送鍵) */}
+        {/* 輸入框與發送按鈕 (圓角長條 + 右側圓形發送鍵) */}
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -388,7 +389,7 @@ export const CoachView: React.FC = () => {
             <input
               ref={inputRef}
               type="text"
-              placeholder="問教練任何問題..."
+              placeholder={entitlement.isPro ? "問教練任何問題..." : "升級 Pro 解鎖向教練提問..."}
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               disabled={isTyping}
@@ -456,6 +457,14 @@ export const CoachView: React.FC = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* 共用 IronLog Pro Paywall */}
+      <ProPaywall
+        isOpen={showPaywall}
+        onClose={() => setShowPaywall(false)}
+        featureTitle="AI 鋼鐵教練"
+        featureDescription="升級 IronLog Pro 即可享受無限次即時 AI 教練對話與專屬指導。"
+      />
     </div>
   );
 };

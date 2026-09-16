@@ -10,10 +10,12 @@ import {
   LayoutGrid, Trash2, ArrowLeft, Plus, ChevronRight, X, Search, Edit2, 
   Check, BookOpen, ChevronLeft, Zap, Play, Save, 
   Target, PlusCircle, MinusCircle, Loader2, Timer, PlusSquare,
-  PlayCircle, Clock, ChevronUp, ChevronDown, ShieldCheck, Flame, Dumbbell
+  PlayCircle, Clock, ChevronUp, ChevronDown, ShieldCheck, Flame, Dumbbell, Lock
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { lightTheme } from '../themeStyles';
+import { useEntitlement } from '../services/storeKitBridge';
+import { ProPaywall } from './ProPaywall';
 
 interface IntegratedWorkoutViewProps {
   routine: RoutineTemplate;
@@ -270,6 +272,8 @@ const IntegratedWorkoutView: React.FC<IntegratedWorkoutViewProps> = ({
 
 export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate) => void }> = ({ onStartRoutine }) => {
   const context = useContext(AppContext);
+  const entitlement = useEntitlement();
+  const [showPaywall, setShowPaywall] = useState(false);
   const [previewRoutine, setPreviewRoutine] = useState<RoutineTemplate | null>(null);
   const [integratedRoutine, setIntegratedRoutine] = useState<RoutineTemplate | null>(null);
   const [sessionExercises, setSessionExercises] = useState<ExerciseEntry[]>([]);
@@ -324,6 +328,10 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
 
   const createRoutine = () => {
     if (!newRoutineName.trim()) return;
+    if (!entitlement.isPro && customRoutines.length >= 2) {
+      setShowPaywall(true);
+      return;
+    }
     const newRoutine: RoutineTemplate = { id: crypto.randomUUID(), name: newRoutineName, exercises: [] };
     setCustomRoutines([newRoutine, ...customRoutines]);
     setNewRoutineName('');
@@ -869,20 +877,43 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
       {/* 自訂課表專區 */}
       <div className="space-y-4 pt-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-[17px] font-black text-black">
-            我的自訂課表
-          </h3>
+          <div className="flex items-center gap-2">
+            <h3 className="text-[17px] font-black text-black">
+              我的自訂課表
+            </h3>
+            {!entitlement.isPro && (
+              <span className="text-[10px] font-black text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200">
+                免費版上限 2 組
+              </span>
+            )}
+          </div>
           <span className="text-[11px] font-black text-stone-400 uppercase tracking-wider">
-            {customRoutines.length} 個課表
+            {customRoutines.length} {entitlement.isPro ? '個課表' : '/ 2 個課表'}
           </span>
         </div>
         
         <button 
-          onClick={() => setIsCreating(true)} 
+          onClick={() => {
+            if (!entitlement.isPro && customRoutines.length >= 2) {
+              setShowPaywall(true);
+              return;
+            }
+            setIsCreating(true);
+          }} 
           style={{ backgroundColor: '#CCFF00', color: '#000000' }}
           className="w-full py-4 text-black text-[15px] font-black rounded-2xl uppercase active:scale-95 transition-all shadow-sm flex items-center justify-center gap-2.5 border border-black/10"
         >
-          <Plus className="w-5 h-5 stroke-[3]" /> 建立我的專屬課表
+          {!entitlement.isPro && customRoutines.length >= 2 ? (
+            <>
+              <Lock className="w-5 h-5 stroke-[2.5]" />
+              <span>建立課表 (已達上限 2 組 · 升級 Pro 解鎖無限組)</span>
+            </>
+          ) : (
+            <>
+              <Plus className="w-5 h-5 stroke-[3]" />
+              <span>建立我的專屬課表</span>
+            </>
+          )}
         </button>
 
         <AnimatePresence>
@@ -917,6 +948,14 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
           </div>
         )}
       </div>
+
+      {/* Pro Paywall Modal */}
+      <ProPaywall
+        isOpen={showPaywall}
+        onClose={() => setShowPaywall(false)}
+        featureTitle="自訂課表數量上限"
+        featureDescription="免費版最多可建立 2 組自訂課表。升級 IronLog Pro 即可享有無限組專屬課表規劃！"
+      />
     </div>
   );
 };

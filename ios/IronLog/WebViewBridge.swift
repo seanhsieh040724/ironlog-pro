@@ -1,5 +1,6 @@
 import Foundation
 import WebKit
+import Security
 
 /**
  * WebViewBridge
@@ -124,9 +125,78 @@ public final class WebViewBridge: NSObject, WKScriptMessageHandler {
                 "data": entitlement.toDictionary()
             ])
             
+        case "getCoachUsageCount":
+            let count = getKeychainCoachUsageCount()
+            sendCallbackToJS(payload: [
+                "action": "coachUsageCount",
+                "requestId": requestId as Any,
+                "data": [
+                    "usedCount": count
+                ]
+            ])
+            
+        case "incrementCoachUsageCount":
+            let current = getKeychainCoachUsageCount()
+            let next = min(current + 1, 10)
+            setKeychainCoachUsageCount(next)
+            sendCallbackToJS(payload: [
+                "action": "coachUsageCountUpdated",
+                "requestId": requestId as Any,
+                "data": [
+                    "usedCount": next
+                ]
+            ])
+            
         default:
             sendErrorToJS(requestId: requestId, error: "未知的 action: \(action)")
         }
+    }
+    
+    // MARK: - AI Coach Quota Keychain Storage (service: com.ironlog.coach, key: ai_usage_count)
+    private static let coachKeychainService = "com.ironlog.coach"
+    private static let coachUsageCountAccount = "ai_usage_count"
+    
+    private func getKeychainCoachUsageCount() -> Int {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: Self.coachKeychainService,
+            kSecAttrAccount as String: Self.coachUsageCountAccount,
+            kSecReturnData as String: true,
+            kSecMatchLimit as String: kSecMatchLimitOne
+        ]
+        
+        var item: CFTypeRef?
+        let status = SecItemCopyMatching(query as CFDictionary, &item)
+        
+        guard status == errSecSuccess,
+              let data = item as? Data,
+              let str = String(data: data, encoding: .utf8),
+              let count = Int(str) else {
+            return 0
+        }
+        
+        return min(max(0, count), 10)
+    }
+    
+    private func setKeychainCoachUsageCount(_ count: Int) {
+        let clampedCount = min(max(0, count), 10)
+        guard let data = "\(clampedCount)".data(using: .utf8) else { return }
+        
+        let deleteQuery: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: Self.coachKeychainService,
+            kSecAttrAccount as String: Self.coachUsageCountAccount
+        ]
+        SecItemDelete(deleteQuery as CFDictionary)
+        
+        let addQuery: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: Self.coachKeychainService,
+            kSecAttrAccount as String: Self.coachUsageCountAccount,
+            kSecValueData as String: data,
+            kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlock
+        ]
+        SecItemAdd(addQuery as CFDictionary, nil)
     }
     
     // MARK: - 回傳資料給 React (window.__IRONLOG_STOREKIT_CALLBACK__)

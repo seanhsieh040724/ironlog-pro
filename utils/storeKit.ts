@@ -161,7 +161,7 @@ export const updateEntitlement = (newEntitlement: Partial<EntitlementInfo>) => {
 /**
  * C. 向 iOS 原生 storeKitHandler 發送訊息的輔助函式
  */
-const sendNativeMessage = <T = any>(action: string, payload: Record<string, any> = {}): Promise<T> => {
+export const sendNativeMessage = <T = any>(action: string, payload: Record<string, any> = {}): Promise<T> => {
   return new Promise((resolve, reject) => {
     if (!isNativeStoreKitAvailable()) {
       reject(new Error('Native StoreKit 2 bridge not available'));

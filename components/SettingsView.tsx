@@ -17,6 +17,7 @@ import {
   Loader2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ProPaywall } from './ProPaywall';
 
 export const SettingsView: React.FC = () => {
   const context = useContext(AppContext);
@@ -60,6 +61,8 @@ export const SettingsView: React.FC = () => {
   // Modals
   const [showEditProfileModal, setShowEditProfileModal] = useState(false);
   const [showProModal, setShowProModal] = useState(false);
+  const [showPaywall, setShowPaywall] = useState(false);
+  const [paywallFeature, setPaywallFeature] = useState({ title: '資料備份與匯出', desc: '' });
   const [showLanguageModal, setShowLanguageModal] = useState(false);
   const [showNutritionModal, setShowNutritionModal] = useState(false);
   const [showTdeeModal, setShowTdeeModal] = useState(false);
@@ -327,6 +330,15 @@ export const SettingsView: React.FC = () => {
   };
 
   const handleExportData = () => {
+    if (!entitlement.isPro) {
+      setPaywallFeature({
+        title: '資料備份與匯出',
+        desc: '資料備份與匯出為 IronLog Pro 專屬功能。升級 Pro 即可隨時完整匯出訓練課表、打卡歷史與營養紀錄！'
+      });
+      setShowPaywall(true);
+      return;
+    }
+
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({
       history,
       metrics: localStorage.getItem('ironlog_v3_metrics'),
@@ -609,11 +621,25 @@ export const SettingsView: React.FC = () => {
                 <Download className="w-6 h-6 stroke-[1.8]" />
               </div>
               <div>
-                <h4 className="text-[15px] font-bold text-slate-900 leading-tight">匯出訓練與營養紀錄</h4>
-                <p className="text-xs text-slate-400 font-medium mt-0.5">下載為 JSON 備份檔</p>
+                <div className="flex items-center gap-1.5">
+                  <h4 className="text-[15px] font-bold text-slate-900 leading-tight">匯出訓練與營養紀錄</h4>
+                  {!entitlement.isPro && (
+                    <span className="text-[10px] font-black text-black bg-[#CCFF00] px-2 py-0.5 rounded-full flex items-center gap-1 border border-black/10">
+                      <Lock className="w-2.5 h-2.5 stroke-[2.5]" /> Pro
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-slate-400 font-medium mt-0.5">
+                  {!entitlement.isPro ? '🔒 Pro 專屬 · 下載為 JSON 備份檔' : '下載為 JSON 備份檔'}
+                </p>
               </div>
             </div>
-            <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-slate-500 shrink-0 transition-colors" />
+            <div className="flex items-center gap-1">
+              {!entitlement.isPro && (
+                <Lock className="w-4 h-4 text-slate-400 mr-1" />
+              )}
+              <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-slate-500 shrink-0 transition-colors" />
+            </div>
           </div>
 
           {/* 條款政策 */}
@@ -1380,6 +1406,14 @@ export const SettingsView: React.FC = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Pro Paywall Modal */}
+      <ProPaywall
+        isOpen={showPaywall}
+        onClose={() => setShowPaywall(false)}
+        featureTitle={paywallFeature.title}
+        featureDescription={paywallFeature.desc}
+      />
     </div>
   );
 };

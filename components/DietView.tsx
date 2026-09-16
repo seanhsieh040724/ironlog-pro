@@ -6,10 +6,12 @@ import {
   Target, Activity, Trash2, Flame, Edit3, CheckCircle2, Save, Beef, Soup, 
   Droplets, GlassWater, Plus, Share2, ScanBarcode, Camera, Sparkles, 
   Loader2, Calendar, History, Upload, Sparkle, Check, X, 
-  ChevronRight, Utensils, Dumbbell, Clock, Info, Search, RefreshCw, Layers
+  ChevronRight, Utensils, Dumbbell, Clock, Info, Search, RefreshCw, Layers, Lock
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { analyzeFoodImage } from '../services/aiService';
+import { useEntitlement } from '../services/storeKitBridge';
+import { ProPaywall } from './ProPaywall';
 import Markdown from 'react-markdown';
 
 interface FoodItem {
@@ -128,6 +130,14 @@ export const DietView: React.FC = () => {
     caloriesBurned: '320'
   });
 
+  // StoreKit Pro 權限狀態與 Paywall
+  const entitlement = useEntitlement();
+  const [showPaywall, setShowPaywall] = useState(false);
+  const [paywallFeature, setPaywallFeature] = useState<{ title: string; desc: string }>({
+    title: 'IronLog Pro',
+    desc: ''
+  });
+
   // AI 掃描與相片分析
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -220,9 +230,9 @@ export const DietView: React.FC = () => {
       type: recalcForm.goalType as any,
       targetWeight: Number(recalcForm.targetWeight) || Number(recalcForm.weight) || 75,
       activityLevel: recalcForm.activityLevel as any,
-      proteinRatio: recalcForm.proteinRatio,
-      carbRatio: recalcForm.carbRatio,
-      fatRatio: recalcForm.fatRatio
+      proteinRatio: entitlement.isPro ? recalcForm.proteinRatio : (globalGoal.proteinRatio || 35),
+      carbRatio: entitlement.isPro ? recalcForm.carbRatio : (globalGoal.carbRatio || 25),
+      fatRatio: entitlement.isPro ? recalcForm.fatRatio : (globalGoal.fatRatio || 40)
     };
     setGlobalGoal(updatedGoal);
     localStorage.setItem('ironlog_v3_goal', JSON.stringify(updatedGoal));
@@ -362,6 +372,14 @@ export const DietView: React.FC = () => {
 
   const handleAnalyzeFood = async () => {
     if (!selectedImage || isAnalyzing) return;
+    if (!entitlement.isPro) {
+      setPaywallFeature({
+        title: 'AI 食物拍照分析',
+        desc: '升級 IronLog Pro 即可享有無限次 AI 拍照辨識食物卡路里與三大營養素。'
+      });
+      setShowPaywall(true);
+      return;
+    }
     setIsAnalyzing(true);
     setAnalysisResult(null);
 
@@ -369,6 +387,18 @@ export const DietView: React.FC = () => {
     setAnalysisResult(result);
     localStorage.setItem('ironlog_last_food_analysis', result);
     setIsAnalyzing(false);
+  };
+
+  const handleSelectMacroRatio = (protein: number, carbs: number, fat: number) => {
+    if (!entitlement.isPro) {
+      setPaywallFeature({
+        title: 'TDEE 營養比例自訂',
+        desc: '升級 IronLog Pro 即可自由調整高蛋白、低碳水或運動員專屬巨量營養素比例。'
+      });
+      setShowPaywall(true);
+      return;
+    }
+    setRecalcForm({ ...recalcForm, proteinRatio: protein, carbRatio: carbs, fatRatio: fat });
   };
 
   // 超市常見健身餐品範本清單
@@ -790,10 +820,18 @@ export const DietView: React.FC = () => {
                 >
                   {isAnalyzing ? (
                     <Loader2 className="w-4 h-4 animate-spin text-black" />
+                  ) : !entitlement.isPro ? (
+                    <Lock className="w-4 h-4 text-black stroke-[2.5]" />
                   ) : (
                     <Sparkle className="w-4 h-4 text-black" />
                   )}
-                  <span>{isAnalyzing ? 'AI 正在分析卡路里與三大營養素...' : '開始 AI 辨識分析'}</span>
+                  <span>
+                    {isAnalyzing 
+                      ? 'AI 正在分析卡路里與三大營養素...' 
+                      : entitlement.isPro 
+                        ? '開始 AI 辨識分析' 
+                        : '🔒 Pro 專屬 · 開始 AI 辨識分析'}
+                  </span>
                 </button>
               )}
 
@@ -1073,42 +1111,58 @@ export const DietView: React.FC = () => {
 
                 {/* 三大營養素比例 */}
                 <div>
-                  <label className="block text-[11px] text-slate-500 mb-1">
-                    三大營養素比例 (蛋白 {recalcForm.proteinRatio}% · 碳水 {recalcForm.carbRatio}% · 脂肪 {recalcForm.fatRatio}%)
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-[11px] text-slate-500 font-bold">
+                      三大營養素比例 (蛋白 {recalcForm.proteinRatio}% · 碳水 {recalcForm.carbRatio}% · 脂肪 {recalcForm.fatRatio}%)
+                    </label>
+                    {!entitlement.isPro && (
+                      <span className="text-[10px] font-black text-black bg-[#CCFF00] px-2 py-0.5 rounded-full flex items-center gap-1 border border-black/10">
+                        <Lock className="w-2.5 h-2.5 stroke-[2.5]" /> Pro
+                      </span>
+                    )}
+                  </div>
                   <div className="grid grid-cols-3 gap-2">
                     <button
                       type="button"
-                      onClick={() => setRecalcForm({ ...recalcForm, proteinRatio: 35, carbRatio: 25, fatRatio: 40 })}
-                      className={`py-1.5 rounded-xl border text-[10px] font-bold ${
+                      onClick={() => handleSelectMacroRatio(35, 25, 40)}
+                      className={`py-1.5 rounded-xl border text-[10px] font-bold transition-all relative ${
                         recalcForm.proteinRatio === 35 && recalcForm.carbRatio === 25
                           ? 'bg-black text-white border-black'
                           : 'bg-slate-50 text-slate-700 border-slate-200'
                       }`}
                     >
                       高蛋白低碳 35/25/40
+                      {!entitlement.isPro && !(recalcForm.proteinRatio === 35 && recalcForm.carbRatio === 25) && (
+                        <Lock className="w-2.5 h-2.5 absolute top-1 right-1 text-slate-400" />
+                      )}
                     </button>
                     <button
                       type="button"
-                      onClick={() => setRecalcForm({ ...recalcForm, proteinRatio: 30, carbRatio: 45, fatRatio: 25 })}
-                      className={`py-1.5 rounded-xl border text-[10px] font-bold ${
+                      onClick={() => handleSelectMacroRatio(30, 45, 25)}
+                      className={`py-1.5 rounded-xl border text-[10px] font-bold transition-all relative ${
                         recalcForm.proteinRatio === 30 && recalcForm.carbRatio === 45
                           ? 'bg-black text-white border-black'
                           : 'bg-slate-50 text-slate-700 border-slate-200'
                       }`}
                     >
                       均衡增肌 30/45/25
+                      {!entitlement.isPro && (
+                        <Lock className="w-2.5 h-2.5 absolute top-1 right-1 text-slate-400" />
+                      )}
                     </button>
                     <button
                       type="button"
-                      onClick={() => setRecalcForm({ ...recalcForm, proteinRatio: 40, carbRatio: 35, fatRatio: 25 })}
-                      className={`py-1.5 rounded-xl border text-[10px] font-bold ${
+                      onClick={() => handleSelectMacroRatio(40, 35, 25)}
+                      className={`py-1.5 rounded-xl border text-[10px] font-bold transition-all relative ${
                         recalcForm.proteinRatio === 40
                           ? 'bg-black text-white border-black'
                           : 'bg-slate-50 text-slate-700 border-slate-200'
                       }`}
                     >
                       運動員 40/35/25
+                      {!entitlement.isPro && (
+                        <Lock className="w-2.5 h-2.5 absolute top-1 right-1 text-slate-400" />
+                      )}
                     </button>
                   </div>
                 </div>
@@ -1447,6 +1501,14 @@ export const DietView: React.FC = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Pro 訂閱 Paywall */}
+      <ProPaywall
+        isOpen={showPaywall}
+        onClose={() => setShowPaywall(false)}
+        featureTitle={paywallFeature.title}
+        featureDescription={paywallFeature.desc}
+      />
     </div>
   );
 };
