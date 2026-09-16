@@ -7,11 +7,16 @@ export const generateDietarySuggestions = async (metrics: BodyMetric, goal: User
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ metrics, goal }),
     });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      return err.error || "AI 分析服務暫時無法使用，請檢查網路或稍後再試。";
+
+    const contentType = res.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+      return "AI 分析服務伺服器連線異常，請確認伺服器或 Vercel API 路由設定。";
     }
+
     const data = await res.json();
+    if (!res.ok) {
+      return data?.error || "AI 分析服務暫時無法使用，請檢查網路或稍後再試。";
+    }
     return data.text || "AI 分析服務暫時無法使用，請檢查網路或稍後再試。";
   } catch (error) {
     console.warn("generateDietarySuggestions fetch error:", error);
@@ -26,11 +31,16 @@ export const analyzeFoodImage = async (base64Image: string): Promise<string> => 
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ image: base64Image }),
     });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      return err.error || "食物影像分析失敗，請檢查網路連線或重新上傳照片。";
+
+    const contentType = res.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+      return "食物影像分析伺服器連線異常，請確認伺服器或 Vercel API 路由設定。";
     }
+
     const data = await res.json();
+    if (!res.ok) {
+      return data?.error || "食物影像分析失敗，請檢查網路連線或重新上傳照片。";
+    }
     return data.text || "食物影像分析失敗，請檢查網路連線或重新上傳照片。";
   } catch (error) {
     console.warn("analyzeFoodImage fetch error:", error);
@@ -50,11 +60,16 @@ export const chatWithCoach = async (
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ messages, metrics, goal, coachTone }),
     });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      return err.error || "AI 鋼鐵教練正在跑步機上狂奔，暫時無法回應，請確認網路連線並稍候再試。";
+
+    const contentType = res.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+      return "AI 鋼鐵教練連線異常，請確認伺服器或 Vercel API 路由設定。";
     }
+
     const data = await res.json();
+    if (!res.ok) {
+      return data?.error || "AI 鋼鐵教練正在跑步機上狂奔，暫時無法回應，請確認網路連線並稍候再試。";
+    }
     return data.text || "AI 鋼鐵教練正在跑步機上狂奔，暫時無法回應，請確認網路連線並稍候再試。";
   } catch (error) {
     console.warn("chatWithCoach fetch error:", error);

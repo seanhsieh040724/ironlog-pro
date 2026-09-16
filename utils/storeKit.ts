@@ -55,14 +55,82 @@ const pendingCallbacks = new Map<string, {
   reject: (err: any) => void;
 }>();
 
+// Native bridge 就緒監聽器
+const bridgeReadyListeners = new Set<(isReady: boolean) => void>();
+
 /**
  * A. 檢查目前執行環境是否具備 iOS 原生 StoreKit 2 WKScriptMessageHandler 橋接能力
  */
 export const isNativeStoreKitAvailable = (): boolean => {
-  return (
-    typeof window !== 'undefined' &&
-    Boolean(window.webkit?.messageHandlers?.storeKitHandler)
-  );
+  if (typeof window === 'undefined') return false;
+
+  // 1. 最標準的 WKScriptMessageHandler postMessage 函式檢查
+  const handler = window.webkit?.messageHandlers?.storeKitHandler;
+  if (handler && typeof handler.postMessage === 'function') {
+    return true;
+  }
+
+  // 2. 容錯檢查：handler 物件存在
+  if (Boolean(handler)) {
+    return true;
+  }
+
+  // 3. 檢查 messageHandlers 容器中的屬性鍵
+  if (window.webkit?.messageHandlers && 'storeKitHandler' in window.webkit.messageHandlers) {
+    return true;
+  }
+
+  return false;
+};
+
+/**
+ * 訂閱原生 Bridge 是否就緒狀態變更
+ */
+export const onNativeStoreKitReady = (callback: (isReady: boolean) => void): (() => void) => {
+  bridgeReadyListeners.add(callback);
+  callback(isNativeStoreKitAvailable());
+  return () => {
+    bridgeReadyListeners.delete(callback);
+  };
+};
+
+/**
+ * 啟動原生 Bridge 偵測與自動同步 (支援冷啟動與非同步注入重試)
+ */
+export const initStoreKitStartup = (): void => {
+  if (typeof window === 'undefined') return;
+
+  const checkAndNotify = () => {
+    const ready = isNativeStoreKitAvailable();
+    if (ready) {
+      bridgeReadyListeners.forEach((cb) => {
+        try { cb(true); } catch {}
+      });
+      getCurrentEntitlements().catch((err) => {
+        console.warn('[StoreKit] Startup getCurrentEntitlements error:', err);
+      });
+      return true;
+    }
+    return false;
+  };
+
+  // 1. 立即檢查一次
+  if (checkAndNotify()) return;
+
+  // 2. 若未就緒，前 3 秒每 100ms 探測一次（解決 WKWebView 非同步注入時間差）
+  let attempts = 0;
+  const timer = setInterval(() => {
+    attempts++;
+    if (checkAndNotify() || attempts >= 30) {
+      clearInterval(timer);
+    }
+  }, 100);
+
+  // 3. 在 DOMContentLoaded 與 window load 事件再次觸發檢查
+  if (typeof document !== 'undefined' && document.readyState !== 'complete') {
+    window.addEventListener('DOMContentLoaded', () => checkAndNotify(), { once: true });
+    window.addEventListener('load', () => checkAndNotify(), { once: true });
+  }
 };
 
 /**
@@ -358,9 +426,25 @@ export const useEntitlement = (): EntitlementInfo => {
   return entitlement;
 };
 
-// I. 模組載入時，若處於 iOS 原生 WKWebView 內，立即進行一次查詢同步
-if (isNativeStoreKitAvailable()) {
-  getCurrentEntitlements().catch((err) => {
-    console.warn('[StoreKit] Auto init getCurrentEntitlements error:', err);
-  });
-}
+/**
+ * React Hook：供元件即時訂閱原生 StoreKit 2 Bridge 是否就緒
+ * 自動處理 WebKit 非同步注入時間差，一旦橋接可用即驅動 UI 重繪
+ */
+export const useNativeStoreKitAvailable = (): boolean => {
+  const [isAvailable, setIsAvailable] = useState<boolean>(() => isNativeStoreKitAvailable());
+
+  useEffect(() => {
+    // 訂閱狀態變更
+    const unsubscribe = onNativeStoreKitReady((ready) => {
+      setIsAvailable(ready);
+    });
+    // 確保啟動輪詢機制
+    initStoreKitStartup();
+    return unsubscribe;
+  }, []);
+
+  return isAvailable;
+};
+
+// I. 模組載入時，立即啟動 StoreKit 探測與冷啟動資格同步
+initStoreKitStartup();
