@@ -13,6 +13,7 @@ import { Dumbbell, History, LayoutGrid, Calendar, Apple, Bot, Settings } from 'l
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
 import { ContainerStyle, lightTheme } from './themeStyles';
+import { isNativeStoreKitAvailable, getCurrentEntitlements } from './utils/storeKit';
 
 export interface AppContextType {
   history: WorkoutSession[];
@@ -80,6 +81,12 @@ const App: React.FC = () => {
 
     if (window.webkit?.messageHandlers?.notificationHandler) {
       window.webkit.messageHandlers.notificationHandler.postMessage({ action: 'requestPermission' });
+    }
+
+    if (isNativeStoreKitAvailable()) {
+      getCurrentEntitlements().catch((err) => {
+        console.warn('[StoreKit] Failed to initialize entitlements on startup:', err);
+      });
     }
 
     setIsLoaded(true);
