@@ -10,13 +10,15 @@ import {
   LayoutGrid, Trash2, ArrowLeft, Plus, ChevronRight, X, Search, Edit2, 
   Check, BookOpen, ChevronLeft, Zap, Play, Save, 
   Target, PlusCircle, MinusCircle, Loader2, Timer, PlusSquare,
-  PlayCircle, Clock, ChevronUp, ChevronDown, ShieldCheck, Flame, Dumbbell, Lock
+  PlayCircle, Clock, ChevronUp, ChevronDown, ShieldCheck, Flame, Dumbbell, Lock,
+  PauseCircle, RotateCcw
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { lightTheme } from '../themeStyles';
 import { useEntitlement } from '../services/storeKitBridge';
 import { ProPaywall } from './ProPaywall';
 import { triggerHapticSuccess } from '../utils/feedback';
+import { formatWorkoutDuration } from './WorkoutView';
 
 interface IntegratedWorkoutViewProps {
   routine: RoutineTemplate;
@@ -35,28 +37,59 @@ const IntegratedWorkoutView: React.FC<IntegratedWorkoutViewProps> = ({
 }) => {
   const context = useContext(AppContext);
   const [timerStartedAt, setTimerStartedAt] = useState<number | null>(null);
+  const [timerAccumulatedMs, setTimerAccumulatedMs] = useState<number>(0);
+  const [timerStatus, setTimerStatus] = useState<'idle' | 'running' | 'paused'>('idle');
   const [elapsedTime, setElapsedTime] = useState<string>("00:00");
 
   useEffect(() => {
-    let interval: number;
-    if (timerStartedAt) {
-      const updateTimer = () => {
-        const diff = Date.now() - timerStartedAt;
-        const totalSeconds = Math.floor(diff / 1000);
-        const mins = Math.floor(totalSeconds / 60);
-        const secs = totalSeconds % 60;
-        setElapsedTime(`${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`);
-      };
-      updateTimer();
-      interval = window.setInterval(updateTimer, 1000);
+    let intervalId: number | undefined;
+
+    const calcCurrentMs = () => {
+      if (timerStatus === 'running' && timerStartedAt) {
+        return timerAccumulatedMs + Math.max(0, Date.now() - timerStartedAt);
+      }
+      return timerAccumulatedMs;
+    };
+
+    setElapsedTime(formatWorkoutDuration(calcCurrentMs()));
+
+    if (timerStatus === 'running' && timerStartedAt) {
+      intervalId = window.setInterval(() => {
+        setElapsedTime(formatWorkoutDuration(calcCurrentMs()));
+      }, 500);
     }
-    return () => clearInterval(interval);
-  }, [timerStartedAt]);
+
+    return () => {
+      if (intervalId) window.clearInterval(intervalId);
+    };
+  }, [timerStatus, timerStartedAt, timerAccumulatedMs]);
 
   const startWorkoutTimer = () => {
-    if (!timerStartedAt) {
-      setTimerStartedAt(Date.now());
-    }
+    if (timerStatus === 'running') return;
+    setTimerStartedAt(Date.now());
+    setTimerStatus('running');
+  };
+
+  const pauseWorkoutTimer = () => {
+    if (timerStatus !== 'running') return;
+    const now = Date.now();
+    const elapsedSinceStart = timerStartedAt ? Math.max(0, now - timerStartedAt) : 0;
+    setTimerAccumulatedMs(prev => prev + elapsedSinceStart);
+    setTimerStartedAt(null);
+    setTimerStatus('paused');
+  };
+
+  const resumeWorkoutTimer = () => {
+    if (timerStatus !== 'paused') return;
+    setTimerStartedAt(Date.now());
+    setTimerStatus('running');
+  };
+
+  const resetWorkoutTimer = () => {
+    setTimerStartedAt(null);
+    setTimerAccumulatedMs(0);
+    setTimerStatus('idle');
+    setElapsedTime("00:00");
   };
 
   const updateSetData = (exIndex: number, setId: string, updates: Partial<SetEntry>, sIdx: number) => {
@@ -107,10 +140,14 @@ const IntegratedWorkoutView: React.FC<IntegratedWorkoutViewProps> = ({
       alert('請至少勾選一個完成的組數再儲存。');
       return;
     }
+    const finalDuration = timerAccumulatedMs + (timerStartedAt && timerStatus === 'running' ? Date.now() - timerStartedAt : 0);
+    const finalStartTime = finalDuration > 0 ? (Date.now() - finalDuration) : (timerStartedAt || Date.now());
     const finalSession: WorkoutSession = {
       id: crypto.randomUUID(),
-      startTime: timerStartedAt || Date.now(),
+      startTime: finalStartTime,
       timerStartedAt: timerStartedAt || undefined,
+      timerAccumulatedMs: finalDuration,
+      timerStatus: 'idle',
       endTime: Date.now(),
       title: routine.name,
       exercises: completedExercises
@@ -122,7 +159,7 @@ const IntegratedWorkoutView: React.FC<IntegratedWorkoutViewProps> = ({
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-8 pb-48">
       <div className="flex items-center gap-4 px-1 sticky top-0 z-[60] bg-white/95 backdrop-blur-xl py-4 border-b border-black/5">
         <button 
-          onClick={() => { if(timerStartedAt && !confirm('訓練正在計時中，確定要離開嗎？')) return; onClose(); }} 
+          onClick={() => { if(timerStatus === 'running' && !confirm('訓練正在計時中，確定要離開嗎？')) return; onClose(); }} 
           style={{ backgroundColor: '#CCFF00' }} 
           className="w-11 h-11 rounded-2xl flex items-center justify-center text-black active:scale-90 transition-all shadow-sm border border-black/10"
         >
@@ -159,23 +196,41 @@ const IntegratedWorkoutView: React.FC<IntegratedWorkoutViewProps> = ({
 
             <div className="space-y-4 px-1">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2.5 sm:gap-3">
                   <div className="flex items-center gap-2">
                     <Target className="w-4 h-4 text-black" />
                     <h3 style={{ color: lightTheme.text }} className="text-xs font-black uppercase tracking-wider">訓練組數</h3>
                   </div>
-                  {timerStartedAt && (
-                    <div className="flex items-center gap-1.5 px-2.5 py-1 bg-black/5 border border-black/10 rounded-lg">
-                      <Timer className="w-3.5 h-3.5 animate-pulse text-black" />
-                      <span className="text-[11px] font-black font-sans text-black">{elapsedTime}</span>
-                    </div>
-                  )}
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 bg-black/5 border border-black/10 rounded-lg">
+                    <Timer className={`w-3.5 h-3.5 ${timerStatus === 'running' ? 'animate-pulse text-[#82CC00]' : 'text-black'}`} />
+                    <span className="text-[11px] font-black font-sans text-black">{elapsedTime}</span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  {!timerStartedAt && (
-                    <button onClick={startWorkoutTimer} className="flex items-center gap-1.5 text-black text-[11px] font-black uppercase group">
-                      <PlayCircle className="w-4 h-4 fill-current group-active:scale-90 transition-transform" /> 開始計時
+                <div className="flex items-center gap-2 sm:gap-3 flex-wrap justify-end">
+                  {timerStatus === 'idle' && (
+                    <button onClick={startWorkoutTimer} className="flex items-center gap-1 text-black text-[11px] font-black uppercase group active:scale-95 transition-transform">
+                      <PlayCircle className="w-4 h-4 fill-current group-active:scale-90 transition-transform" /> 開始
                     </button>
+                  )}
+                  {timerStatus === 'running' && (
+                    <>
+                      <button onClick={pauseWorkoutTimer} className="flex items-center gap-1 text-black text-[11px] font-black uppercase active:scale-95 transition-transform">
+                        <PauseCircle className="w-4 h-4 fill-current" /> 暫停
+                      </button>
+                      <button onClick={resetWorkoutTimer} className="flex items-center gap-1 text-black/70 hover:text-black text-[11px] font-black uppercase active:scale-95 transition-transform">
+                        <RotateCcw className="w-3.5 h-3.5" /> 重置
+                      </button>
+                    </>
+                  )}
+                  {timerStatus === 'paused' && (
+                    <>
+                      <button onClick={resumeWorkoutTimer} className="flex items-center gap-1 text-black text-[11px] font-black uppercase active:scale-95 transition-transform">
+                        <PlayCircle className="w-4 h-4 fill-current" /> 繼續
+                      </button>
+                      <button onClick={resetWorkoutTimer} className="flex items-center gap-1 text-black/70 hover:text-black text-[11px] font-black uppercase active:scale-95 transition-transform">
+                        <RotateCcw className="w-3.5 h-3.5" /> 重置
+                      </button>
+                    </>
                   )}
                   <button onClick={() => addSetToEx(exIdx)} className="flex items-center gap-1 text-black text-[11px] font-black uppercase">
                     <PlusCircle className="w-4 h-4" /> 加一組
@@ -240,7 +295,6 @@ const IntegratedWorkoutView: React.FC<IntegratedWorkoutViewProps> = ({
                         onClick={() => { 
                           const nc = !set.completed; 
                           if(nc) { 
-                            startWorkoutTimer(); 
                             if(context) context.triggerRestTimer(); 
                           } 
                           updateSetData(exIdx, set.id, { completed: nc }, sIdx); 

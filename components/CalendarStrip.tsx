@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 // Fix: Use path-based imports for members missing from the main date-fns entry point to avoid compilation errors
 import { 
   format, 
@@ -26,11 +26,24 @@ interface CalendarStripProps {
 }
 
 export const CalendarStrip: React.FC<CalendarStripProps> = ({ selectedDate, onDateSelect, workoutDates }) => {
-  const [viewDate, setViewDate] = useState(selectedDate);
+  const [viewDate, setViewDate] = useState(() => startOfMonth(selectedDate));
   const [direction, setDirection] = useState(0);
+  const prevSelectedDateRef = useRef(selectedDate);
 
+  // 只有當外部傳入的 selectedDate 確實改變，且該日期不在目前瀏覽的 viewDate 月份中時，才同步 viewDate
   useEffect(() => {
-    setViewDate(selectedDate);
+    if (!isSameDay(selectedDate, prevSelectedDateRef.current)) {
+      const prevDate = prevSelectedDateRef.current;
+      prevSelectedDateRef.current = selectedDate;
+
+      setViewDate(currentView => {
+        if (!isSameMonth(selectedDate, currentView)) {
+          setDirection(selectedDate.getTime() > prevDate.getTime() ? 1 : -1);
+          return startOfMonth(selectedDate);
+        }
+        return currentView;
+      });
+    }
   }, [selectedDate]);
 
   const days = useMemo(() => {
@@ -41,12 +54,12 @@ export const CalendarStrip: React.FC<CalendarStripProps> = ({ selectedDate, onDa
 
   const nextMonth = () => {
     setDirection(1);
-    setViewDate(addMonths(viewDate, 1));
+    setViewDate(curr => startOfMonth(addMonths(curr, 1)));
   };
 
   const prevMonth = () => {
     setDirection(-1);
-    setViewDate(subMonths(viewDate, 1));
+    setViewDate(curr => startOfMonth(subMonths(curr, 1)));
   };
 
   const weekdays = ['一', '二', '三', '四', '五', '六', '日'];
@@ -57,12 +70,15 @@ export const CalendarStrip: React.FC<CalendarStripProps> = ({ selectedDate, onDa
   };
 
   const handleDateSelect = (day: Date) => {
+    // 只有點選跨月份的日期時，才觸發月份滑動切換
     if (!isSameMonth(day, viewDate)) {
       setDirection(day.getTime() > viewDate.getTime() ? 1 : -1);
       setViewDate(startOfMonth(day));
     }
     onDateSelect(day);
   };
+
+  const currentMonthKey = format(viewDate, 'yyyy-MM');
 
   return (
     <div className="p-4 sm:p-5 select-none relative z-10">
@@ -96,12 +112,12 @@ export const CalendarStrip: React.FC<CalendarStripProps> = ({ selectedDate, onDa
       <div className="relative overflow-hidden min-h-[240px] touch-pan-y">
         <AnimatePresence initial={false} custom={direction} mode="popLayout">
           <motion.div
-            key={viewDate.toString()}
+            key={currentMonthKey}
             custom={direction}
             variants={{
               enter: (direction: number) => ({
-                x: direction > 0 ? 100 : -100,
-                opacity: 0
+                x: direction === 0 ? 0 : (direction > 0 ? 100 : -100),
+                opacity: direction === 0 ? 1 : 0
               }),
               center: {
                 zIndex: 1,
@@ -110,8 +126,8 @@ export const CalendarStrip: React.FC<CalendarStripProps> = ({ selectedDate, onDa
               },
               exit: (direction: number) => ({
                 zIndex: 0,
-                x: direction < 0 ? 100 : -100,
-                opacity: 0
+                x: direction === 0 ? 0 : (direction < 0 ? 100 : -100),
+                opacity: direction === 0 ? 1 : 0
               })
             }}
             initial="enter"
@@ -127,9 +143,9 @@ export const CalendarStrip: React.FC<CalendarStripProps> = ({ selectedDate, onDa
             onDragEnd={(e, { offset, velocity }) => {
               const swipe = swipePower(offset.x, velocity.x);
 
-              if (swipe < -swipeConfidenceThreshold) {
+              if (swipe < -swipeConfidenceThreshold || offset.x < -50) {
                 nextMonth();
-              } else if (swipe > swipeConfidenceThreshold) {
+              } else if (swipe > swipeConfidenceThreshold || offset.x > 50) {
                 prevMonth();
               }
             }}

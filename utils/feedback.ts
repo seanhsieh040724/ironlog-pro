@@ -1,3 +1,38 @@
+let lastSelectionHapticTime = 0;
+
+/**
+ * 觸發 iOS 原生 UISelectionFeedbackGenerator（專供滾輪選取值改變）
+ * 限制觸發頻率避免過度震動，僅在選值切換時輕微觸覺回饋
+ */
+export const triggerHapticSelection = (): void => {
+  const now = Date.now();
+  if (now - lastSelectionHapticTime < 45) return; // 45ms 節流，確保快速滑動時流暢不卡頓
+  lastSelectionHapticTime = now;
+
+  // 1. iOS 原生 WKScriptMessageHandler UISelectionFeedbackGenerator 橋接
+  try {
+    const webkit = (window as any).webkit;
+    if (webkit?.messageHandlers?.notificationHandler) {
+      webkit.messageHandlers.notificationHandler.postMessage({ action: 'haptic', style: 'selection' });
+      return;
+    } else if (webkit?.messageHandlers?.hapticFeedback) {
+      webkit.messageHandlers.hapticFeedback.postMessage({ type: 'selection' });
+      return;
+    }
+  } catch {
+    // 忽略原生異常
+  }
+
+  // 2. 標準 Web Vibration API Fallback（輕微短震動 6ms）
+  if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+    try {
+      navigator.vibrate(6);
+    } catch {
+      // 忽略
+    }
+  }
+};
+
 /**
  * 輕微觸覺震動（Haptic Feedback）與低調短促音效回饋
  * 符合 iOS 原生風格規範：

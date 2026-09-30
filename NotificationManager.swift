@@ -1,17 +1,25 @@
 import Foundation
 import UserNotifications
 import WebKit
+#if canImport(UIKit)
+import UIKit
+#endif
 
 /**
  * NotificationManager.swift
  * 
- * 處理計時器倒數結束之本機推播通知
+ * 處理計時器倒數結束之本機推播通知與原生觸覺回饋
  * 支援前景橫幅與音效、背景定時推播、以及取消與重新計時生命週期
  */
 @MainActor
 public final class NotificationManager: NSObject, WKScriptMessageHandler, UNUserNotificationCenterDelegate {
     public static let shared = NotificationManager()
     public static let restTimerNotificationId = "rest-timer-end"
+    
+    #if canImport(UIKit)
+    private let selectionFeedback = UISelectionFeedbackGenerator()
+    private let lightImpactFeedback = UIImpactFeedbackGenerator(style: .light)
+    #endif
     
     private override init() {
         super.init()
@@ -93,6 +101,22 @@ public final class NotificationManager: NSObject, WKScriptMessageHandler, UNUser
             
         case "cancel":
             cancelAllNotifications()
+            
+        case "haptic":
+            #if canImport(UIKit)
+            let style = body["style"] as? String ?? "selection"
+            if style == "selection" {
+                selectionFeedback.prepare()
+                selectionFeedback.selectionChanged()
+            } else if style == "medium" {
+                let generator = UIImpactFeedbackGenerator(style: .medium)
+                generator.prepare()
+                generator.impactOccurred()
+            } else {
+                lightImpactFeedback.prepare()
+                lightImpactFeedback.impactOccurred()
+            }
+            #endif
             
         default:
             print("[NotificationManager] Unknown action received: \(action)")

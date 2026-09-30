@@ -27,7 +27,9 @@ export interface Exercise {
 export interface WorkoutSession {
   id: string;
   startTime: number;
-  timerStartedAt?: number; // 新增：點擊「開始訓練」的時間戳記
+  timerStartedAt?: number | null; // 點擊「開始」或「繼續」時的時間戳記（暫停或未開始時為 null）
+  timerAccumulatedMs?: number; // 暫停時已累積之毫秒數
+  timerStatus?: 'idle' | 'running' | 'paused'; // 運動計時器狀態
   endTime?: number;
   title: string;
   exercises: ExerciseEntry[];

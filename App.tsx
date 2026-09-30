@@ -1,5 +1,5 @@
-import React, { useState, useEffect, createContext, useMemo } from 'react';
-import { WorkoutView } from './components/WorkoutView';
+import React, { useState, useEffect, createContext, useMemo, useRef, useCallback, useLayoutEffect } from 'react';
+import { WorkoutView, resetWorkoutScrollPosition } from './components/WorkoutView';
 import { RoutineView } from './components/RoutineView';
 import { HistoryView } from './components/HistoryView';
 import { DietView } from './components/DietView';
@@ -48,6 +48,62 @@ const App: React.FC = () => {
   const [showSplash, setShowSplash] = useState(true);
 
   const [restTimer, setRestTimer] = useState({ active: false, seconds: 90 });
+
+  const mainRef = useRef<HTMLElement | null>(null);
+
+  // 統一重設垂直捲動容器至最頂端（包括主 <main> 容器與全域 window/document）
+  const resetScrollToTop = useCallback((smooth = false) => {
+    if (mainRef.current) {
+      if (smooth) {
+        mainRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        mainRef.current.scrollTop = 0;
+      }
+    }
+    if (smooth) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      window.scrollTo(0, 0);
+      if (document.documentElement) document.documentElement.scrollTop = 0;
+      if (document.body) document.body.scrollTop = 0;
+    }
+  }, []);
+
+  // 每次 activeTab 改變，以多重保險機制確保新頁面絕對由最頂端開始
+  useLayoutEffect(() => {
+    resetWorkoutScrollPosition();
+    resetScrollToTop(false);
+
+    const f1 = requestAnimationFrame(() => {
+      resetScrollToTop(false);
+      const f2 = requestAnimationFrame(() => {
+        resetScrollToTop(false);
+      });
+      return () => cancelAnimationFrame(f2);
+    });
+
+    const timer = setTimeout(() => {
+      resetScrollToTop(false);
+    }, 220); // 覆蓋 AnimatePresence 過場（0.2s）後的完成狀態
+
+    return () => {
+      cancelAnimationFrame(f1);
+      clearTimeout(timer);
+    };
+  }, [activeTab, resetScrollToTop]);
+
+  const handleTabClick = (tab: AppTab) => {
+    if (tab === activeTab) {
+      // 再次點選已選中的導覽項目：平滑捲動回頂端
+      resetWorkoutScrollPosition();
+      resetScrollToTop(true);
+    } else {
+      // 切換至新分頁：立即重設捲動至頂端
+      resetWorkoutScrollPosition();
+      resetScrollToTop(false);
+      setActiveTab(tab);
+    }
+  };
 
   useEffect(() => {
     // 模擬載入與過場動畫時間
@@ -130,8 +186,10 @@ const App: React.FC = () => {
     }
 
     const now = Date.now();
-    // 確保 startTime 屬於當天（若此前開啟 App 跨日，自動錨定於今日）
-    const sessionStartTime = currentSession.timerStartedAt || currentSession.startTime || now;
+    // 確保 startTime 屬於當天（計算總運動時長，含累積與當前執行中時間）
+    const totalWorkoutDurationMs = (currentSession.timerAccumulatedMs || 0) + 
+      (currentSession.timerStartedAt && currentSession.timerStatus === 'running' ? (now - currentSession.timerStartedAt) : 0);
+    const sessionStartTime = totalWorkoutDurationMs > 0 ? (now - totalWorkoutDurationMs) : (currentSession.timerStartedAt || currentSession.startTime || now);
     const isStartedToday = isSameDay(new Date(sessionStartTime), new Date(now));
     const finalStartTime = isStartedToday ? sessionStartTime : now;
 
@@ -272,7 +330,7 @@ const App: React.FC = () => {
             style={ContainerStyle} 
             className="flex flex-col max-w-md mx-auto relative overflow-hidden"
           >
-            <main className="flex-1 pb-32 px-5 pt-16 overflow-y-auto no-scrollbar">
+            <main ref={mainRef} className="flex-1 pb-32 px-5 pt-16 overflow-y-auto no-scrollbar">
               {/* 頂部固定日期標示 */}
               {activeTab === 'workout' && (
                 <div className="flex items-center justify-between mt-4 mb-8 px-1">
@@ -303,6 +361,9 @@ const App: React.FC = () => {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.2 }}
+                  onAnimationComplete={() => {
+                    resetScrollToTop(false);
+                  }}
                 >
                   {activeTab === 'workout' && (
                     <WorkoutView 
@@ -362,12 +423,12 @@ const App: React.FC = () => {
             </main>
 
             <nav style={{ backgroundColor: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(20px)' }} className="fixed bottom-0 left-0 right-0 max-w-md mx-auto border-t border-black/5 safe-bottom z-50 px-2 py-4 flex justify-between items-center rounded-t-[40px] shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
-              <TabButton active={activeTab === 'routines'} onClick={() => setActiveTab('routines')} icon={<LayoutGrid />} label="課表" />
-              <TabButton active={activeTab === 'history'} onClick={() => setActiveTab('history')} icon={<History />} label="歷史" />
-              <TabButton active={activeTab === 'workout'} onClick={() => setActiveTab('workout')} icon={<Dumbbell />} label="主頁" />
-              <TabButton active={activeTab === 'diet'} onClick={() => setActiveTab('diet')} icon={<Apple />} label="飲食分析" />
-              <TabButton active={activeTab === 'coach'} onClick={() => setActiveTab('coach')} icon={<Bot />} label="教練" />
-              <TabButton active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} icon={<Settings />} label="設定" />
+              <TabButton active={activeTab === 'routines'} onClick={() => handleTabClick('routines')} icon={<LayoutGrid />} label="課表" />
+              <TabButton active={activeTab === 'history'} onClick={() => handleTabClick('history')} icon={<History />} label="歷史" />
+              <TabButton active={activeTab === 'workout'} onClick={() => handleTabClick('workout')} icon={<Dumbbell />} label="主頁" />
+              <TabButton active={activeTab === 'diet'} onClick={() => handleTabClick('diet')} icon={<Apple />} label="飲食分析" />
+              <TabButton active={activeTab === 'coach'} onClick={() => handleTabClick('coach')} icon={<Bot />} label="教練" />
+              <TabButton active={activeTab === 'settings'} onClick={() => handleTabClick('settings')} icon={<Settings />} label="設定" />
             </nav>
 
             <RestTimer 

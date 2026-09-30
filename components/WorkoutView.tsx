@@ -3,7 +3,7 @@ import { WorkoutSession, ExerciseEntry, SetEntry, MuscleGroup } from '../types';
 import { 
   Plus, Trash2, Search, Save, PlusCircle, 
   Check, MinusCircle, Target, Sparkles, ChevronRight, ChevronLeft, Loader2, AlertCircle, BookOpen, PlusSquare, Play, Timer,
-  ChevronUp, ChevronDown
+  ChevronUp, ChevronDown, Pause, RotateCcw
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ExerciseSmallGif } from './ExerciseSmallGif';
@@ -11,6 +11,17 @@ import { ExerciseGifDisplay } from './ExerciseGifDisplay';
 import { getMuscleGroup, getMuscleGroupDisplay, getExerciseMethod } from '../utils/fitnessMath';
 import { AppContext } from '../App';
 import { lightTheme, CardStyle, TextStyle, InputStyle, ActionButtonStyle } from '../themeStyles';
+
+export const formatWorkoutDuration = (ms: number): string => {
+  const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  if (hours > 0) {
+    return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  }
+  return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+};
 
 export const ORGANIZED_EXERCISES: Record<string, string[]> = {
   'chest': ['槓鈴平板臥推', '槓鈴上斜臥推', '啞鈴平板臥推', '啞鈴上斜臥推', '史密斯平板臥推', '坐姿器械胸推', '蝴蝶機夾胸', '跪姿繩索夾胸', '站姿繩索夾胸', '平板繩索飛鳥', '平板啞鈴飛鳥', '上斜啞鈴飛鳥', '上斜器械飛鳥', '上斜器械胸推', '雙槓撐體輔助', '仰臥器械胸推', '雙槓撐體', '標準俯地挺身', '器械上斜胸推', '史密斯上斜臥推'],
@@ -50,13 +61,54 @@ let preservedWorkoutState: PreservedWorkoutState = {
   shouldRestore: false
 };
 
+export const resetWorkoutScrollPosition = () => {
+  preservedWorkoutState.scrollMain = 0;
+  preservedWorkoutState.scrollWindow = 0;
+  preservedWorkoutState.lastExerciseName = '';
+  preservedWorkoutState.shouldRestore = false;
+};
+
 export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onFinish }) => {
   const context = useContext(AppContext);
   const [activeExerciseId, setActiveExerciseId] = useState<string | null>(null);
   // 保留選定的肌群分類與搜尋字串，即使切換 tab 或重新渲染也不會被重置
   const [activeCategory, setActiveCategory] = useState<string>(preservedWorkoutState.activeCategory);
   const [searchTerm, setSearchTerm] = useState(preservedWorkoutState.searchTerm);
-  const [elapsedTime, setElapsedTime] = useState<string>("00:00");
+
+  // 運動計時器狀態計算
+  const timerStatus: 'idle' | 'running' | 'paused' = session?.timerStatus || (session?.timerStartedAt ? 'running' : 'idle');
+  const [elapsedTime, setElapsedTime] = useState<string>(() => {
+    if (!session) return "00:00";
+    const accum = session.timerAccumulatedMs || 0;
+    const currentMs = accum + (session.timerStartedAt && session.timerStatus !== 'paused' ? Math.max(0, Date.now() - session.timerStartedAt) : 0);
+    return formatWorkoutDuration(currentMs);
+  });
+
+  // 精準運動計時器：利用 timestamp 差值與累積毫秒，無漂移且安全支援前景/背景與 Tab 切換
+  useEffect(() => {
+    let intervalId: number | undefined;
+
+    const calcCurrentMs = () => {
+      if (!session) return 0;
+      const accum = session.timerAccumulatedMs || 0;
+      if (session.timerStatus === 'running' && session.timerStartedAt) {
+        return accum + Math.max(0, Date.now() - session.timerStartedAt);
+      }
+      return accum;
+    };
+
+    setElapsedTime(formatWorkoutDuration(calcCurrentMs()));
+
+    if (session?.timerStatus === 'running' && session.timerStartedAt) {
+      intervalId = window.setInterval(() => {
+        setElapsedTime(formatWorkoutDuration(calcCurrentMs()));
+      }, 500);
+    }
+
+    return () => {
+      if (intervalId) window.clearInterval(intervalId);
+    };
+  }, [session?.timerStatus, session?.timerStartedAt, session?.timerAccumulatedMs]);
 
   const overviewContainerRef = useRef<HTMLDivElement | null>(null);
 
@@ -291,11 +343,51 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
     setActiveExerciseId(newExId);
   };
 
-  const startWorkoutTimer = () => {
-    if (session && !session.timerStartedAt) {
-      onUpdate({ ...session, timerStartedAt: Date.now() });
-    }
-  };
+  const startWorkoutTimer = useCallback(() => {
+    if (!session || session.timerStatus === 'running') return;
+    const now = Date.now();
+    onUpdate({
+      ...session,
+      timerStartedAt: now,
+      timerAccumulatedMs: session.timerAccumulatedMs || 0,
+      timerStatus: 'running'
+    });
+  }, [session, onUpdate]);
+
+  const pauseWorkoutTimer = useCallback(() => {
+    if (!session || session.timerStatus !== 'running') return;
+    const now = Date.now();
+    const elapsedSinceStart = session.timerStartedAt ? Math.max(0, now - session.timerStartedAt) : 0;
+    const totalAccum = (session.timerAccumulatedMs || 0) + elapsedSinceStart;
+    onUpdate({
+      ...session,
+      timerStartedAt: null,
+      timerAccumulatedMs: totalAccum,
+      timerStatus: 'paused'
+    });
+  }, [session, onUpdate]);
+
+  const resumeWorkoutTimer = useCallback(() => {
+    if (!session || session.timerStatus !== 'paused') return;
+    const now = Date.now();
+    onUpdate({
+      ...session,
+      timerStartedAt: now,
+      timerAccumulatedMs: session.timerAccumulatedMs || 0,
+      timerStatus: 'running'
+    });
+  }, [session, onUpdate]);
+
+  const resetWorkoutTimer = useCallback(() => {
+    if (!session) return;
+    onUpdate({
+      ...session,
+      timerStartedAt: null,
+      timerAccumulatedMs: 0,
+      timerStatus: 'idle'
+    });
+    setElapsedTime("00:00");
+  }, [session, onUpdate]);
 
   const filteredExercises = useMemo(() => {
     if (searchTerm) {
@@ -320,13 +412,12 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
             key="overview" 
             ref={(node) => {
               overviewContainerRef.current = node;
-              if (node && (preservedWorkoutState.shouldRestore || preservedWorkoutState.scrollMain > 0 || preservedWorkoutState.scrollWindow > 0)) {
-                preservedWorkoutState.shouldRestore = true;
+              if (node && preservedWorkoutState.shouldRestore) {
                 performScrollRestoration();
               }
             }}
             onAnimationComplete={() => {
-              if (preservedWorkoutState.shouldRestore || preservedWorkoutState.scrollMain > 0 || preservedWorkoutState.scrollWindow > 0) {
+              if (preservedWorkoutState.shouldRestore) {
                 performScrollRestoration();
               }
             }}
@@ -467,25 +558,58 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
 
             <div className="space-y-5 px-1">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2.5">
+                <div className="flex items-center gap-2.5 sm:gap-4">
+                  <div className="flex items-center gap-2">
                     <Target className="w-5 h-5 text-black" />
                     <h3 style={{ color: lightTheme.text }} className="text-base font-black uppercase">訓練錄入</h3>
                   </div>
-                  {session.timerStartedAt && (
-                    <div className="flex items-center gap-1.5 px-3 py-1 bg-black/5 border border-black/10 rounded-lg">
-                      <Timer className="w-3.5 h-3.5 animate-pulse" />
-                      <span className="text-[12px] font-black font-sans text-black">{elapsedTime}</span>
-                    </div>
-                  )}
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 bg-black/5 border border-black/10 rounded-lg">
+                    <Timer className={`w-3.5 h-3.5 ${timerStatus === 'running' ? 'animate-pulse text-[#82CC00]' : 'text-black'}`} />
+                    <span className="text-[12px] font-black font-sans text-black">{elapsedTime}</span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  {!session.timerStartedAt && (
-                    <button onClick={startWorkoutTimer} className="flex items-center gap-1.5 text-black text-[11px] font-black uppercase">
-                      <Play className="w-4 h-4 fill-current" /> 開始訓練
+                <div className="flex items-center gap-2 sm:gap-3 flex-wrap justify-end">
+                  {timerStatus === 'idle' && (
+                    <button 
+                      onClick={startWorkoutTimer} 
+                      className="flex items-center gap-1 text-black text-[11px] font-black uppercase active:scale-95 transition-transform"
+                    >
+                      <Play className="w-3.5 h-3.5 fill-current" /> 開始
                     </button>
                   )}
-                  <button onClick={() => onUpdate({ ...session, exercises: session.exercises.map(ex => ex.id === currentDetailEx!.id ? { ...ex, sets: [...ex.sets, { id: crypto.randomUUID(), weight: ex.sets[ex.sets.length-1]?.weight || 0, reps: ex.sets[ex.sets.length-1]?.reps || 10, completed: false }] } : ex) })} className="flex items-center gap-1.5 text-black text-[11px] font-black uppercase">
+                  {timerStatus === 'running' && (
+                    <>
+                      <button 
+                        onClick={pauseWorkoutTimer} 
+                        className="flex items-center gap-1 text-black text-[11px] font-black uppercase active:scale-95 transition-transform"
+                      >
+                        <Pause className="w-3.5 h-3.5 fill-current" /> 暫停
+                      </button>
+                      <button 
+                        onClick={resetWorkoutTimer} 
+                        className="flex items-center gap-1 text-black/70 hover:text-black text-[11px] font-black uppercase active:scale-95 transition-transform"
+                      >
+                        <RotateCcw className="w-3.5 h-3.5" /> 重置
+                      </button>
+                    </>
+                  )}
+                  {timerStatus === 'paused' && (
+                    <>
+                      <button 
+                        onClick={resumeWorkoutTimer} 
+                        className="flex items-center gap-1 text-black text-[11px] font-black uppercase active:scale-95 transition-transform"
+                      >
+                        <Play className="w-3.5 h-3.5 fill-current" /> 繼續
+                      </button>
+                      <button 
+                        onClick={resetWorkoutTimer} 
+                        className="flex items-center gap-1 text-black/70 hover:text-black text-[11px] font-black uppercase active:scale-95 transition-transform"
+                      >
+                        <RotateCcw className="w-3.5 h-3.5" /> 重置
+                      </button>
+                    </>
+                  )}
+                  <button onClick={() => onUpdate({ ...session, exercises: session.exercises.map(ex => ex.id === currentDetailEx!.id ? { ...ex, sets: [...ex.sets, { id: crypto.randomUUID(), weight: ex.sets[ex.sets.length-1]?.weight || 0, reps: ex.sets[ex.sets.length-1]?.reps || 10, completed: false }] } : ex) })} className="flex items-center gap-1 text-black text-[11px] font-black uppercase active:scale-95 transition-transform">
                     <PlusCircle className="w-4 h-4" /> 加一組
                   </button>
                 </div>
@@ -640,8 +764,8 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
               <div className="pt-6 pb-12">
                 <button 
                   onClick={() => {
-                    if (!session.timerStartedAt) {
-                       onUpdate({ ...session, timerStartedAt: Date.now() });
+                    if (!session.timerStartedAt && session.timerStatus !== 'running') {
+                       onUpdate({ ...session, timerStartedAt: Date.now(), timerStatus: 'running' });
                     }
                     const result = onFinish();
                     if (result !== false) {
