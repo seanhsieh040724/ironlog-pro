@@ -328,9 +328,16 @@ const App: React.FC = () => {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
             style={ContainerStyle} 
-            className="flex flex-col max-w-md mx-auto relative overflow-hidden"
+            className="flex flex-col max-w-md mx-auto relative overflow-hidden h-full h-[100dvh] w-full"
           >
-            <main ref={mainRef} className="flex-1 pb-32 px-5 pt-16 overflow-y-auto no-scrollbar">
+            <main 
+              ref={mainRef} 
+              className="flex-1 pb-32 px-5 pt-16 overflow-y-auto no-scrollbar overscroll-y-contain"
+              style={{ 
+                overscrollBehaviorY: 'contain', 
+                WebkitOverflowScrolling: 'touch' 
+              }}
+            >
               {/* 頂部固定日期標示 */}
               {activeTab === 'workout' && (
                 <div className="flex items-center justify-between mt-4 mb-8 px-1">
@@ -422,7 +429,10 @@ const App: React.FC = () => {
               </AnimatePresence>
             </main>
 
-            <nav style={{ backgroundColor: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(20px)' }} className="fixed bottom-0 left-0 right-0 max-w-md mx-auto border-t border-black/5 safe-bottom z-50 px-2 py-4 flex justify-between items-center rounded-t-[40px] shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
+            <nav 
+              style={{ backgroundColor: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(20px)' }} 
+              className="fixed bottom-0 left-0 right-0 max-w-md mx-auto border-t border-black/5 safe-bottom z-50 px-2 py-4 flex justify-between items-center rounded-t-[40px] shadow-[0_-10px_40px_rgba(0,0,0,0.05)] select-none touch-none"
+            >
               <TabButton active={activeTab === 'routines'} onClick={() => handleTabClick('routines')} icon={<LayoutGrid />} label="課表" />
               <TabButton active={activeTab === 'history'} onClick={() => handleTabClick('history')} icon={<History />} label="歷史" />
               <TabButton active={activeTab === 'workout'} onClick={() => handleTabClick('workout')} icon={<Dumbbell />} label="主頁" />

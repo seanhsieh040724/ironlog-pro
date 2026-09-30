@@ -42,13 +42,31 @@
     <style>
         * {
             font-weight: normal !important;
+            box-sizing: border-box;
         }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "SF Pro", "PingFang TC", "PingFang SC", "Helvetica Neue", Helvetica, Arial, sans-serif;
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            height: 100dvh;
+            overflow: hidden;
+            overscroll-behavior: none;
+            overscroll-behavior-y: none;
             background-color: #FFFFFF;
             color: #1D1D1F;
             -webkit-tap-highlight-color: transparent;
-            overflow-x: hidden;
+            -webkit-text-size-adjust: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "SF Pro", "PingFang TC", "PingFang SC", "Helvetica Neue", Helvetica, Arial, sans-serif;
+        }
+        #root {
+            width: 100%;
+            height: 100%;
+            height: 100dvh;
+            overflow: hidden;
+            background-color: #FFFFFF;
+            display: flex;
+            flex-direction: column;
         }
         .text-neon-green { color: #82CC00; }
         .bg-neon-green { background-color: #CCFF00; }

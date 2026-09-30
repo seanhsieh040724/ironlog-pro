@@ -13,7 +13,7 @@ struct ContentView: View {
     var body: some View {
         IronLogWebViewContainer(url: webAppURL)
             .ignoresSafeArea()
-            .background(Color.black)
+            .background(Color.white)
     }
 }
 
@@ -40,9 +40,16 @@ struct IronLogWebViewContainer: UIViewRepresentable {
         config.mediaTypesRequiringUserActionForPlayback = []
         
         let webView = WKWebView(frame: .zero, configuration: config)
-        webView.scrollView.bounces = true
-        webView.isOpaque = false
-        webView.backgroundColor = .black
+        
+        // 4. 禁用外層 WebView 橡皮筋滑動（防止露出黑邊或拉動整個版面）
+        webView.scrollView.bounces = false
+        webView.scrollView.alwaysBounceVertical = false
+        webView.scrollView.alwaysBounceHorizontal = false
+        
+        // 5. 設定為純白背景，消除啟動載入時的黑屏與閃爍
+        webView.isOpaque = true
+        webView.backgroundColor = .white
+        webView.scrollView.backgroundColor = .white
         
         // 傳遞 webView 參考給 bridge 以便 evaluateJavaScript
         storeKitBridge.webView = webView

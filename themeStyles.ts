@@ -16,7 +16,8 @@ export const lightTheme = {
 export const ContainerStyle = {
   backgroundColor: lightTheme.bg,
   color: lightTheme.text,
-  minHeight: '100vh',
+  height: '100%',
+  width: '100%',
   fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "SF Pro", "PingFang TC", "PingFang SC", "Helvetica Neue", Helvetica, Arial, sans-serif'
 };
 
