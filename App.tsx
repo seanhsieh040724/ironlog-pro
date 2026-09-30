@@ -11,9 +11,10 @@ import { WorkoutSummaryModal } from './components/WorkoutSummaryModal';
 import { AppTab, WorkoutSession, BodyMetric, UserGoal, RoutineTemplate } from './types';
 import { Dumbbell, History, LayoutGrid, Calendar, Apple, Bot, Settings } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { format } from 'date-fns';
+import { format, isSameDay } from 'date-fns';
 import { ContainerStyle, lightTheme } from './themeStyles';
 import { isNativeStoreKitAvailable, getCurrentEntitlements } from './utils/storeKit';
+import { triggerHapticSuccess } from './utils/feedback';
 
 export interface AppContextType {
   history: WorkoutSession[];
@@ -116,8 +117,8 @@ const App: React.FC = () => {
     triggerRestTimer
   }), [history, bodyMetrics, goal, customRoutines]);
 
-  const handleSaveWorkout = () => {
-    if (!currentSession) return;
+  const handleSaveWorkout = (): boolean => {
+    if (!currentSession) return false;
 
     const completedExercises = currentSession.exercises.filter(ex => 
       ex.sets.some(set => set.completed)
@@ -125,17 +126,49 @@ const App: React.FC = () => {
 
     if (completedExercises.length === 0) {
       alert('請至少勾選一個完成的組數再儲存訓練紀錄。');
-      return;
+      return false;
     }
+
+    const now = Date.now();
+    // 確保 startTime 屬於當天（若此前開啟 App 跨日，自動錨定於今日）
+    const sessionStartTime = currentSession.timerStartedAt || currentSession.startTime || now;
+    const isStartedToday = isSameDay(new Date(sessionStartTime), new Date(now));
+    const finalStartTime = isStartedToday ? sessionStartTime : now;
 
     const completedSession: WorkoutSession = { 
       ...currentSession, 
-      exercises: completedExercises,
-      endTime: Date.now() 
+      startTime: finalStartTime,
+      endTime: now,
+      exercises: completedExercises
     };
 
-    setHistory([completedSession, ...history]);
-    setSessionForSummary(completedSession);
+    // 1. 立即同步寫入歷史紀錄與 LocalStorage，確保導頁時資料已齊全
+    const updatedHistory = [completedSession, ...history];
+    setHistory(updatedHistory);
+    try {
+      localStorage.setItem('ironlog_v3_history', JSON.stringify(updatedHistory));
+    } catch (e) {
+      console.error('Failed to sync history to localStorage', e);
+    }
+
+    // 2. 觸發 iOS 原生風格輕微觸覺震動回饋（備援低調短促溫和提示音）
+    triggerHapticSuccess();
+
+    // 3. 重設下一次訓練的空白 Session，並清除彈窗
+    setCurrentSession({
+      id: crypto.randomUUID(),
+      startTime: Date.now(),
+      title: `${format(new Date(), 'MM/dd')} 訓練`,
+      exercises: []
+    });
+    setSessionForSummary(null);
+
+    // 4. 自然且快速直接導向今日「訓練日報」
+    const today = new Date();
+    setSelectedDate(today);
+    setActiveTab('history');
+
+    return true;
   };
 
   const handleSaveAsRoutine = (session: WorkoutSession) => {
@@ -295,26 +328,32 @@ const App: React.FC = () => {
                       />
                     </div>
                   )}
-                  {activeTab === 'routines' && <RoutineView onStartRoutine={(template) => {
-                    const newSess: WorkoutSession = {
-                      id: crypto.randomUUID(),
-                      startTime: Date.now(),
-                      title: template.name,
-                      exercises: template.exercises.map(te => ({
+                  {activeTab === 'routines' && <RoutineView 
+                    onStartRoutine={(template) => {
+                      const newSess: WorkoutSession = {
                         id: crypto.randomUUID(),
-                        name: te.name,
-                        muscleGroup: te.muscleGroup,
-                        sets: Array.from({ length: te.defaultSets || 4 }).map((_, idx) => ({
+                        startTime: Date.now(),
+                        title: template.name,
+                        exercises: template.exercises.map(te => ({
                           id: crypto.randomUUID(),
-                          weight: idx === 0 ? te.defaultWeight : 0, 
-                          reps: te.defaultReps,
-                          completed: false
+                          name: te.name,
+                          muscleGroup: te.muscleGroup,
+                          sets: Array.from({ length: te.defaultSets || 4 }).map((_, idx) => ({
+                            id: crypto.randomUUID(),
+                            weight: idx === 0 ? te.defaultWeight : 0, 
+                            reps: te.defaultReps,
+                            completed: false
+                          }))
                         }))
-                      }))
-                    };
-                    setCurrentSession(newSess);
-                    setActiveTab('workout');
-                  }} />}
+                      };
+                      setCurrentSession(newSess);
+                      setActiveTab('workout');
+                    }}
+                    onWorkoutSaved={() => {
+                      setSelectedDate(new Date());
+                      setActiveTab('history');
+                    }}
+                  />}
                   {activeTab === 'diet' && <DietView />}
                   {activeTab === 'coach' && <CoachView />}
                   {activeTab === 'settings' && <SettingsView />}

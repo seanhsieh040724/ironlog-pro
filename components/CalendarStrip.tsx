@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 // Fix: Use path-based imports for members missing from the main date-fns entry point to avoid compilation errors
 import { 
   format, 
@@ -28,6 +28,10 @@ interface CalendarStripProps {
 export const CalendarStrip: React.FC<CalendarStripProps> = ({ selectedDate, onDateSelect, workoutDates }) => {
   const [viewDate, setViewDate] = useState(selectedDate);
   const [direction, setDirection] = useState(0);
+
+  useEffect(() => {
+    setViewDate(selectedDate);
+  }, [selectedDate]);
 
   const days = useMemo(() => {
     const start = startOfWeek(startOfMonth(viewDate), { weekStartsOn: 1 });

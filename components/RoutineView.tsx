@@ -16,6 +16,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { lightTheme } from '../themeStyles';
 import { useEntitlement } from '../services/storeKitBridge';
 import { ProPaywall } from './ProPaywall';
+import { triggerHapticSuccess } from '../utils/feedback';
 
 interface IntegratedWorkoutViewProps {
   routine: RoutineTemplate;
@@ -270,7 +271,10 @@ const IntegratedWorkoutView: React.FC<IntegratedWorkoutViewProps> = ({
   );
 };
 
-export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate) => void }> = ({ onStartRoutine }) => {
+export const RoutineView: React.FC<{ 
+  onStartRoutine: (template: RoutineTemplate) => void;
+  onWorkoutSaved?: () => void;
+}> = ({ onStartRoutine, onWorkoutSaved }) => {
   const context = useContext(AppContext);
   const entitlement = useEntitlement();
   const [showPaywall, setShowPaywall] = useState(false);
@@ -397,10 +401,17 @@ export const RoutineView: React.FC<{ onStartRoutine: (template: RoutineTemplate)
   };
 
   const handleFinishIntegratedWorkout = (finalSession: WorkoutSession) => {
-    setHistory([finalSession, ...history]);
-    alert('訓練紀錄已儲存！');
+    const updated = [finalSession, ...history];
+    setHistory(updated);
+    try {
+      localStorage.setItem('ironlog_v3_history', JSON.stringify(updated));
+    } catch (_) {}
+    triggerHapticSuccess();
     setIntegratedRoutine(null);
     setPreviewRoutine(null);
+    if (onWorkoutSaved) {
+      onWorkoutSaved();
+    }
   };
 
   if (integratedRoutine) {

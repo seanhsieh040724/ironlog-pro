@@ -20,7 +20,10 @@ export const RestTimer: React.FC<RestTimerProps> = ({ active, seconds: initialSe
     if (window.webkit?.messageHandlers?.notificationHandler) {
       window.webkit.messageHandlers.notificationHandler.postMessage({
         action: 'schedule',
-        seconds: seconds
+        seconds: seconds,
+        delay: seconds,
+        title: 'IronLog',
+        body: '組間休息結束！該開始下一組了！'
       });
     }
   }, []);
@@ -41,18 +44,21 @@ export const RestTimer: React.FC<RestTimerProps> = ({ active, seconds: initialSe
   const handleTimerEnd = useCallback(() => {
     if (notificationSentRef.current) return;
     notificationSentRef.current = true;
-    if (audioRef.current) audioRef.current.play().catch(e => console.debug("Audio play blocked", e));
-    if ('vibrate' in navigator) navigator.vibrate([500, 150, 500, 150, 300]);
-    if ("Notification" in window && Notification.permission === "granted") {
-      const n = new Notification("IronLog: 休息結束！", {
-        body: "該開始下一組訓練了。鋼鐵般的意志，不能停下！",
-        tag: 'rest-timer-end',
-        requireInteraction: true,
-        silent: false
-      });
-      n.onclick = () => { window.focus(); onClose(); };
+    try {
+      if (audioRef.current) {
+        audioRef.current.play().catch(e => console.debug("Audio play blocked", e));
+      }
+    } catch (e) {
+      console.debug("Audio play error", e);
     }
-  }, [onClose]);
+    try {
+      if ('vibrate' in navigator) {
+        navigator.vibrate([500, 150, 500, 150, 300]);
+      }
+    } catch (e) {
+      console.debug("Vibrate error", e);
+    }
+  }, []);
 
   useEffect(() => {
     if (!active) { 

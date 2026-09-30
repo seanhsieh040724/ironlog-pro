@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useContext, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useContext, useEffect, useRef, useLayoutEffect, useCallback } from 'react';
 import { WorkoutSession, ExerciseEntry, SetEntry, MuscleGroup } from '../types';
 import { 
   Plus, Trash2, Search, Save, PlusCircle, 
@@ -26,15 +26,52 @@ export const EXERCISE_DATABASE = Object.values(ORGANIZED_EXERCISES).flat();
 interface WorkoutViewProps {
   session: WorkoutSession | null;
   onUpdate: (session: WorkoutSession) => void;
-  onFinish: () => void;
+  onFinish: () => boolean | void;
 }
+
+/**
+ * 列表狀態保存結構（支援切換 Tab、重新 Mount 與條件渲染）
+ */
+interface PreservedWorkoutState {
+  activeCategory: string;
+  searchTerm: string;
+  scrollMain: number;
+  scrollWindow: number;
+  lastExerciseName: string;
+  shouldRestore: boolean;
+}
+
+let preservedWorkoutState: PreservedWorkoutState = {
+  activeCategory: 'chest',
+  searchTerm: '',
+  scrollMain: 0,
+  scrollWindow: 0,
+  lastExerciseName: '',
+  shouldRestore: false
+};
 
 export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onFinish }) => {
   const context = useContext(AppContext);
   const [activeExerciseId, setActiveExerciseId] = useState<string | null>(null);
-  const [activeCategory, setActiveCategory] = useState<string>('chest');
-  const [searchTerm, setSearchTerm] = useState('');
+  // 保留選定的肌群分類與搜尋字串，即使切換 tab 或重新渲染也不會被重置
+  const [activeCategory, setActiveCategory] = useState<string>(preservedWorkoutState.activeCategory);
+  const [searchTerm, setSearchTerm] = useState(preservedWorkoutState.searchTerm);
   const [elapsedTime, setElapsedTime] = useState<string>("00:00");
+
+  const overviewContainerRef = useRef<HTMLDivElement | null>(null);
+
+  // 保持 activeExerciseId 即時 ref，供非同步 frame / timeout 嚴格判定
+  const activeExerciseIdRef = useRef<string | null>(activeExerciseId);
+  activeExerciseIdRef.current = activeExerciseId;
+
+  // 將捲動容器獨立重設至最上方（專供動作詳情頁）
+  const resetDetailScrollToTop = useCallback(() => {
+    const mainEl = document.querySelector('main');
+    if (mainEl) {
+      mainEl.scrollTop = 0;
+    }
+    window.scrollTo(0, 0);
+  }, []);
 
   const currentDetailEx = useMemo(() => session?.exercises.find(e => e.id === activeExerciseId), [session, activeExerciseId]);
 
@@ -47,45 +84,191 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
       ?.exercises.find(e => e.name === currentDetailEx.name);
   }, [currentDetailEx?.name, context?.history]);
 
+  // 同步分類與搜尋狀態至模組層，跨 Tab 與 Mount 保留
   useEffect(() => {
-    if (activeExerciseId) {
-      // 當進入任何動作詳情時，確保畫面穩定地停在最上方（顯示 GIF 區域）
-      const scrollToTop = () => {
-        const mainElement = document.querySelector('main');
-        if (mainElement) {
-          mainElement.scrollTop = 0;
-        }
-        window.scrollTo(0, 0);
-      };
+    preservedWorkoutState.activeCategory = activeCategory;
+  }, [activeCategory]);
 
-      scrollToTop();
-      // 額外在短時間後再執行一次，確保在動畫或 DOM 更新完成後仍能保持在頂部
-      const timer = setTimeout(scrollToTop, 50);
-      return () => clearTimeout(timer);
+  useEffect(() => {
+    preservedWorkoutState.searchTerm = searchTerm;
+  }, [searchTerm]);
+
+  // 當使用者在列表視圖（overview）滾動時，持續記錄目前捲動位置（詳情頁滾動絕對不寫入）
+  useEffect(() => {
+    if (activeExerciseId) return;
+
+    const handleScroll = () => {
+      // 若正在執行恢復動畫過程或處於非列表狀態，避免覆寫目標滾動值
+      if (preservedWorkoutState.shouldRestore || activeExerciseIdRef.current) return;
+
+      const mainEl = document.querySelector('main');
+      const mainTop = mainEl ? mainEl.scrollTop : 0;
+      const winTop = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
+
+      preservedWorkoutState.scrollMain = mainTop;
+      preservedWorkoutState.scrollWindow = winTop;
+    };
+
+    const mainEl = document.querySelector('main');
+    if (mainEl) {
+      mainEl.addEventListener('scroll', handleScroll, { passive: true });
     }
+    window.addEventListener('scroll', handleScroll, { passive: true });
+
+    return () => {
+      if (mainEl) mainEl.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('scroll', handleScroll);
+    };
   }, [activeExerciseId]);
 
+  // 執行精確滾動位置恢復（僅用於動作列表 Overview，嚴禁在詳情頁執行）
+  const performScrollRestoration = useCallback(() => {
+    // 雙重安全守衛：若當前在詳情頁，或未標記恢復，立即退出
+    if (activeExerciseIdRef.current || !preservedWorkoutState.shouldRestore) return;
 
+    const targetMain = preservedWorkoutState.scrollMain;
+    const targetWin = preservedWorkoutState.scrollWindow;
+    const targetEx = preservedWorkoutState.lastExerciseName;
 
-  useEffect(() => {
-    let interval: number;
-    if (session?.timerStartedAt) {
-      const updateTimer = () => {
-        const diff = Date.now() - session.timerStartedAt!;
-        const totalSeconds = Math.floor(diff / 1000);
-        const mins = Math.floor(totalSeconds / 60);
-        const secs = totalSeconds % 60;
-        setElapsedTime(`${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`);
-      };
-      updateTimer();
-      interval = window.setInterval(updateTimer, 1000);
-    } else {
-      setElapsedTime("00:00");
+    // 若原本在頂部且無特定動作目標，無須恢復
+    if (targetMain <= 0 && targetWin <= 0 && !targetEx) {
+      preservedWorkoutState.shouldRestore = false;
+      return;
     }
-    return () => clearInterval(interval);
-  }, [session?.timerStartedAt]);
+
+    const mainEl = document.querySelector('main');
+
+    const applyScroll = (): boolean => {
+      // 隨時檢查：若使用者進入詳情頁，立即中止避免將詳情頁滾動到底部
+      if (activeExerciseIdRef.current) return true;
+
+      let applied = false;
+
+      // 1. 恢復 <main> 獨立捲動容器之 scrollTop
+      if (mainEl && targetMain > 0) {
+        mainEl.scrollTop = targetMain;
+        if (Math.abs(mainEl.scrollTop - targetMain) < 15) {
+          applied = true;
+        }
+      }
+
+      // 2. 恢復 window 捲動位置（相容 window scrolling 情境）
+      if (targetWin > 0) {
+        window.scrollTo(0, targetWin);
+        const currentWin = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
+        if (Math.abs(currentWin - targetWin) < 15) {
+          applied = true;
+        }
+      }
+
+      // 3. 雙重保險：若因佈局折疊無法抵達 targetMain，以目標動作卡片為錨點確保該動作進入畫面
+      if (targetEx) {
+        const exElement = document.querySelector(`[data-exercise-name="${targetEx}"]`);
+        if (exElement) {
+          if (!applied && mainEl && mainEl.scrollTop === 0) {
+            exElement.scrollIntoView({ block: 'center', inline: 'nearest' });
+            applied = true;
+          }
+        }
+      }
+
+      return applied;
+    };
+
+    // 立即嘗試一次
+    applyScroll();
+
+    // 隨幀重試以克服 Framer Motion 動畫過程及非同步渲染中 DOM 高度尚未齊備的問題
+    let frameId: number;
+    let count = 0;
+    const maxFrames = 25; // 約 400ms，涵蓋動畫過渡期
+
+    const step = () => {
+      if (activeExerciseIdRef.current) return;
+      count++;
+      applyScroll();
+      if (count < maxFrames && preservedWorkoutState.shouldRestore) {
+        frameId = requestAnimationFrame(step);
+      } else {
+        preservedWorkoutState.shouldRestore = false;
+      }
+    };
+
+    frameId = requestAnimationFrame(step);
+
+    const timer = setTimeout(() => {
+      if (!activeExerciseIdRef.current) {
+        applyScroll();
+      }
+      preservedWorkoutState.shouldRestore = false;
+    }, 380);
+
+    return () => {
+      cancelAnimationFrame(frameId);
+      clearTimeout(timer);
+    };
+  }, []);
+
+  // 當返回 overview 且標記需要恢復時，於 LayoutEffect 觸發列表位置恢復
+  useLayoutEffect(() => {
+    if (!activeExerciseId && preservedWorkoutState.shouldRestore) {
+      const cleanup = performScrollRestoration();
+      return cleanup;
+    }
+  }, [activeExerciseId, performScrollRestoration]);
+
+  // 進入動作詳情時：徹底將捲動容器重設至頂部（標題、GIF 與運動方法），絕對從 0 開始
+  useLayoutEffect(() => {
+    if (activeExerciseId) {
+      preservedWorkoutState.shouldRestore = false;
+      resetDetailScrollToTop();
+
+      let frameId: number;
+      let count = 0;
+      const step = () => {
+        count++;
+        resetDetailScrollToTop();
+        if (count < 12) {
+          frameId = requestAnimationFrame(step);
+        }
+      };
+      frameId = requestAnimationFrame(step);
+
+      const t1 = setTimeout(resetDetailScrollToTop, 50);
+      const t2 = setTimeout(resetDetailScrollToTop, 150);
+
+      return () => {
+        cancelAnimationFrame(frameId);
+        clearTimeout(t1);
+        clearTimeout(t2);
+      };
+    }
+  }, [activeExerciseId, resetDetailScrollToTop]);
 
   const addExercise = (name: string) => {
+    // 進入動作詳情前：立即擷取目前列表的實際捲動位置與目標動作
+    const mainEl = document.querySelector('main');
+    const mainTop = mainEl ? mainEl.scrollTop : 0;
+    const winTop = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
+
+    preservedWorkoutState.scrollMain = mainTop;
+    preservedWorkoutState.scrollWindow = winTop;
+    preservedWorkoutState.activeCategory = activeCategory;
+    preservedWorkoutState.searchTerm = searchTerm;
+    preservedWorkoutState.lastExerciseName = name;
+    // 進入詳情頁時禁止 shouldRestore，確保詳情頁不被列表位置干擾
+    preservedWorkoutState.shouldRestore = false;
+
+    // 立即將主容器置頂歸零
+    resetDetailScrollToTop();
+
+    // 若目前訓練階段已存在該動作，直接開啟既有卡片避免重複建立空白組數
+    const existingEx = session?.exercises.find(e => e.name === name);
+    if (existingEx) {
+      setActiveExerciseId(existingEx.id);
+      return;
+    }
+
     const newExId = crypto.randomUUID();
     const muscle = getMuscleGroup(name);
     onUpdate({ 
@@ -106,7 +289,6 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
       ] 
     });
     setActiveExerciseId(newExId);
-    setSearchTerm('');
   };
 
   const startWorkoutTimer = () => {
@@ -134,7 +316,25 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
     <div className="relative min-h-screen">
       <AnimatePresence mode="wait">
         {!activeExerciseId ? (
-          <motion.div key="overview" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6 pb-40">
+          <motion.div 
+            key="overview" 
+            ref={(node) => {
+              overviewContainerRef.current = node;
+              if (node && (preservedWorkoutState.shouldRestore || preservedWorkoutState.scrollMain > 0 || preservedWorkoutState.scrollWindow > 0)) {
+                preservedWorkoutState.shouldRestore = true;
+                performScrollRestoration();
+              }
+            }}
+            onAnimationComplete={() => {
+              if (preservedWorkoutState.shouldRestore || preservedWorkoutState.scrollMain > 0 || preservedWorkoutState.scrollWindow > 0) {
+                performScrollRestoration();
+              }
+            }}
+            initial={{ opacity: 0, x: -20 }} 
+            animate={{ opacity: 1, x: 0 }} 
+            exit={{ opacity: 0, x: -20 }} 
+            className="space-y-6 pb-40"
+          >
             <div className="space-y-5 pt-2">
               <div style={{ backgroundColor: lightTheme.card }} className="flex items-center gap-4 border border-black/5 rounded-2xl px-6 py-4 shadow-sm">
                 <Search className="w-5 h-5 text-black" />
@@ -152,7 +352,17 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                   {Object.keys(ORGANIZED_EXERCISES).map(cat => (
                     <button 
                       key={cat} 
-                      onClick={() => setActiveCategory(cat)} 
+                      onClick={() => {
+                        setActiveCategory(cat);
+                        preservedWorkoutState.activeCategory = cat;
+                        preservedWorkoutState.scrollMain = 0;
+                        preservedWorkoutState.scrollWindow = 0;
+                        preservedWorkoutState.lastExerciseName = '';
+                        preservedWorkoutState.shouldRestore = false;
+                        const mainEl = document.querySelector('main');
+                        if (mainEl) mainEl.scrollTop = 0;
+                        window.scrollTo(0, 0);
+                      }} 
                       className={`shrink-0 px-5 py-2.5 rounded-xl text-[12px] font-black uppercase tracking-widest transition-all border ${activeCategory === cat ? 'bg-black text-white border-black' : 'bg-slate-100 text-black border-black/5'}`}
                       style={activeCategory === cat ? { backgroundColor: '#000000', color: '#FFFFFF' } : {}}
                     >
@@ -166,6 +376,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                 {searchTerm.trim() && !isExactMatch && (
                   <motion.button 
                     whileTap={{ scale: 0.95 }} 
+                    data-exercise-name={searchTerm.trim()}
                     onClick={() => addExercise(searchTerm.trim())} 
                     style={{ backgroundColor: lightTheme.card }}
                     className="p-5 rounded-[20px] border border-black/5 flex items-center justify-between group shadow-sm"
@@ -186,6 +397,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                 {filteredExercises.map(exName => (
                   <motion.button 
                     key={exName} 
+                    data-exercise-name={exName}
                     whileTap={{ scale: 0.95 }} 
                     onClick={() => addExercise(exName)} 
                     style={{ backgroundColor: lightTheme.card }}
@@ -209,10 +421,27 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
             </div>
           </motion.div>
         ) : (
-          <motion.div key="detail" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="space-y-6 pb-40">
+          <motion.div 
+            key="detail" 
+            ref={(node) => {
+              if (node) {
+                resetDetailScrollToTop();
+              }
+            }}
+            onAnimationComplete={() => {
+              resetDetailScrollToTop();
+            }}
+            initial={{ opacity: 0, x: 20 }} 
+            animate={{ opacity: 1, x: 0 }} 
+            exit={{ opacity: 0, x: 20 }} 
+            className="space-y-6 pb-40"
+          >
             <div className="relative flex items-center justify-center mb-8 px-1 min-h-[48px]">
               <button 
-                onClick={() => setActiveExerciseId(null)} 
+                onClick={() => {
+                  preservedWorkoutState.shouldRestore = true;
+                  setActiveExerciseId(null);
+                }} 
                 className="absolute left-1 p-2 active:scale-90 transition-all shrink-0 z-10"
               >
                 <ChevronLeft className="w-8 h-8 text-black stroke-[4]" />
@@ -414,7 +643,14 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
                     if (!session.timerStartedAt) {
                        onUpdate({ ...session, timerStartedAt: Date.now() });
                     }
-                    onFinish();
+                    const result = onFinish();
+                    if (result !== false) {
+                      preservedWorkoutState.shouldRestore = false;
+                      preservedWorkoutState.scrollMain = 0;
+                      preservedWorkoutState.scrollWindow = 0;
+                      preservedWorkoutState.lastExerciseName = '';
+                      setActiveExerciseId(null);
+                    }
                   }} 
                   style={{ backgroundColor: '#000000', color: '#FFFFFF' }}
                   className="w-full font-black h-14 rounded-2xl uppercase text-lg active:scale-95 transition-all shadow-xl flex items-center justify-center gap-3 tracking-tighter"

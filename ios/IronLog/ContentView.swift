@@ -30,6 +30,7 @@ struct IronLogWebViewContainer: UIViewRepresentable {
         
         // 2. 掛載本地推播處理器 (現有通知功能)
         let notificationManager = NotificationManager.shared
+        UNUserNotificationCenter.current().delegate = notificationManager
         contentController.add(notificationManager, name: "notificationHandler")
         
         // 3. WebKit 偏好設定
