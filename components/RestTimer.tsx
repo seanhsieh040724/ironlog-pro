@@ -22,7 +22,7 @@ export const RestTimer: React.FC<RestTimerProps> = ({ active, seconds: initialSe
         action: 'schedule',
         seconds: seconds,
         delay: seconds,
-        title: 'IronLog',
+        title: '耶巴蒂',
         body: '組間休息結束！該開始下一組了！'
       });
     }

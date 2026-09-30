@@ -23,7 +23,7 @@ ios/
 
 1. **StoreKit 2 原生訂閱**
    - **Product ID**：`com.ironlog.pro.monthly`
-   - **Bundle Identifier**：`com.ironlog.pro`
+   - **Bundle Identifier**：`com.xiangan.IronLog2026`
    - **交易監聽**：使用 `Transaction.updates` 背景監聽續約與購買事件。
    - **有效權益驗證**：使用 `Transaction.currentEntitlements` 驗證 JWS 數位簽名，過期或被撤銷時自動降級為一般會員。
    - **交易完成確認**：呼叫 `transaction.finish()` 結束交易生命週期。

@@ -63,7 +63,7 @@ public final class NotificationManager: NSObject, WKScriptMessageHandler, UNUser
             
         case "schedule":
             let rawTitle = (body["title"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines)
-            let actualTitle = (rawTitle?.isEmpty == false) ? rawTitle! : "IronLog"
+            let actualTitle = (rawTitle?.isEmpty == false) ? rawTitle! : "耶巴蒂"
             
             let rawBody = (body["body"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines)
             let actualBody = (rawBody?.isEmpty == false) ? rawBody! : "組間休息結束！該開始下一組了！"
