@@ -9,7 +9,7 @@ import {
   ChevronRight, Utensils, Dumbbell, Clock, Info, Search, RefreshCw, Layers, Lock
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { analyzeFoodImage } from '../services/aiService';
+import { analyzeFoodImage, sanitizeFoodAnalysisText } from '../services/aiService';
 import { useEntitlement } from '../services/storeKitBridge';
 import { ProPaywall } from './ProPaywall';
 import Markdown from 'react-markdown';
@@ -142,7 +142,8 @@ export const DietView: React.FC = () => {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<string | null>(() => {
-    return localStorage.getItem('ironlog_last_food_analysis') || null;
+    const saved = localStorage.getItem('ironlog_last_food_analysis');
+    return saved ? sanitizeFoodAnalysisText(saved) : null;
   });
   const [supermarketSearch, setSupermarketSearch] = useState('');
 
@@ -383,9 +384,10 @@ export const DietView: React.FC = () => {
     setIsAnalyzing(true);
     setAnalysisResult(null);
 
-    const result = await analyzeFoodImage(selectedImage);
-    setAnalysisResult(result);
-    localStorage.setItem('ironlog_last_food_analysis', result);
+    const rawResult = await analyzeFoodImage(selectedImage);
+    const sanitized = sanitizeFoodAnalysisText(rawResult);
+    setAnalysisResult(sanitized);
+    localStorage.setItem('ironlog_last_food_analysis', sanitized);
     setIsAnalyzing(false);
   };
 
@@ -857,8 +859,8 @@ export const DietView: React.FC = () => {
                         <p className="text-xs text-slate-500 font-bold">正在比對食品庫數據，計算卡路里與巨量營養素...</p>
                       </div>
                     ) : (
-                      <div className="prose prose-sm text-slate-800 text-xs leading-relaxed font-medium markdown-body overflow-x-auto">
-                        <Markdown>{analysisResult || ''}</Markdown>
+                      <div className="prose prose-sm text-slate-800 text-xs leading-relaxed font-medium markdown-body overflow-x-auto whitespace-pre-line">
+                        <Markdown>{analysisResult ? sanitizeFoodAnalysisText(analysisResult) : ''}</Markdown>
                       </div>
                     )}
                   </motion.div>

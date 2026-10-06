@@ -17,6 +17,7 @@ struct IronLogApp: App {
             ContentView()
                 .environmentObject(storeKitManager)
                 .preferredColorScheme(.light)
+                .background(Color.white)
         }
     }
 }
