@@ -83,6 +83,125 @@ export const sanitizeFoodAnalysisText = (rawText: string): string => {
   return cleaned;
 };
 
+export interface ParsedFoodNutrition {
+  name: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  isValid: boolean;
+}
+
+/**
+ * 從 AI 食物分析結果文字中解析數值（食物名稱、熱量 kcal、蛋白質、碳水、脂肪）
+ * 支援提取數值範圍平均值（如 320 - 350 kcal -> 335 kcal）
+ */
+export const parseFoodAnalysisResult = (text: string): ParsedFoodNutrition => {
+  if (!text) {
+    return { name: '', calories: 0, protein: 0, carbs: 0, fat: 0, isValid: false };
+  }
+
+  const extractNumberOrRange = (str: string): number => {
+    // 優先匹配範圍如 "680 - 750", "320~350", "320 至 350"
+    const rangeMatch = str.match(/(\d+(?:\.\d+)?)\s*(?:[-~～至]|到)\s*(\d+(?:\.\d+)?)/);
+    if (rangeMatch) {
+      const n1 = parseFloat(rangeMatch[1]);
+      const n2 = parseFloat(rangeMatch[2]);
+      if (!isNaN(n1) && !isNaN(n2)) {
+        return Math.round((n1 + n2) / 2);
+      }
+    }
+    // 單一數字
+    const singleMatch = str.match(/(\d+(?:\.\d+)?)/);
+    if (singleMatch) {
+      const n = parseFloat(singleMatch[1]);
+      return isNaN(n) ? 0 : Math.round(n * 10) / 10;
+    }
+    return 0;
+  };
+
+  let name = '';
+  let calories = 0;
+  let protein = 0;
+  let carbs = 0;
+  let fat = 0;
+
+  const lines = text.split('\n');
+
+  for (const rawLine of lines) {
+    const line = rawLine.trim();
+
+    // 1. 食物名稱（匹配 🍱 食物：XXX 或 食物：XXX）
+    if (!name && (line.includes('食物') || line.includes('🍱'))) {
+      const match = line.match(/(?:🍱\s*)?(?:\*\*)?食物(?:\*\*)?[：:]\s*(.+)/);
+      if (match && match[1]) {
+        name = match[1].replace(/[*_#`]/g, '').trim();
+      }
+    }
+
+    // 2. 熱量（匹配 🔥 熱量：約 XXX kcal 或 熱量：XXX 或行中帶有 kcal / 大卡）
+    if (calories === 0 && (line.includes('熱量') || line.includes('🔥') || /kcal|大卡/i.test(line))) {
+      const match = line.match(/(?:🔥\s*)?(?:\*\*)?熱量(?:\*\*)?[：:]\s*(.+)/);
+      if (match && match[1]) {
+        calories = Math.round(extractNumberOrRange(match[1]));
+      } else {
+        const calMatch = line.match(/(\d+(?:\.\d+)?(?:\s*[-~～至]\s*\d+(?:\.\d+)?)?)\s*(?:kcal|大卡)/i);
+        if (calMatch && calMatch[1]) {
+          calories = Math.round(extractNumberOrRange(calMatch[1]));
+        }
+      }
+    }
+
+    // 3. 蛋白質（匹配 🥩 蛋白質：XX g）
+    if (protein === 0 && (line.includes('蛋白質') || line.includes('🥩'))) {
+      const match = line.match(/(?:🥩\s*)?(?:\*\*)?蛋白質(?:\*\*)?[：:]\s*(.+)/);
+      if (match && match[1]) {
+        protein = extractNumberOrRange(match[1]);
+      }
+    }
+
+    // 4. 碳水（匹配 🍚 碳水：XX g）
+    if (carbs === 0 && (line.includes('碳水') || line.includes('🍚'))) {
+      const match = line.match(/(?:🍚\s*)?(?:\*\*)?碳水(?:化合物)?(?:\*\*)?[：:]\s*(.+)/);
+      if (match && match[1]) {
+        carbs = extractNumberOrRange(match[1]);
+      }
+    }
+
+    // 5. 脂肪（匹配 🥑 脂肪：XX g）
+    if (fat === 0 && (line.includes('脂肪') || line.includes('🥑'))) {
+      const match = line.match(/(?:🥑\s*)?(?:\*\*)?脂肪(?:\*\*)?[：:]\s*(.+)/);
+      if (match && match[1]) {
+        fat = extractNumberOrRange(match[1]);
+      }
+    }
+  }
+
+  // 若依行未抓到熱量，進行全文檢索任意帶有 kcal 或 大卡 或 熱量 的數值
+  if (calories === 0) {
+    const fullCalMatch = text.match(/(\d+(?:\.\d+)?(?:\s*[-~～至]\s*\d+(?:\.\d+)?)?)\s*(?:kcal|大卡)/i) ||
+      text.match(/(?:熱量|卡路里)[^\d]*(\d+(?:\.\d+)?(?:\s*[-~～至]\s*\d+(?:\.\d+)?)?)/i);
+    if (fullCalMatch && fullCalMatch[1]) {
+      calories = Math.round(extractNumberOrRange(fullCalMatch[1]));
+    }
+  }
+
+  if (!name) {
+    name = 'AI 拍照分析食物';
+  }
+
+  const isValid = calories > 0 && !isNaN(calories);
+
+  return {
+    name,
+    calories,
+    protein,
+    carbs,
+    fat,
+    isValid
+  };
+};
+
 export const analyzeFoodImage = async (base64Image: string): Promise<string> => {
   try {
     const res = await fetch('/api/diet/analysis', {

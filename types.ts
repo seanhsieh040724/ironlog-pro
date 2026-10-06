@@ -68,6 +68,21 @@ export interface UserGoal {
   dietaryPlan?: string;
 }
 
+export interface FoodItem {
+  id: string;
+  name: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack';
+  timestamp: number;
+  dateKey?: string;
+  isAiAnalyzed?: boolean;
+  addedToDaily?: boolean;
+  notes?: string;
+}
+
 export interface Achievement {
   id: string;
   type: 'PR_BREAK' | 'STREAK' | 'VOLUME';
