@@ -128,7 +128,6 @@ export const RestTimer: React.FC<RestTimerProps> = ({ active, seconds: initialSe
 
   const targetTimeRef = useRef<number | null>(null);
   const notificationSentRef = useRef<boolean>(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const scheduleNativeNotification = useCallback((seconds: number) => {
     if (window.webkit?.messageHandlers?.notificationHandler) {
@@ -150,11 +149,6 @@ export const RestTimer: React.FC<RestTimerProps> = ({ active, seconds: initialSe
     }
   }, []);
 
-  useEffect(() => {
-    audioRef.current = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
-    audioRef.current.load();
-  }, []);
-
   // 當 initialSeconds 改變或組件打開時同步狀態
   useEffect(() => {
     if (active) {
@@ -174,13 +168,6 @@ export const RestTimer: React.FC<RestTimerProps> = ({ active, seconds: initialSe
   const handleTimerEnd = useCallback(() => {
     if (notificationSentRef.current) return;
     notificationSentRef.current = true;
-    try {
-      if (audioRef.current) {
-        audioRef.current.play().catch(e => console.debug("Audio play blocked", e));
-      }
-    } catch (e) {
-      console.debug("Audio play error", e);
-    }
     try {
       if ('vibrate' in navigator) {
         navigator.vibrate([500, 150, 500, 150, 300]);
