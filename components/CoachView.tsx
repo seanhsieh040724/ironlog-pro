@@ -5,7 +5,7 @@ import { chatWithCoach } from '../services/aiService';
 import { useEntitlement } from '../services/storeKitBridge';
 import { ProPaywall } from './ProPaywall';
 import { 
-  Send, Loader2, Sparkles, User, Trash2, Copy, Check, Lock, RotateCcw
+  Send, Sparkles, Trash2, Copy, Check, Lock, RotateCcw
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Markdown from 'react-markdown';
@@ -16,6 +16,86 @@ interface ChatMessage {
   text: string;
   timestamp: number;
 }
+
+/**
+ * 自訂 ChatGPT iOS 風格的 Markdown 排版元件
+ * 移除厚重卡片，提供舒適行高、段落間距、層級標題與清晰清單
+ */
+const markdownComponents = {
+  h1: ({ children }: any) => (
+    <h1 className="text-base sm:text-lg font-black text-slate-900 mt-3.5 mb-1.5 first:mt-0 tracking-tight">
+      {children}
+    </h1>
+  ),
+  h2: ({ children }: any) => (
+    <h2 className="text-sm sm:text-base font-black text-slate-900 mt-3 mb-1 first:mt-0 tracking-tight">
+      {children}
+    </h2>
+  ),
+  h3: ({ children }: any) => (
+    <h3 className="text-sm font-bold text-slate-900 mt-2 mb-1 first:mt-0">
+      {children}
+    </h3>
+  ),
+  p: ({ children }: any) => (
+    <p className="text-slate-800 text-sm leading-relaxed mb-2.5 last:mb-0">
+      {children}
+    </p>
+  ),
+  strong: ({ children }: any) => (
+    <strong className="font-black text-slate-950">
+      {children}
+    </strong>
+  ),
+  ul: ({ children }: any) => (
+    <ul className="my-2 space-y-1.5 pl-4 list-disc marker:text-[#82CC00] text-sm text-slate-800">
+      {children}
+    </ul>
+  ),
+  ol: ({ children }: any) => (
+    <ol className="my-2 space-y-1.5 pl-4 list-decimal marker:text-slate-500 marker:font-bold text-sm text-slate-800">
+      {children}
+    </ol>
+  ),
+  li: ({ children }: any) => (
+    <li className="leading-relaxed">
+      {children}
+    </li>
+  ),
+  blockquote: ({ children }: any) => (
+    <blockquote className="border-l-2 border-[#82CC00] pl-3 my-2 text-slate-600 italic bg-slate-50/80 py-1 rounded-r-lg">
+      {children}
+    </blockquote>
+  ),
+  table: ({ children }: any) => (
+    <div className="overflow-x-auto my-3 rounded-xl border border-slate-200">
+      <table className="w-full text-xs text-left border-collapse">
+        {children}
+      </table>
+    </div>
+  ),
+  th: ({ children }: any) => (
+    <th className="bg-slate-100 font-bold text-slate-900 px-3 py-1.5 border-b border-slate-200">
+      {children}
+    </th>
+  ),
+  td: ({ children }: any) => (
+    <td className="px-3 py-1.5 border-b border-slate-100 text-slate-700">
+      {children}
+    </td>
+  ),
+  code: ({ children, inline }: any) => (
+    inline ? (
+      <code className="bg-slate-100 text-slate-900 px-1 py-0.5 rounded text-xs font-mono font-bold">
+        {children}
+      </code>
+    ) : (
+      <pre className="bg-slate-900 text-slate-100 p-3 rounded-xl overflow-x-auto my-2 text-xs font-mono">
+        <code>{children}</code>
+      </pre>
+    )
+  ),
+};
 
 export const CoachView: React.FC = () => {
   const context = useContext(AppContext);
@@ -151,7 +231,7 @@ export const CoachView: React.FC = () => {
     setShowClearConfirm(false);
   };
 
-  // 截圖中的 4 個快捷按鈕
+  // 保留原有 4 個快捷問題按鈕
   const quickActions = [
     {
       icon: '💪',
@@ -176,13 +256,13 @@ export const CoachView: React.FC = () => {
   ];
 
   return (
-    <div className="flex flex-col h-[calc(100vh-175px)] relative overflow-hidden bg-white/50 rounded-[32px] p-2 md:p-3">
-      {/* 頂部標題列 (與截圖完全一致：🤖 IronLog 教練 + 垃圾桶圖示) */}
+    <div className="flex flex-col h-[calc(100vh-175px)] relative overflow-hidden bg-white/70 rounded-[28px] border border-black/5 p-2 sm:p-3 shadow-xs">
+      {/* 頂部標題列 (極簡乾淨的 ChatGPT 頂欄風格) */}
       <div className="flex items-center justify-between px-3 py-2 border-b border-black/5 flex-none">
-        <div className="w-8" /> {/* 佔位保持標題置中 */}
+        <div className="w-8" />
         <div className="flex items-center gap-1.5">
-          <span className="text-xl">🤖</span>
-          <h1 className="text-lg font-black text-slate-900 tracking-tight">IronLog 教練</h1>
+          <span className="text-lg">🤖</span>
+          <h1 className="text-base font-black text-slate-900 tracking-tight">IronLog 教練</h1>
         </div>
         <button
           onClick={() => {
@@ -192,73 +272,64 @@ export const CoachView: React.FC = () => {
           }}
           disabled={messages.length === 0}
           title="清除聊天紀錄"
-          className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-700 disabled:opacity-30 transition-colors"
+          className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-700 disabled:opacity-20 transition-colors cursor-pointer"
         >
-          <Trash2 className="w-5 h-5 stroke-[1.8]" />
+          <Trash2 className="w-4 h-4 stroke-[1.8]" />
         </button>
       </div>
 
-      {/* 主內容區：訊息為空時顯示置中機器人，有訊息時滾動顯示對話 */}
-      <div className="flex-1 overflow-y-auto no-scrollbar px-2 py-3 space-y-4">
+      {/* 主內容區：訊息滾動顯示對話 (ChatGPT iOS 垂直節奏) */}
+      <div className="flex-1 overflow-y-auto no-scrollbar px-2 sm:px-3 py-4 space-y-6">
         {messages.length === 0 ? (
-          /* 空狀態：與截圖 100% 一致的置中教練頭像與歡迎詞 */
+          /* 空狀態：簡約教練引導畫面 */
           <motion.div
-            initial={{ opacity: 0, scale: 0.96 }}
+            initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.2 }}
-            className="h-full flex flex-col items-center justify-center text-center px-4 py-8 space-y-4"
+            className="h-full flex flex-col items-center justify-center text-center px-4 py-8 space-y-3"
           >
-            {/* 置中圓形機器人頭像 (淡綠色圓底) */}
-            <div className="w-24 h-24 rounded-full bg-[#EAF7D7] border border-[#82CC00]/25 flex items-center justify-center text-4xl shadow-sm">
+            <div className="w-20 h-20 rounded-full bg-[#F0FDF4] border border-[#82CC00]/30 flex items-center justify-center text-4xl shadow-2xs">
               <span>🤖</span>
             </div>
 
-            {/* 教練名稱與副標題 */}
-            <div className="space-y-2 max-w-xs">
-              <h2 className="text-2xl font-black text-slate-900 tracking-tight">
-                IronLog 教練
+            <div className="space-y-1.5 max-w-xs">
+              <h2 className="text-xl font-black text-slate-900 tracking-tight">
+                IronLog AI 鋼鐵教練
               </h2>
-              <p className="text-sm font-bold text-slate-600 leading-relaxed">
-                關於訓練、飲食或恢復，隨時打字問我吧！
+              <p className="text-xs font-medium text-slate-500 leading-relaxed">
+                我是你的專屬健身助手，關於訓練排程、重量突破、飲食菜單或運動恢復，隨時問我！
               </p>
             </div>
           </motion.div>
         ) : (
-          /* 對話訊息列表 */
-          <div className="space-y-4 pt-1">
+          /* 對話訊息列表 (ChatGPT iOS 式：右側淡色氣泡，左側無框排版) */
+          <div className="space-y-6 pt-1">
             {messages.map((m) => {
               const isModel = m.role === 'model';
               return (
                 <motion.div
                   key={m.id}
-                  initial={{ opacity: 0, y: 8 }}
+                  initial={{ opacity: 0, y: 6 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className={`flex gap-2.5 ${isModel ? 'justify-start' : 'justify-end'}`}
+                  transition={{ duration: 0.15 }}
+                  className={`flex ${isModel ? 'justify-start' : 'justify-end'}`}
                 >
-                  {isModel && (
-                    <div className="w-8 h-8 rounded-full bg-[#EAF7D7] border border-[#82CC00]/30 flex items-center justify-center text-base shrink-0 self-start shadow-2xs mt-0.5">
-                      <span>🤖</span>
-                    </div>
-                  )}
+                  {isModel ? (
+                    /* AI 教練回覆：ChatGPT 式無框排版，專注文字閱讀 */
+                    <div className="flex gap-2.5 sm:gap-3 items-start max-w-[96%] sm:max-w-[92%]">
+                      <div className="w-6 h-6 rounded-full bg-[#F0FDF4] border border-[#82CC00]/30 flex items-center justify-center text-xs shrink-0 mt-0.5 shadow-2xs">
+                        🤖
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-slate-800 text-sm leading-relaxed overflow-x-auto selection:bg-[#CCFF00] selection:text-black">
+                          <Markdown components={markdownComponents}>{m.text}</Markdown>
+                        </div>
 
-                  <div
-                    className={`max-w-[85%] rounded-[24px] text-xs md:text-sm leading-relaxed font-medium shadow-2xs relative group ${
-                      isModel
-                        ? 'bg-white border border-black/8 text-slate-900 rounded-tl-xs px-4 py-3.5'
-                        : 'bg-[#18392B] text-white rounded-tr-xs px-4 py-3'
-                    }`}
-                  >
-                    <div className="prose prose-sm text-inherit markdown-body overflow-x-auto text-xs md:text-sm leading-relaxed">
-                      <Markdown>{m.text}</Markdown>
-                    </div>
+                        <div className="flex items-center gap-3 mt-2.5 text-slate-400 text-[10px] select-none">
+                          <span>
+                            {new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
 
-                    <div className="flex items-center justify-between gap-3 mt-2 pt-1 border-t border-black/5">
-                      <span className="text-[9px] font-bold text-slate-400">
-                        {new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </span>
-
-                      {isModel && (
-                        <div className="flex items-center gap-2">
                           {(m.text.includes('正在跑步機上狂奔') || m.text.includes('連線繁忙') || m.text.includes('稍候再試')) && (
                             <button
                               onClick={() => {
@@ -269,20 +340,21 @@ export const CoachView: React.FC = () => {
                                   handleSendMessage(prevUserMsg.text);
                                 }
                               }}
-                              className="text-[10px] text-amber-700 hover:text-amber-900 bg-amber-50 px-2 py-0.5 rounded-md flex items-center gap-1 font-bold transition-colors"
+                              className="text-amber-700 hover:text-amber-900 bg-amber-50 px-2 py-0.5 rounded flex items-center gap-1 font-bold transition-colors cursor-pointer"
                             >
                               <RotateCcw className="w-2.5 h-2.5" />
                               <span>重試</span>
                             </button>
                           )}
+
                           <button
                             onClick={() => handleCopyMessage(m.id, m.text)}
-                            className="text-[10px] text-slate-400 hover:text-black flex items-center gap-1 font-bold transition-colors"
+                            className="hover:text-slate-700 flex items-center gap-1 font-medium transition-colors cursor-pointer"
                           >
                             {copiedMessageId === m.id ? (
                               <>
-                                <Check className="w-3 h-3 text-[#82CC00]" />
-                                <span className="text-[#82CC00]">已複製</span>
+                                <Check className="w-3 h-3 text-[#10B981]" />
+                                <span className="text-[#10B981]">已複製</span>
                               </>
                             ) : (
                               <>
@@ -292,32 +364,40 @@ export const CoachView: React.FC = () => {
                             )}
                           </button>
                         </div>
-                      )}
+                      </div>
                     </div>
-                  </div>
-
-                  {!isModel && (
-                    <div className="w-8 h-8 rounded-full bg-[#CCFF00] flex items-center justify-center text-black font-black text-xs shrink-0 self-start shadow-2xs mt-0.5">
-                      <User className="w-4 h-4 text-black" />
+                  ) : (
+                    /* 使用者提問：簡潔右側淡色氣泡 */
+                    <div className="max-w-[82%] sm:max-w-[76%] rounded-[20px] rounded-br-xs bg-[#F4F4F6] border border-slate-200/50 text-slate-900 px-4 py-2.5 shadow-2xs">
+                      <div className="text-sm font-medium leading-relaxed whitespace-pre-wrap break-words text-slate-900">
+                        {m.text}
+                      </div>
+                      <div className="text-[10px] text-slate-400 font-medium text-right mt-1 select-none">
+                        {new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </div>
                     </div>
                   )}
                 </motion.div>
               );
             })}
 
-            {/* 思考中狀態 */}
+            {/* 思考中狀態 (ChatGPT 呼吸圓點微動態) */}
             {isTyping && (
               <motion.div
-                initial={{ opacity: 0, y: 6 }}
+                initial={{ opacity: 0, y: 4 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="flex gap-2.5 justify-start"
+                className="flex gap-2.5 sm:gap-3 items-center justify-start"
               >
-                <div className="w-8 h-8 rounded-full bg-[#EAF7D7] border border-[#82CC00]/30 flex items-center justify-center text-base shrink-0 self-start shadow-2xs mt-0.5">
-                  <span>🤖</span>
+                <div className="w-6 h-6 rounded-full bg-[#F0FDF4] border border-[#82CC00]/30 flex items-center justify-center text-xs shrink-0 shadow-2xs">
+                  🤖
                 </div>
-                <div className="bg-white border border-black/8 max-w-[85%] px-4 py-3 rounded-[24px] rounded-tl-xs flex items-center gap-2.5 shadow-2xs text-xs text-slate-600 font-bold">
-                  <Loader2 className="w-3.5 h-3.5 animate-spin text-[#18392B] shrink-0" />
-                  <span>教練正在思考並整理建議...</span>
+                <div className="flex items-center gap-2 py-1 text-xs text-slate-500 font-medium">
+                  <div className="flex gap-1 items-center">
+                    <span className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <span className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <span className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-bounce" style={{ animationDelay: '300ms' }} />
+                  </div>
+                  <span>教練正在思考建議...</span>
                 </div>
               </motion.div>
             )}
@@ -326,9 +406,9 @@ export const CoachView: React.FC = () => {
         )}
       </div>
 
-      {/* 底部功能區 (2x2 快捷按鈕 + 會員狀態標示 + 輸入框) */}
-      <div className="flex-none pt-2 border-t border-black/5 space-y-2.5 px-1">
-        {/* 4 個快捷問題按鈕 (2x2 網格) */}
+      {/* 底部功能區 (2x2 快捷按鈕 + 會員狀態標示 + 簡潔輸入框) */}
+      <div className="flex-none pt-2 border-t border-black/5 space-y-2 px-1">
+        {/* 4 個快捷問題按鈕 (2x2 網格，輕巧低彩度) */}
         <div className="grid grid-cols-2 gap-2">
           {quickActions.map((action, idx) => (
             <button
@@ -341,7 +421,7 @@ export const CoachView: React.FC = () => {
                 handleSendMessage(action.prompt);
               }}
               disabled={isTyping}
-              className="py-3 px-3 rounded-2xl border border-slate-300 hover:border-[#18392B] bg-white hover:bg-[#CCFF00]/10 text-slate-900 font-bold text-xs md:text-sm flex items-center justify-center gap-1.5 transition-all active:scale-98 shadow-2xs disabled:opacity-50"
+              className="py-2.5 px-3 rounded-2xl border border-slate-200/90 hover:border-slate-300 bg-slate-50/80 hover:bg-slate-100 text-slate-800 font-bold text-xs flex items-center justify-center gap-1.5 transition-all active:scale-98 shadow-2xs disabled:opacity-50 cursor-pointer"
             >
               <span className="text-sm">{action.icon}</span>
               <span className="truncate">{action.label}</span>
@@ -363,7 +443,7 @@ export const CoachView: React.FC = () => {
             <button
               type="button"
               onClick={() => setShowPaywall(true)}
-              className="flex items-center justify-between w-full text-slate-500 hover:text-black transition-colors"
+              className="flex items-center justify-between w-full text-slate-500 hover:text-black transition-colors cursor-pointer"
             >
               <span className="flex items-center gap-1">
                 <Lock className="w-3 h-3 text-slate-600" />
@@ -377,7 +457,7 @@ export const CoachView: React.FC = () => {
           )}
         </div>
 
-        {/* 輸入框與發送按鈕 (圓角長條 + 右側圓形發送鍵) */}
+        {/* 簡潔的輸入框與發送按鈕 (ChatGPT 淺灰膠囊風格) */}
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -394,13 +474,13 @@ export const CoachView: React.FC = () => {
               onChange={(e) => setInputMessage(e.target.value)}
               disabled={isTyping}
               style={{ color: '#000000' }}
-              className="w-full bg-slate-100 hover:bg-slate-100/80 focus:bg-white border border-slate-200 focus:border-black rounded-full px-5 h-12 text-xs md:text-sm font-bold outline-none transition-all placeholder:text-slate-400 placeholder:font-medium shadow-2xs"
+              className="w-full bg-[#F4F4F6] hover:bg-[#EEEEF1] focus:bg-white border border-slate-200/80 focus:border-slate-400 rounded-full pl-4 pr-10 h-11 text-sm text-slate-900 font-medium outline-none transition-all placeholder:text-slate-400 placeholder:font-normal shadow-2xs"
             />
             {inputMessage && (
               <button
                 type="button"
                 onClick={() => setInputMessage('')}
-                className="absolute right-3.5 text-slate-400 hover:text-black text-xs font-black p-1"
+                className="absolute right-3.5 text-slate-400 hover:text-black text-xs font-black p-1 cursor-pointer"
               >
                 ✕
               </button>
@@ -410,7 +490,7 @@ export const CoachView: React.FC = () => {
           <button
             type="submit"
             disabled={!inputMessage.trim() || isTyping}
-            className="w-12 h-12 rounded-full bg-[#18392B] hover:bg-[#122c21] active:scale-95 disabled:opacity-40 disabled:scale-100 flex items-center justify-center text-white shadow-md transition-all shrink-0"
+            className="w-11 h-11 rounded-full bg-slate-900 hover:bg-black active:scale-95 disabled:opacity-30 disabled:scale-100 flex items-center justify-center text-white shadow-sm transition-all shrink-0 cursor-pointer"
           >
             <Send className="w-4 h-4 text-white fill-white ml-0.5" />
           </button>
@@ -442,13 +522,13 @@ export const CoachView: React.FC = () => {
               <div className="flex gap-2.5 pt-2">
                 <button
                   onClick={() => setShowClearConfirm(false)}
-                  className="flex-1 py-2.5 bg-slate-100 text-slate-700 rounded-xl font-bold text-xs"
+                  className="flex-1 py-2.5 bg-slate-100 text-slate-700 rounded-xl font-bold text-xs cursor-pointer"
                 >
                   取消
                 </button>
                 <button
                   onClick={handleClearChat}
-                  className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-bold text-xs shadow-md"
+                  className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-bold text-xs shadow-md cursor-pointer"
                 >
                   確認清除
                 </button>
