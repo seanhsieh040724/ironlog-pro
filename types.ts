@@ -91,7 +91,7 @@ export interface Achievement {
   exerciseName?: string;
 }
 
-export type AppTab = 'routines' | 'history' | 'workout' | 'diet' | 'coach' | 'settings';
+export type AppTab = 'routines' | 'history' | 'workout' | 'diet' | 'coach' | 'settings' | 'achievements';
 
 export type SubscriptionStatus = 
   | 'inactive'

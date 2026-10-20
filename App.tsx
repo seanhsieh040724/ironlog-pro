@@ -8,6 +8,7 @@ import { SettingsView } from './components/SettingsView';
 import { RestTimer } from './components/RestTimer';
 import { CalendarStrip } from './components/CalendarStrip';
 import { WorkoutSummaryModal } from './components/WorkoutSummaryModal';
+import { AchievementsView } from './components/AchievementsView';
 import { AppTab, WorkoutSession, BodyMetric, UserGoal, RoutineTemplate } from './types';
 import { Dumbbell, History, LayoutGrid, Calendar, Apple, Bot, Settings } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -15,6 +16,8 @@ import { format, isSameDay } from 'date-fns';
 import { ContainerStyle, lightTheme } from './themeStyles';
 import { isNativeStoreKitAvailable, getCurrentEntitlements } from './utils/storeKit';
 import { triggerHapticSuccess } from './utils/feedback';
+import { evaluateAllAchievements, calculateUserLevel } from './utils/achievements';
+import { RankTierEmblem } from './components/AchievementBadges';
 
 export interface AppContextType {
   history: WorkoutSession[];
@@ -26,6 +29,7 @@ export interface AppContextType {
   customRoutines: RoutineTemplate[];
   setCustomRoutines: React.Dispatch<React.SetStateAction<RoutineTemplate[]>>;
   triggerRestTimer: (seconds?: number) => void;
+  navigateTab?: (tab: AppTab) => void;
 }
 
 export const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -165,13 +169,17 @@ const App: React.FC = () => {
     setRestTimer({ active: true, seconds });
   };
 
+  const { unlockedList } = useMemo(() => evaluateAllAchievements(history), [history]);
+  const userLevel = useMemo(() => calculateUserLevel(history, unlockedList), [history, unlockedList]);
+
   const contextValue = useMemo(() => ({
     history, setHistory, 
     bodyMetrics, setBodyMetrics, 
     goal, setGoal, 
     customRoutines, setCustomRoutines,
-    triggerRestTimer
-  }), [history, bodyMetrics, goal, customRoutines]);
+    triggerRestTimer,
+    navigateTab: handleTabClick
+  }), [history, bodyMetrics, goal, customRoutines, handleTabClick]);
 
   const handleSaveWorkout = (): boolean => {
     if (!currentSession) return false;
@@ -338,26 +346,39 @@ const App: React.FC = () => {
                 WebkitOverflowScrolling: 'touch' 
               }}
             >
-              {/* 頂部固定日期標示 */}
+              {/* 頂部固定日期標示與成就等級快捷入口 */}
               {activeTab === 'workout' && (
-                <div className="flex items-center justify-between mt-4 mb-8 px-1">
-                  <div className="flex items-center gap-4">
+                <div className="flex items-center justify-between mt-4 mb-8 px-1 gap-3">
+                  <div className="flex items-center gap-3.5 min-w-0">
                     <div style={{ backgroundColor: lightTheme.card }} className="w-12 h-12 rounded-2xl flex items-center justify-center border border-black/5 shadow-sm shrink-0">
                       <Calendar className="w-6 h-6 text-black" />
                     </div>
-                    <div>
-                      <h1 style={{ color: lightTheme.text }} className="text-3xl font-black uppercase tracking-tighter leading-none">
+                    <div className="min-w-0">
+                      <h1 style={{ color: lightTheme.text }} className="text-2xl sm:text-3xl font-black uppercase tracking-tighter leading-none truncate">
                         {(() => {
                           const d = new Date();
                           const weekDays = ['週日', '週一', '週二', '週三', '週四', '週五', '週六'];
                           return `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()} ${weekDays[d.getDay()]}`;
                         })()}
                       </h1>
-                      <p className="text-[11px] font-black text-black uppercase tracking-[0.2em] mt-1.5">
+                      <p className="text-[11px] font-black text-black/60 uppercase tracking-[0.2em] mt-1.5 truncate">
                         TODAY'S WORKOUT
                       </p>
                     </div>
                   </div>
+
+                  {/* 獨立小型等級徽章 */}
+                  <button 
+                    onClick={() => handleTabClick('achievements')}
+                    className="flex items-center gap-1.5 pl-1.5 pr-3 py-1 rounded-full bg-white border border-slate-200/90 hover:border-black/25 hover:bg-slate-50 active:scale-95 transition-all shadow-sm shrink-0 cursor-pointer"
+                    aria-label={`查看鋼鐵成就系統 - 目前等級 ${userLevel.levelFormatted}`}
+                    title={`成就殿堂 · 目前等級 ${userLevel.levelFormatted} (${userLevel.title})`}
+                  >
+                    <RankTierEmblem level={userLevel.level} size="xs" />
+                    <span className="text-xs sm:text-sm font-black tracking-tight text-slate-900 font-mono">
+                      {userLevel.levelFormatted}
+                    </span>
+                  </button>
                 </div>
               )}
 
@@ -425,6 +446,7 @@ const App: React.FC = () => {
                   {activeTab === 'diet' && <DietView />}
                   {activeTab === 'coach' && <CoachView />}
                   {activeTab === 'settings' && <SettingsView />}
+                  {activeTab === 'achievements' && <AchievementsView onBack={() => handleTabClick('workout')} />}
                 </motion.div>
               </AnimatePresence>
             </main>

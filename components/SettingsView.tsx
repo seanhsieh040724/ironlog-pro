@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ProPaywall } from './ProPaywall';
+import { evaluateAllAchievements } from '../utils/achievements';
 
 export const SettingsView: React.FC = () => {
   const context = useContext(AppContext);
@@ -203,9 +204,11 @@ export const SettingsView: React.FC = () => {
     },
   ], [stats]);
 
-  const unlockedCount = useMemo(() => {
-    return badges.filter(b => b.requirement()).length;
-  }, [badges]);
+  const { unlockedList: globalUnlockedList, progressList: globalProgressList } = useMemo(() => {
+    return evaluateAllAchievements(history);
+  }, [history]);
+
+  const unlockedCount = globalUnlockedList.length;
 
   // Handlers
   const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -596,7 +599,13 @@ export const SettingsView: React.FC = () => {
         <div className="bg-white rounded-[28px] border border-black/5 shadow-sm overflow-hidden divide-y divide-slate-100">
           {/* 成就里程碑 */}
           <div 
-            onClick={() => setShowAchievementsModal(true)}
+            onClick={() => {
+              if (context?.navigateTab) {
+                context.navigateTab('achievements');
+              } else {
+                setShowAchievementsModal(true);
+              }
+            }}
             className="p-5 flex items-center justify-between cursor-pointer hover:bg-slate-50/70 transition-colors group"
           >
             <div className="flex items-center gap-3.5">
@@ -604,8 +613,8 @@ export const SettingsView: React.FC = () => {
                 <Trophy className="w-6 h-6 stroke-[1.8]" />
               </div>
               <div>
-                <h4 className="text-[15px] font-bold text-slate-900 leading-tight">訓練成就徽章</h4>
-                <p className="text-xs text-slate-400 font-medium mt-0.5">已解鎖 {unlockedCount} / {badges.length} 個里程碑</p>
+                <h4 className="text-[15px] font-bold text-slate-900 leading-tight">訓練成就系統</h4>
+                <p className="text-xs text-slate-400 font-medium mt-0.5">已解鎖 {globalUnlockedList.length} / {globalProgressList.length} 個里程碑</p>
               </div>
             </div>
             <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-slate-500 shrink-0 transition-colors" />

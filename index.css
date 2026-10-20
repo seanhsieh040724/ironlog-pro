@@ -1,0 +1,7 @@
+/* IronLog Pro Global Styles */
+@layer base {
+  body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}

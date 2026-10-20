@@ -1,7 +1,8 @@
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import React, { useState, useMemo, useCallback, useEffect, useContext } from 'react';
 import { WorkoutSession, MuscleGroup, ExerciseEntry, SetEntry } from '../types';
 import { getMuscleGroupDisplay, getMuscleGroup, getExerciseGifSources } from '../utils/fitnessMath';
-import { Activity, BarChart3, Trash2, CalendarDays, Timer, Save, Check, ChevronLeft, ChevronRight, Clock, ArrowLeft, X, Loader2, Dumbbell, Lock, Sparkles } from 'lucide-react';
+import { Activity, BarChart3, Trash2, CalendarDays, Timer, Save, Check, ChevronLeft, ChevronRight, Clock, ArrowLeft, X, Loader2, Dumbbell, Lock, Sparkles, Trophy } from 'lucide-react';
+import { AppContext } from '../App';
 import { isSameDay, format, startOfWeek, endOfWeek, eachDayOfInterval, subWeeks, addWeeks, startOfMonth, endOfMonth, startOfYear } from 'date-fns';
 import { BodyMuscleMap, MuscleLoadInfo, LoadLevel } from './BodyMuscleMap';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -125,6 +126,7 @@ interface HistoryViewProps {
 }
 
 export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate, onUpdateHistory, onSaveAsRoutine }) => {
+  const context = useContext(AppContext);
   const entitlement = useEntitlement();
   const [showPaywall, setShowPaywall] = useState(false);
   const [analysisPeriod, setAnalysisPeriod] = useState<'week' | 'month'>('week');
@@ -336,6 +338,14 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
                訓練日報 <span className="text-black">/ {format(selectedDate, 'MM.dd')}</span>
              </h2>
           </div>
+          <button
+            onClick={() => context?.navigateTab && context.navigateTab('achievements')}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-black text-[#CCFF00] hover:bg-black/90 active:scale-95 text-xs font-black transition-all shadow-xs"
+            title="查看鋼鐵成就系統"
+          >
+            <Trophy className="w-3.5 h-3.5 fill-[#CCFF00]" />
+            <span>成就系統</span>
+          </button>
         </div>
 
         <AnimatePresence mode="popLayout">
