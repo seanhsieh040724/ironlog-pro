@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { getExerciseGifSources, getMuscleGroup, getMuscleGroupDisplay, getExerciseMp4Url, getExercisePrimaryFallbackGifUrl } from '../utils/fitnessMath';
+import { getExerciseGifSources, getMuscleGroup, getMuscleGroupDisplay, getExerciseMp4Url, getExercisePrimaryFallbackGifUrl, getExercisePosterUrl } from '../utils/fitnessMath';
 import { Loader2, Dumbbell, Play, Pause } from 'lucide-react';
 import { lightTheme } from '../themeStyles';
 
@@ -16,6 +16,7 @@ export const ExerciseGifDisplay: React.FC<ExerciseGifDisplayProps> = ({
 }) => {
   const cleanName = (name || '').trim();
   const mp4Url = getExerciseMp4Url(cleanName);
+  const posterUrl = getExercisePosterUrl(cleanName);
   const isMp4Exercise = Boolean(mp4Url);
 
   // Video specific states
@@ -122,14 +123,18 @@ export const ExerciseGifDisplay: React.FC<ExerciseGifDisplayProps> = ({
   if (isMp4Exercise && !videoFailed && mp4Url) {
     return (
       <div style={{ backgroundColor: lightTheme.card }} className={containerClassName}>
-        {/* Loading Spinner */}
-        {isVideoLoading && (
+        {/* Loading Spinner - only if waiting without poster or buffering during active playback */}
+        {isVideoLoading && (!posterUrl || isPlaying) && (
           <div 
-            style={{ backgroundColor: lightTheme.card }} 
-            className="absolute inset-0 flex flex-col items-center justify-center gap-3 z-10 pointer-events-none"
+            style={{ backgroundColor: !posterUrl ? lightTheme.card : undefined }} 
+            className={`absolute inset-0 flex flex-col items-center justify-center gap-3 z-10 pointer-events-none ${
+              posterUrl ? 'bg-black/30 backdrop-blur-[2px]' : ''
+            }`}
           >
-            <Loader2 className="w-8 h-8 animate-spin text-black" />
-            <p className="text-[11px] font-black uppercase tracking-widest text-black">影片載入中...</p>
+            <Loader2 className={`w-8 h-8 animate-spin ${posterUrl ? 'text-white' : 'text-black'}`} />
+            <p className={`text-[11px] font-black uppercase tracking-widest ${posterUrl ? 'text-white' : 'text-black'}`}>
+              {isPlaying ? '影片載入中...' : '動作準備中...'}
+            </p>
           </div>
         )}
 
@@ -137,6 +142,7 @@ export const ExerciseGifDisplay: React.FC<ExerciseGifDisplayProps> = ({
         <video
           ref={videoRef}
           src={mp4Url}
+          poster={posterUrl || undefined}
           playsInline
           muted
           loop
@@ -157,7 +163,7 @@ export const ExerciseGifDisplay: React.FC<ExerciseGifDisplayProps> = ({
         />
 
         {/* Bottom Floating Play / Pause Control Button (Only custom play control) */}
-        {!isVideoLoading && (
+        {(!isVideoLoading || Boolean(posterUrl)) && (
           <div className="absolute bottom-3 right-3 flex items-center gap-2 z-20">
             <button
               type="button"

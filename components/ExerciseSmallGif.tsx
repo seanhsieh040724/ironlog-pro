@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { getExerciseGifSources, getMuscleGroup, getMuscleGroupDisplay, getExerciseMp4Url, getExercisePrimaryFallbackGifUrl } from '../utils/fitnessMath';
+import { getExerciseGifSources, getMuscleGroup, getMuscleGroupDisplay, getExerciseMp4Url, getExercisePrimaryFallbackGifUrl, getExercisePosterUrl } from '../utils/fitnessMath';
 import { Loader2, Dumbbell } from 'lucide-react';
 
 interface ExerciseSmallGifProps {
@@ -9,6 +9,7 @@ interface ExerciseSmallGifProps {
 export const ExerciseSmallGif: React.FC<ExerciseSmallGifProps> = ({ name }) => {
   const cleanName = (name || '').trim();
   const mp4Url = getExerciseMp4Url(cleanName);
+  const posterUrl = getExercisePosterUrl(cleanName);
   const isMp4Exercise = Boolean(mp4Url);
 
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -93,7 +94,7 @@ export const ExerciseSmallGif: React.FC<ExerciseSmallGifProps> = ({ name }) => {
 
   return (
     <div className="w-full h-full relative overflow-hidden bg-slate-50 flex items-center justify-center">
-      {loading && (
+      {loading && !posterUrl && (
         <div className="absolute inset-0 flex items-center justify-center bg-slate-50 z-10">
           <Loader2 className="w-4 h-4 animate-spin text-black" />
         </div>
@@ -104,6 +105,7 @@ export const ExerciseSmallGif: React.FC<ExerciseSmallGifProps> = ({ name }) => {
         <video
           ref={videoRef}
           src={`${mp4Url}#t=0.001`}
+          poster={posterUrl || undefined}
           preload="metadata"
           muted
           playsInline

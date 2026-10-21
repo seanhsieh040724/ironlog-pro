@@ -172,6 +172,19 @@ export const getExercisePrimaryFallbackGifUrl = (name: string): string | null =>
 };
 
 /**
+ * Returns the static poster preview image URL for an exercise with MP4 demonstration.
+ * Serves static asset path /assets/posters/[targetAssetName].jpg
+ * Returns null for non-chest exercises or exercises without MP4.
+ */
+export const getExercisePosterUrl = (name: string): string | null => {
+  if (!name) return null;
+  const cleanName = name.trim();
+  const targetAssetName = CHEST_EXERCISES_WITH_MP4[cleanName];
+  if (!targetAssetName) return null;
+  return `/assets/posters/${encodeURIComponent(targetAssetName)}.jpg`;
+};
+
+/**
  * Generates an ordered cascade of candidate asset URLs:
  * 1. Primary: Local / Vercel public static asset path (/assets/[encodedName].gif)
  * 2. Local / Vercel public static asset path (/assets/[rawName].gif)
