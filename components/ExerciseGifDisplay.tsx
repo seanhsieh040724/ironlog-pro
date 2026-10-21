@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { getExerciseGifSources, getMuscleGroup, getMuscleGroupDisplay } from '../utils/fitnessMath';
-import { Loader2, Dumbbell, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { getExerciseGifSources, getMuscleGroup, getMuscleGroupDisplay, getExerciseMp4Url, getExercisePrimaryFallbackGifUrl } from '../utils/fitnessMath';
+import { Loader2, Dumbbell, Play, Pause } from 'lucide-react';
 import { lightTheme } from '../themeStyles';
 
 interface ExerciseGifDisplayProps {
@@ -14,52 +14,179 @@ export const ExerciseGifDisplay: React.FC<ExerciseGifDisplayProps> = ({
   className = "w-full h-auto object-cover rounded-[15px] block",
   containerClassName = "relative overflow-hidden rounded-[24px] shadow-sm border border-black/5 min-h-[240px] flex items-center justify-center"
 }) => {
-  const sources = useMemo(() => getExerciseGifSources(name), [name]);
+  const cleanName = (name || '').trim();
+  const mp4Url = getExerciseMp4Url(cleanName);
+  const isMp4Exercise = Boolean(mp4Url);
+
+  // Video specific states
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isVideoLoading, setIsVideoLoading] = useState(true);
+  const [videoFailed, setVideoFailed] = useState(false);
+
+  // GIF fallback / standard GIF states
+  const sources = useMemo(() => {
+    const defaultSources = getExerciseGifSources(cleanName);
+    const fallbackGif = getExercisePrimaryFallbackGifUrl(cleanName);
+    if (fallbackGif) {
+      // Prioritize immutable verified fallback GIF if MP4 failed
+      return [
+        fallbackGif,
+        ...defaultSources.filter(s => s !== fallbackGif)
+      ];
+    }
+    return defaultSources;
+  }, [cleanName]);
+
   const [sourceIndex, setSourceIndex] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
-  const [hasError, setHasError] = useState(false);
+  const [isGifLoading, setIsGifLoading] = useState(true);
+  const [hasGifError, setHasGifError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
 
+  // Reset & cleanup when name changes or unmounts
   useEffect(() => {
+    setIsPlaying(false);
+    setIsVideoLoading(true);
+    setVideoFailed(false);
     setSourceIndex(0);
-    setIsLoading(true);
-    setHasError(false);
+    setIsGifLoading(true);
+    setHasGifError(false);
     setRetryCount(0);
-  }, [name, sources]);
 
+    return () => {
+      if (videoRef.current) {
+        try {
+          videoRef.current.pause();
+          videoRef.current.removeAttribute('src');
+          videoRef.current.load();
+        } catch {
+          // Ignore unmount cleanup error
+        }
+      }
+    };
+  }, [cleanName]);
+
+  const togglePlay = useCallback((e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation();
+    }
+    const video = videoRef.current;
+    if (!video) return;
+
+    if (video.paused) {
+      video.play().catch(err => {
+        console.warn('[IronLog Video] Play request failed:', err);
+      });
+    } else {
+      video.pause();
+    }
+  }, []);
+
+  const handleVideoError = useCallback(() => {
+    console.warn(`[IronLog Video] Failed to load/decode MP4 for "${cleanName}". Falling back to original GIF.`);
+    setVideoFailed(true);
+    setIsVideoLoading(false);
+  }, [cleanName]);
+
+  // GIF error / load handlers
   const currentSrc = sources[sourceIndex] || '';
 
-  const handleError = useCallback(() => {
-    console.warn(`[IronLog Media] Failed to load GIF for "${name}" from source [${sourceIndex}]: ${currentSrc}`);
+  const handleGifError = useCallback(() => {
+    console.warn(`[IronLog Media] Failed to load GIF for "${cleanName}" from source [${sourceIndex}]: ${currentSrc}`);
     
     if (sourceIndex + 1 < sources.length) {
       setSourceIndex(prev => prev + 1);
-      setIsLoading(true);
+      setIsGifLoading(true);
     } else if (retryCount < 1) {
-      // Retry once after 800ms
       setTimeout(() => {
         setRetryCount(prev => prev + 1);
         setSourceIndex(0);
-        setIsLoading(true);
+        setIsGifLoading(true);
       }, 800);
     } else {
-      console.error(`[IronLog Media] All sources exhausted for "${name}". Rendering visual fallback card.`);
-      setIsLoading(false);
-      setHasError(true);
+      console.error(`[IronLog Media] All sources exhausted for "${cleanName}". Rendering visual fallback card.`);
+      setIsGifLoading(false);
+      setHasGifError(true);
     }
-  }, [name, sourceIndex, sources, currentSrc, retryCount]);
+  }, [cleanName, sourceIndex, sources, currentSrc, retryCount]);
 
-  const handleLoad = useCallback(() => {
-    setIsLoading(false);
-    setHasError(false);
+  const handleGifLoad = useCallback(() => {
+    setIsGifLoading(false);
+    setHasGifError(false);
   }, []);
 
-  const muscleGroup = getMuscleGroup(name);
+  const muscleGroup = getMuscleGroup(cleanName);
   const muscleDisplay = getMuscleGroupDisplay(muscleGroup);
 
+  // Render MP4 player for chest movements with verified MP4 (unless video load failed)
+  if (isMp4Exercise && !videoFailed && mp4Url) {
+    return (
+      <div style={{ backgroundColor: lightTheme.card }} className={containerClassName}>
+        {/* Loading Spinner */}
+        {isVideoLoading && (
+          <div 
+            style={{ backgroundColor: lightTheme.card }} 
+            className="absolute inset-0 flex flex-col items-center justify-center gap-3 z-10 pointer-events-none"
+          >
+            <Loader2 className="w-8 h-8 animate-spin text-black" />
+            <p className="text-[11px] font-black uppercase tracking-widest text-black">影片載入中...</p>
+          </div>
+        )}
+
+        {/* Video Element */}
+        <video
+          ref={videoRef}
+          src={mp4Url}
+          playsInline
+          muted
+          loop
+          preload="metadata"
+          style={{ objectFit: 'contain' }}
+          className="w-full h-auto max-h-[360px] object-contain rounded-[15px] block cursor-pointer select-none"
+          onLoadedMetadata={() => setIsVideoLoading(false)}
+          onLoadedData={() => setIsVideoLoading(false)}
+          onCanPlay={() => setIsVideoLoading(false)}
+          onWaiting={() => setIsVideoLoading(true)}
+          onPlaying={() => {
+            setIsVideoLoading(false);
+            setIsPlaying(true);
+          }}
+          onPause={() => setIsPlaying(false)}
+          onError={handleVideoError}
+          onClick={togglePlay}
+        />
+
+        {/* Bottom Floating Play / Pause Control Button (Only custom play control) */}
+        {!isVideoLoading && (
+          <div className="absolute bottom-3 right-3 flex items-center gap-2 z-20">
+            <button
+              type="button"
+              onClick={togglePlay}
+              aria-label={isPlaying ? "暫停示範" : "播放示範"}
+              className="px-3.5 py-1.5 rounded-full bg-black/75 hover:bg-black/90 active:scale-95 text-white text-xs font-black flex items-center gap-1.5 shadow-lg backdrop-blur-md border border-white/15 transition-all"
+            >
+              {isPlaying ? (
+                <>
+                  <Pause className="w-3.5 h-3.5 fill-white" />
+                  <span>暫停</span>
+                </>
+              ) : (
+                <>
+                  <Play className="w-3.5 h-3.5 fill-white translate-x-0.5" />
+                  <span>播放</span>
+                </>
+              )}
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Standard GIF rendering (for all other exercises, or as fallback when MP4 fails)
   return (
     <div style={{ backgroundColor: lightTheme.card }} className={containerClassName}>
-      {isLoading && (
+      {isGifLoading && (
         <div 
           style={{ backgroundColor: lightTheme.card }} 
           className="absolute inset-0 flex flex-col items-center justify-center gap-3 z-10"
@@ -69,13 +196,13 @@ export const ExerciseGifDisplay: React.FC<ExerciseGifDisplayProps> = ({
         </div>
       )}
 
-      {hasError ? (
+      {hasGifError ? (
         <div className="flex flex-col items-center justify-center py-12 px-6 text-center space-y-3">
           <div className="w-16 h-16 rounded-2xl bg-[#CCFF00]/25 flex items-center justify-center text-slate-900 border border-[#82CC00]/30 shadow-sm">
             <Dumbbell className="w-8 h-8 stroke-[2.5]" />
           </div>
           <div>
-            <h4 className="text-base font-black text-slate-900">{name}</h4>
+            <h4 className="text-base font-black text-slate-900">{cleanName}</h4>
             <span className="text-xs font-bold text-slate-500 mt-1 inline-block">
               {muscleDisplay.cn} · {muscleDisplay.en}
             </span>
@@ -88,10 +215,10 @@ export const ExerciseGifDisplay: React.FC<ExerciseGifDisplayProps> = ({
         <img
           key={currentSrc}
           src={currentSrc}
-          alt={name}
+          alt={cleanName}
           className={className}
-          onLoad={handleLoad}
-          onError={handleError}
+          onLoad={handleGifLoad}
+          onError={handleGifError}
           referrerPolicy="no-referrer"
           loading="eager"
         />

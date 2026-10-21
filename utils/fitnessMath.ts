@@ -109,10 +109,66 @@ export const BACKUP_ASSET_COMMIT_SHA = 'a7f385c9aa6c1a24b9ce718e25ca0a101986df88
  */
 export const EXERCISE_MEDIA_ALIASES: Record<string, string> = {
   '跪姿繩索夾胸': '站姿繩索夾胸',
-  '上斜器械飛鳥': '上斜啞鈴飛鳥',
+  '上斜器械飛鳥': '上斜CABLE飛鳥',
+  '器械上斜臥推': '橫向器械上斜臥推',
+  '器械上斜胸推': '橫向器械上斜臥推',
   '史密斯上斜臥推': '槓鈴上斜臥推',
   '史密斯平板臥推': '槓鈴平板臥推',
   '史密斯肩推': '站姿槓鈴肩推',
+};
+
+/**
+ * All verified Chest movements that have hosted MP4 video demonstrations.
+ * Verified on https://ironlog-pro.vercel.app/assets/
+ */
+export const CHEST_EXERCISES_WITH_MP4: Record<string, string> = {
+  '槓鈴平板臥推': '槓鈴平板臥推',
+  '槓鈴上斜臥推': '槓鈴上斜臥推',
+  '啞鈴平板臥推': '啞鈴平板臥推',
+  '啞鈴上斜臥推': '啞鈴上斜臥推',
+  '史密斯平板臥推': '史密斯平板臥推',
+  '坐姿器械胸推': '坐姿器械胸推',
+  '蝴蝶機夾胸': '蝴蝶機夾胸',
+  '站姿繩索夾胸': '站姿繩索夾胸',
+  '平板繩索飛鳥': '平板繩索飛鳥',
+  '平板啞鈴飛鳥': '平板啞鈴飛鳥',
+  '上斜啞鈴飛鳥': '上斜啞鈴飛鳥',
+  '上斜CABLE飛鳥': '上斜CABLE飛鳥',
+  '上斜器械胸推': '上斜器械胸推',
+  '雙槓撐體輔助': '雙槓撐體輔助',
+  '仰臥器械胸推': '仰臥器械胸推',
+  '雙槓撐體': '雙槓撐體',
+  '標準俯地挺身': '標準俯地挺身',
+  '橫向器械上斜臥推': '橫向器械上斜臥推',
+  '史密斯上斜臥推': '史密斯上斜臥推',
+  // Historical / Backward Compatibility Aliases:
+  '跪姿繩索夾胸': '跪姿繩索夾胸',
+  '上斜器械飛鳥': '上斜CABLE飛鳥',
+  '器械上斜臥推': '橫向器械上斜臥推',
+  '器械上斜胸推': '橫向器械上斜臥推',
+};
+
+/**
+ * Returns the hosted MP4 URL for an exercise if it is a chest movement with verified MP4 demonstration.
+ * Returns null for non-chest exercises or exercises without MP4.
+ */
+export const getExerciseMp4Url = (name: string): string | null => {
+  if (!name) return null;
+  const cleanName = name.trim();
+  const targetAssetName = CHEST_EXERCISES_WITH_MP4[cleanName];
+  if (!targetAssetName) return null;
+  return `https://ironlog-pro.vercel.app/assets/${encodeURIComponent(targetAssetName)}.mp4`;
+};
+
+/**
+ * Returns the primary verified fallback GIF URL for an exercise.
+ */
+export const getExercisePrimaryFallbackGifUrl = (name: string): string | null => {
+  if (!name) return null;
+  const cleanName = name.trim();
+  const targetAssetName = CHEST_EXERCISES_WITH_MP4[cleanName];
+  if (!targetAssetName) return null;
+  return `https://ironlog-pro.vercel.app/assets/${encodeURIComponent(targetAssetName)}.gif`;
 };
 
 /**
@@ -197,6 +253,10 @@ const EXERCISE_METHODS: Record<string, string> = {
 
   "器械上斜胸推": "01 坐在上斜推胸機上，調整座椅使握把位於上胸高度，雙腳踩穩地面。\n\n02 緩慢控制握把回收，感受上胸肌群在傾斜角度下的受壓與舒張。\n\n03 感覺上胸收縮，將握把沿著機器軌道向上方推起，專注於上胸的飽滿感。",
 
+  "橫向器械上斜臥推": "01 坐在橫向器械上斜推胸機上，調整座椅使握把位於上胸高度，背部緊貼椅背，雙腳踩穩地面。\n\n02 緩慢控制握把橫向向外回放，感受上胸纖維在固定弧形軌道下的深度舒張。\n\n03 感覺上胸肌群強力收縮，順應器械軌道向前上方推起並在頂點擠壓，專注於上胸的飽滿受力。",
+
+  "器械上斜臥推": "01 坐在橫向器械上斜推胸機上，調整座椅使握把位於上胸高度，背部緊貼椅背，雙腳踩穩地面。\n\n02 緩慢控制握把橫向向外回放，感受上胸纖維在固定弧形軌道下的深度舒張。\n\n03 感覺上胸肌群強力收縮，順應器械軌道向前上方推起並在頂點擠壓，專注於上胸的飽滿受力。",
+
   "史密斯上斜臥推": "01 將斜凳置於史密斯機內，平躺後確認槓鈴路徑對準上胸，雙手握寬後解鎖。\n\n02 沿著垂直或微斜軌道緩慢降下槓鈴，控制重心，感受上胸纖維的拉伸與舒張。\n\n03 感覺上胸肌肉強力收縮，將槓鈴推回頂端，利用固定軌道進行高強度擠壓。",
 
   "平板繩索飛鳥": "01 將平板長凳置於兩台滑輪機中間，平躺於凳上，雙手各握住低位滑輪把手。\n\n02 保持手肘微彎，緩慢將手臂向兩側張開，直到感受胸肌完全舒張與拉伸。\n\n03 感覺胸肌收縮發力，帶動雙臂向胸部上方中心併攏，頂峰時強力擠壓胸肌。",
@@ -204,6 +264,8 @@ const EXERCISE_METHODS: Record<string, string> = {
   "平板啞鈴飛鳥": "01 平躺於平板凳，雙手持啞鈴舉至胸部上方，掌心相對，手肘微彎並保持固定。\n\n02 緩慢將啞鈴向兩側弧形下降，感受胸肌的橫向拉伸與舒張。\n\n03 感覺胸肌收縮，帶動啞鈴沿原路徑向上劃弧線併攏，頂峰時擠壓胸肌中縫。",
 
   "上斜啞鈴飛鳥": "01 坐在上斜凳上，雙手持啞鈴舉至上胸上方，掌心相對，手肘微彎。\n\n02 緩慢將啞鈴向兩側斜下方打開，感受上胸肌群的深度舒張與牽拉。\n\n03 感覺上胸收縮發力，將啞鈴向中心斜上方帶回，專注於上胸中縫的擠壓感。",
+
+  "上斜CABLE飛鳥": "01 將滑輪設定在低位或下斜高度，雙手握住 D 型把手，仰臥在約 30-45 度的上斜長凳上。\n\n02 保持手肘微彎固定角度，緩慢向兩側斜下方打開，控制繩索張力，感受上胸與胸肌內側的舒張。\n\n03 感覺上胸肌群收縮，將雙手沿著弧線向胸部上方夾攏，頂峰時強力擠壓上胸中縫。",
 
   "上斜器械飛鳥": "01 坐在上斜飛鳥機上，背部貼緊靠墊，雙手握住把手，手臂微彎。\n\n02 緩慢控制握把向兩側張開，感受上胸肌群在固定軌道下的舒張。\n\n03 感覺上胸收縮，將握把向中心擠壓併攏，利用機器穩定性專注於上胸發力。",
 
@@ -360,7 +422,9 @@ const EXERCISE_METHODS: Record<string, string> = {
 };
 
 export const getExerciseMethod = (name: string): string => {
-  const method = EXERCISE_METHODS[name] || "01 準備起始姿勢並確保脊椎中立穩定核心。調整負重與器械高度，確保身體重心穩固且安全。\n\n02 按照標準生理運動路徑執行動作。發力時呼氣，還原時吸氣. 專注於目標肌群的收縮感，而非僅是移動重量。\n\n03 全程控制離心還原速度，維持肌肉張力不流失. 結束後平穩放下重量，確保不對關節造成衝擊性的傷害。";
+  const cleanName = (name || '').trim();
+  const resolvedName = EXERCISE_MEDIA_ALIASES[cleanName] || cleanName;
+  const method = EXERCISE_METHODS[cleanName] || EXERCISE_METHODS[resolvedName] || "01 準備起始姿勢並確保脊椎中立穩定核心。調整負重與器械高度，確保身體重心穩固且安全。\n\n02 按照標準生理運動路徑執行動作。發力時呼氣，還原時吸氣. 專注於目標肌群的收縮感，而非僅是移動重量。\n\n03 全程控制離心還原速度，維持肌肉張力不流失. 結束後平穩放下重量，確保不對關節造成衝擊性的傷害。";
   return method
     .replace(/\b01\b/g, "1")
     .replace(/\b02\b/g, "2")

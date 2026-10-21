@@ -8,7 +8,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { ExerciseSmallGif } from './ExerciseSmallGif';
 import { ExerciseGifDisplay } from './ExerciseGifDisplay';
-import { getMuscleGroup, getMuscleGroupDisplay, getExerciseMethod } from '../utils/fitnessMath';
+import { getMuscleGroup, getMuscleGroupDisplay, getExerciseMethod, EXERCISE_MEDIA_ALIASES } from '../utils/fitnessMath';
 import { AppContext } from '../App';
 import { lightTheme, CardStyle, TextStyle, InputStyle, ActionButtonStyle } from '../themeStyles';
 
@@ -24,7 +24,7 @@ export const formatWorkoutDuration = (ms: number): string => {
 };
 
 export const ORGANIZED_EXERCISES: Record<string, string[]> = {
-  'chest': ['槓鈴平板臥推', '槓鈴上斜臥推', '啞鈴平板臥推', '啞鈴上斜臥推', '史密斯平板臥推', '坐姿器械胸推', '蝴蝶機夾胸', '跪姿繩索夾胸', '站姿繩索夾胸', '平板繩索飛鳥', '平板啞鈴飛鳥', '上斜啞鈴飛鳥', '上斜器械飛鳥', '上斜器械胸推', '雙槓撐體輔助', '仰臥器械胸推', '雙槓撐體', '標準俯地挺身', '器械上斜胸推', '史密斯上斜臥推'],
+  'chest': ['槓鈴平板臥推', '槓鈴上斜臥推', '啞鈴平板臥推', '啞鈴上斜臥推', '史密斯平板臥推', '坐姿器械胸推', '蝴蝶機夾胸', '站姿繩索夾胸', '平板繩索飛鳥', '平板啞鈴飛鳥', '上斜啞鈴飛鳥', '上斜CABLE飛鳥', '上斜器械胸推', '雙槓撐體輔助', '仰臥器械胸推', '雙槓撐體', '標準俯地挺身', '橫向器械上斜臥推', '史密斯上斜臥推'],
   'back': ['引體向上', '高位下拉', '槓鈴划船', '單臂啞鈴划船', '坐姿器械划船', '俯臥T槓划船', '反握高位划船', '傳統硬舉', '引體向上輔助', 'V把坐姿划船', '寬距坐姿划船', '反握高位下拉', '分動器械下拉', '滑輪直臂下拉', '上斜啞鈴划船'],
   'shoulders': ['坐姿啞鈴肩推', '站姿槓鈴肩推', '阿諾肩推', '器械肩推', '史密斯肩推', '啞鈴側平舉', '繩索單邊側平舉', '器械側平舉', '啞鈴前平舉', '蝴蝶機反向飛鳥', '繩索面拉', '俯身啞鈴反向飛鳥'],
   'legs': ['槓鈴深蹲', '啞鈴高腳杯蹲', '上斜器械腿推', '水平器械腿推', '槓鈴臀推', '保加利亞啞鈴分腿蹲', '哈克深蹲', '俯臥腿後勾', '坐姿腿後勾', '器械站姿提踵', '相撲硬舉', '器械腿外展', '器械腿內收', '六角槓硬舉'],
@@ -391,13 +391,31 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
 
   const filteredExercises = useMemo(() => {
     if (searchTerm) {
-      return EXERCISE_DATABASE.filter(ex => ex.toLowerCase().includes(searchTerm.toLowerCase()));
+      const term = searchTerm.trim().toLowerCase();
+      return EXERCISE_DATABASE.filter(ex => {
+        if (ex.toLowerCase().includes(term)) return true;
+        for (const [oldName, targetName] of Object.entries(EXERCISE_MEDIA_ALIASES)) {
+          if (targetName === ex && oldName.toLowerCase().includes(term)) {
+            return true;
+          }
+        }
+        return false;
+      });
     }
     return ORGANIZED_EXERCISES[activeCategory] || [];
   }, [searchTerm, activeCategory]);
 
   const isExactMatch = useMemo(() => {
-    return EXERCISE_DATABASE.some(ex => ex.toLowerCase() === searchTerm.trim().toLowerCase());
+    const term = searchTerm.trim().toLowerCase();
+    return EXERCISE_DATABASE.some(ex => {
+      if (ex.toLowerCase() === term) return true;
+      for (const [oldName, targetName] of Object.entries(EXERCISE_MEDIA_ALIASES)) {
+        if ((oldName.toLowerCase() === term || targetName.toLowerCase() === term) && ex === targetName) {
+          return true;
+        }
+      }
+      return false;
+    });
   }, [searchTerm]);
 
   if (!session) return null;
