@@ -1,13 +1,24 @@
 import React, { useContext, useMemo, useState, useRef, useEffect } from 'react';
 import { AppContext } from '../App';
-import { BodyMetric, UserGoal } from '../types';
+import { BodyMetric, UserGoal, StoreKitProduct } from '../types';
 import { calculateSuggestedCalories, calculateMacros } from '../utils/fitnessMath';
+import { 
+  useEntitlement,
+  getProducts,
+  purchase,
+  restorePurchases,
+  isNativeStoreKitAvailable,
+  DEFAULT_PRO_PRODUCT_ID
+} from '../services/storeKitBridge';
 import { 
   User, Camera, Edit3, Check, Award, Trophy, Crown, Flame, Sparkles, Calendar,
   Globe, Scale, Download, Trash2, ChevronRight, CheckCircle2,
-  Lock, X, UserCheck, Utensils, Calculator, FileText
+  Lock, X, UserCheck, Utensils, Calculator, FileText,
+  Loader2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ProPaywall } from './ProPaywall';
+import { evaluateAllAchievements } from '../utils/achievements';
 
 export const SettingsView: React.FC = () => {
   const context = useContext(AppContext);
@@ -18,6 +29,18 @@ export const SettingsView: React.FC = () => {
   const globalGoal = context?.goal || { type: 'maintain', targetWeight: 0, startWeight: 0, activityLevel: 1.55 };
   const setGlobalGoal = context?.setGoal || (() => {});
   const setBodyMetrics = context?.setBodyMetrics || (() => {});
+
+  // StoreKit 2 & 會員狀態（由 StoreKit Bridge 統一管理）
+  const entitlement = useEntitlement();
+  const isSubscribed = entitlement.isPro;
+  const isNativeAvailable = isNativeStoreKitAvailable();
+  const [products, setProducts] = useState<StoreKitProduct[]>([]);
+  const [isStoreKitLoading, setIsStoreKitLoading] = useState(false);
+  const [storeKitMessage, setStoreKitMessage] = useState<{ text: string; type: 'info' | 'error' | 'success' } | null>(null);
+
+  useEffect(() => {
+    getProducts().then(setProducts).catch(console.error);
+  }, []);
 
   // Current latest body metric
   const latestMetric: BodyMetric = useMemo(() => {
@@ -30,7 +53,6 @@ export const SettingsView: React.FC = () => {
   const [profileImage, setProfileImage] = useState<string | null>(() => localStorage.getItem('ironlog_user_avatar'));
   const [userName, setUserName] = useState<string>(() => localStorage.getItem('ironlog_user_name') || '');
   const [userEmail, setUserEmail] = useState<string>(() => localStorage.getItem('ironlog_user_email') || '');
-  const [isSubscribed, setIsSubscribed] = useState<boolean>(() => localStorage.getItem('ironlog_pro_subscribed') === 'true');
 
   // Preferences State
   const [weightUnit, setWeightUnit] = useState<string>(() => localStorage.getItem('ironlog_weight_unit') || 'kg');
@@ -40,6 +62,8 @@ export const SettingsView: React.FC = () => {
   // Modals
   const [showEditProfileModal, setShowEditProfileModal] = useState(false);
   const [showProModal, setShowProModal] = useState(false);
+  const [showPaywall, setShowPaywall] = useState(false);
+  const [paywallFeature, setPaywallFeature] = useState({ title: '資料備份與匯出', desc: '' });
   const [showLanguageModal, setShowLanguageModal] = useState(false);
   const [showNutritionModal, setShowNutritionModal] = useState(false);
   const [showTdeeModal, setShowTdeeModal] = useState(false);
@@ -180,9 +204,11 @@ export const SettingsView: React.FC = () => {
     },
   ], [stats]);
 
-  const unlockedCount = useMemo(() => {
-    return badges.filter(b => b.requirement()).length;
-  }, [badges]);
+  const { unlockedList: globalUnlockedList, progressList: globalProgressList } = useMemo(() => {
+    return evaluateAllAchievements(history);
+  }, [history]);
+
+  const unlockedCount = globalUnlockedList.length;
 
   // Handlers
   const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -254,13 +280,68 @@ export const SettingsView: React.FC = () => {
     setShowTdeeModal(false);
   };
 
-  const toggleSubscription = () => {
-    const nextSub = !isSubscribed;
-    setIsSubscribed(nextSub);
-    localStorage.setItem('ironlog_pro_subscribed', String(nextSub));
+  const handlePurchase = async (productId: string = DEFAULT_PRO_PRODUCT_ID) => {
+    if (!isNativeAvailable) {
+      setStoreKitMessage({
+        type: 'info',
+        text: '目前處於 Web 預覽環境，尚未連接 iOS App Store 原生 StoreKit 2。請在 iOS 原生 App 中執行 Apple 原生購買。'
+      });
+      return;
+    }
+
+    setIsStoreKitLoading(true);
+    setStoreKitMessage(null);
+    try {
+      const res = await purchase(productId);
+      if (res.success) {
+        setStoreKitMessage({ type: 'success', text: '🎉 訂閱成功！Pro 尊榮版已生效。' });
+      } else {
+        if (!res.userCancelled) {
+          setStoreKitMessage({ type: 'error', text: res.error || '購買未能完成' });
+        }
+      }
+    } catch (e: any) {
+      setStoreKitMessage({ type: 'error', text: e?.message || '購買失敗' });
+    } finally {
+      setIsStoreKitLoading(false);
+    }
+  };
+
+  const handleRestore = async () => {
+    if (!isNativeAvailable) {
+      setStoreKitMessage({
+        type: 'info',
+        text: '目前處於 Web 預覽環境，尚未連接 iOS 原生 StoreKit 2。'
+      });
+      return;
+    }
+
+    setIsStoreKitLoading(true);
+    setStoreKitMessage(null);
+    try {
+      const res = await restorePurchases();
+      if (res.success) {
+        setStoreKitMessage({ type: 'success', text: '🎉 已成功恢復您的 Pro 訂閱！' });
+      } else {
+        setStoreKitMessage({ type: 'error', text: res.error || '未找到有效購買紀錄' });
+      }
+    } catch (e: any) {
+      setStoreKitMessage({ type: 'error', text: e?.message || '恢復購買失敗' });
+    } finally {
+      setIsStoreKitLoading(false);
+    }
   };
 
   const handleExportData = () => {
+    if (!entitlement.isPro) {
+      setPaywallFeature({
+        title: '資料備份與匯出',
+        desc: '資料備份與匯出為 IronLog Pro 專屬功能。升級 Pro 即可隨時完整匯出訓練課表、打卡歷史與營養紀錄！'
+      });
+      setShowPaywall(true);
+      return;
+    }
+
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({
       history,
       metrics: localStorage.getItem('ironlog_v3_metrics'),
@@ -518,7 +599,13 @@ export const SettingsView: React.FC = () => {
         <div className="bg-white rounded-[28px] border border-black/5 shadow-sm overflow-hidden divide-y divide-slate-100">
           {/* 成就里程碑 */}
           <div 
-            onClick={() => setShowAchievementsModal(true)}
+            onClick={() => {
+              if (context?.navigateTab) {
+                context.navigateTab('achievements');
+              } else {
+                setShowAchievementsModal(true);
+              }
+            }}
             className="p-5 flex items-center justify-between cursor-pointer hover:bg-slate-50/70 transition-colors group"
           >
             <div className="flex items-center gap-3.5">
@@ -526,8 +613,8 @@ export const SettingsView: React.FC = () => {
                 <Trophy className="w-6 h-6 stroke-[1.8]" />
               </div>
               <div>
-                <h4 className="text-[15px] font-bold text-slate-900 leading-tight">訓練成就徽章</h4>
-                <p className="text-xs text-slate-400 font-medium mt-0.5">已解鎖 {unlockedCount} / {badges.length} 個里程碑</p>
+                <h4 className="text-[15px] font-bold text-slate-900 leading-tight">訓練成就系統</h4>
+                <p className="text-xs text-slate-400 font-medium mt-0.5">已解鎖 {globalUnlockedList.length} / {globalProgressList.length} 個里程碑</p>
               </div>
             </div>
             <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-slate-500 shrink-0 transition-colors" />
@@ -543,11 +630,25 @@ export const SettingsView: React.FC = () => {
                 <Download className="w-6 h-6 stroke-[1.8]" />
               </div>
               <div>
-                <h4 className="text-[15px] font-bold text-slate-900 leading-tight">匯出訓練與營養紀錄</h4>
-                <p className="text-xs text-slate-400 font-medium mt-0.5">下載為 JSON 備份檔</p>
+                <div className="flex items-center gap-1.5">
+                  <h4 className="text-[15px] font-bold text-slate-900 leading-tight">匯出訓練與營養紀錄</h4>
+                  {!entitlement.isPro && (
+                    <span className="text-[10px] font-black text-black bg-[#CCFF00] px-2 py-0.5 rounded-full flex items-center gap-1 border border-black/10">
+                      <Lock className="w-2.5 h-2.5 stroke-[2.5]" /> Pro
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-slate-400 font-medium mt-0.5">
+                  {!entitlement.isPro ? '🔒 Pro 專屬 · 下載為 JSON 備份檔' : '下載為 JSON 備份檔'}
+                </p>
               </div>
             </div>
-            <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-slate-500 shrink-0 transition-colors" />
+            <div className="flex items-center gap-1">
+              {!entitlement.isPro && (
+                <Lock className="w-4 h-4 text-slate-400 mr-1" />
+              )}
+              <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-slate-500 shrink-0 transition-colors" />
+            </div>
           </div>
 
           {/* 條款政策 */}
@@ -690,7 +791,7 @@ export const SettingsView: React.FC = () => {
         )}
       </AnimatePresence>
 
-      {/* 2. Pro 方案升級 Modal */}
+      {/* 2. Pro 方案升級 Modal (由 StoreKit 2 接管) */}
       <AnimatePresence>
         {showProModal && (
           <motion.div
@@ -703,7 +804,7 @@ export const SettingsView: React.FC = () => {
               initial={{ scale: 0.95, y: 15 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.95, y: 15 }}
-              className="bg-white rounded-[32px] p-7 max-w-sm w-full shadow-2xl space-y-6 relative"
+              className="bg-white rounded-[32px] p-7 max-w-sm w-full shadow-2xl space-y-5 relative"
             >
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-2">
@@ -713,14 +814,17 @@ export const SettingsView: React.FC = () => {
                   <h3 className="text-lg font-black text-slate-900">IronLog Pro 尊榮版</h3>
                 </div>
                 <button 
-                  onClick={() => setShowProModal(false)}
+                  onClick={() => {
+                    setShowProModal(false);
+                    setStoreKitMessage(null);
+                  }}
                   className="p-1 rounded-full text-slate-400 hover:text-slate-700"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
-              <div className="space-y-3 py-2">
+              <div className="space-y-2.5 py-1">
                 {[
                   '無限次 AI 食物熱量拍照與營養分析',
                   '專屬 AI 鋼鐵教練（支援港式 / 台式雙語氣即時諮詢）',
@@ -735,34 +839,89 @@ export const SettingsView: React.FC = () => {
                 ))}
               </div>
 
-              {/* 訂閱方案與價格 */}
-              <div className="bg-[#CCFF00]/10 p-4 rounded-2xl text-center border border-[#82CC00]/30 space-y-1">
+              {/* 訂閱方案與價格 (來自 StoreKit 2 商品資訊) */}
+              <div className="bg-[#CCFF00]/10 p-4 rounded-2xl text-center border border-[#82CC00]/30 space-y-1.5">
                 <div className="flex items-baseline justify-center gap-1">
-                  <span className="text-2xl font-black text-slate-900">NT$ 100</span>
-                  <span className="text-xs font-bold text-slate-600">/ 每月 (台幣)</span>
+                  <span className="text-2xl font-black text-slate-900">
+                    {products[0]?.displayPrice || 'NT$ 100'}
+                  </span>
+                  <span className="text-xs font-bold text-slate-600">/ 每月 (自動續訂)</span>
                 </div>
                 <p className="text-[11px] font-bold text-slate-500">
-                  {isSubscribed ? '🎉 目前方案：Pro 專業版會員 (已生效)' : '隨時可取消 · 無綁約負擔'}
+                  {isSubscribed ? '🎉 目前方案：Pro 專業版會員 (已生效)' : '隨時可至 Apple ID 取消 · App Store 自動續訂'}
                 </p>
+
+                {/* 環境與原生橋接狀態標籤 */}
+                <div className="pt-1">
+                  {isNativeAvailable ? (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-black text-emerald-700 bg-emerald-100/80 px-2.5 py-0.5 rounded-full">
+                      <CheckCircle2 className="w-3 h-3" />
+                      已連接 iOS StoreKit 2 原生付費
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-black text-amber-800 bg-amber-100/90 px-2.5 py-0.5 rounded-full border border-amber-200">
+                      尚未連接 Apple App Store (Web 預覽環境)
+                    </span>
+                  )}
+                </div>
               </div>
 
-              <div className="flex gap-3">
+              {storeKitMessage && (
+                <div className={`p-3 rounded-xl text-xs font-bold leading-relaxed ${
+                  storeKitMessage.type === 'error' ? 'bg-rose-50 text-rose-600 border border-rose-200' :
+                  storeKitMessage.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+                  'bg-slate-100 text-slate-700 border border-slate-200'
+                }`}>
+                  {storeKitMessage.text}
+                </div>
+              )}
+
+              <div className="flex gap-2.5">
                 <button
-                  onClick={() => setShowProModal(false)}
+                  onClick={() => {
+                    setShowProModal(false);
+                    setStoreKitMessage(null);
+                  }}
                   className="flex-1 py-3 bg-slate-100 text-slate-700 rounded-2xl font-bold text-sm hover:bg-slate-200 transition-colors"
                 >
                   返回
                 </button>
+                {isSubscribed ? (
+                  <button
+                    disabled
+                    className="flex-1 py-3 bg-slate-200 text-slate-600 font-black rounded-2xl text-sm cursor-default"
+                  >
+                    已開通 Pro 會員
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => handlePurchase(products[0]?.id || DEFAULT_PRO_PRODUCT_ID)}
+                    disabled={isStoreKitLoading}
+                    className={`flex-1 py-3 text-black font-black rounded-2xl text-sm shadow-md transition-all flex items-center justify-center gap-1.5 ${
+                      isNativeAvailable
+                        ? 'bg-[#CCFF00] hover:bg-[#b8e600] active:scale-[0.98]'
+                        : 'bg-slate-200 hover:bg-slate-300 text-slate-700'
+                    }`}
+                  >
+                    {isStoreKitLoading ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : isNativeAvailable ? (
+                      <span>{products[0]?.displayPrice || 'NT$ 100'} / 月 立即訂閱</span>
+                    ) : (
+                      <span>App Store 購買 (需原生環境)</span>
+                    )}
+                  </button>
+                )}
+              </div>
+
+              {/* 恢復購買 (Restore Purchases) 按鈕 */}
+              <div className="text-center pt-0.5">
                 <button
-                  onClick={() => {
-                    toggleSubscription();
-                    setShowProModal(false);
-                  }}
-                  className={`flex-1 py-3 text-black font-black rounded-2xl text-sm shadow-md transition-all ${
-                    isSubscribed ? 'bg-slate-200 hover:bg-slate-300 text-slate-800' : 'bg-[#CCFF00] hover:bg-[#b8e600]'
-                  }`}
+                  onClick={handleRestore}
+                  disabled={isStoreKitLoading}
+                  className="text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors underline"
                 >
-                  {isSubscribed ? '停用 Pro 訂閱' : '每月 NT$100 立即解鎖'}
+                  {isStoreKitLoading ? '處理中...' : '恢復已購買的訂閱 (Restore Purchases)'}
                 </button>
               </div>
             </motion.div>
@@ -1256,6 +1415,14 @@ export const SettingsView: React.FC = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Pro Paywall Modal */}
+      <ProPaywall
+        isOpen={showPaywall}
+        onClose={() => setShowPaywall(false)}
+        featureTitle={paywallFeature.title}
+        featureDescription={paywallFeature.desc}
+      />
     </div>
   );
 };

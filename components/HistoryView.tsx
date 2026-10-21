@@ -1,14 +1,122 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback, useEffect, useContext } from 'react';
 import { WorkoutSession, MuscleGroup, ExerciseEntry, SetEntry } from '../types';
-import { getMuscleGroupDisplay } from '../utils/fitnessMath';
-import { Activity, BarChart3, Trash2, CalendarDays, Timer, Save, Check, ChevronLeft, ChevronRight, Clock } from 'lucide-react';
-import { isSameDay, format, startOfWeek, endOfWeek, eachDayOfInterval, subWeeks, addWeeks } from 'date-fns';
-import { ExerciseSmallGif } from './ExerciseSmallGif';
-import { startOfMonth } from 'date-fns/startOfMonth';
-import { startOfYear } from 'date-fns/startOfYear';
+import { getMuscleGroupDisplay, getMuscleGroup, getExerciseGifSources } from '../utils/fitnessMath';
+import { Activity, BarChart3, Trash2, CalendarDays, Timer, Save, Check, ChevronLeft, ChevronRight, Clock, ArrowLeft, X, Loader2, Dumbbell, Lock, Sparkles, Trophy } from 'lucide-react';
+import { AppContext } from '../App';
+import { isSameDay, format, startOfWeek, endOfWeek, eachDayOfInterval, subWeeks, addWeeks, startOfMonth, endOfMonth, startOfYear } from 'date-fns';
+import { BodyMuscleMap, MuscleLoadInfo, LoadLevel } from './BodyMuscleMap';
 import { motion, AnimatePresence } from 'framer-motion';
 import { lightTheme } from '../themeStyles';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, Label } from 'recharts';
+import { useEntitlement } from '../services/storeKitBridge';
+import { ProPaywall } from './ProPaywall';
+
+/**
+ * 專屬於「當日總訓練」列表的小型動作 GIF 元件
+ * 採用行內嚴格寬高鎖定與 WebKit 遮罩，確保在所有手機端（iOS Safari / Android Chrome）均不溢出或異常放大
+ */
+const DailyWorkoutExerciseGif: React.FC<{ name: string }> = ({ name }) => {
+  const sources = useMemo(() => getExerciseGifSources(name), [name]);
+  const [sourceIndex, setSourceIndex] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [failedAll, setFailedAll] = useState(false);
+
+  useEffect(() => {
+    setSourceIndex(0);
+    setLoading(true);
+    setFailedAll(false);
+  }, [name, sources]);
+
+  const currentSrc = sources[sourceIndex] || '';
+
+  const handleError = useCallback(() => {
+    if (sourceIndex + 1 < sources.length) {
+      setSourceIndex(prev => prev + 1);
+    } else {
+      setLoading(false);
+      setFailedAll(true);
+    }
+  }, [sourceIndex, sources.length]);
+
+  const handleLoad = useCallback(() => {
+    setLoading(false);
+    setFailedAll(false);
+  }, []);
+
+  if (failedAll) {
+    const mg = getMuscleGroup(name);
+    const disp = getMuscleGroupDisplay(mg);
+    return (
+      <div 
+        style={{
+          width: '54px',
+          height: '54px',
+          minWidth: '54px',
+          maxWidth: '54px',
+          minHeight: '54px',
+          maxHeight: '54px',
+          flexShrink: 0,
+          borderRadius: '14px'
+        }}
+        className="flex flex-col items-center justify-center bg-slate-100 text-slate-700 p-1 text-center select-none border border-black/5 shrink-0"
+      >
+        <Dumbbell className="w-4 h-4 text-slate-600 mb-0.5" />
+        <span className="text-[9px] font-black leading-tight line-clamp-1">{disp.cn}</span>
+      </div>
+    );
+  }
+
+  return (
+    <div 
+      style={{ 
+        width: '54px', 
+        height: '54px', 
+        minWidth: '54px', 
+        minHeight: '54px', 
+        maxWidth: '54px', 
+        maxHeight: '54px',
+        flexShrink: 0,
+        overflow: 'hidden',
+        position: 'relative',
+        borderRadius: '14px',
+        WebkitMaskImage: '-webkit-radial-gradient(white, black)',
+        isolation: 'isolate'
+      }}
+      className="bg-slate-100 border border-black/5 shrink-0 flex items-center justify-center"
+    >
+      {loading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-slate-50 z-10">
+          <Loader2 className="w-4 h-4 animate-spin text-black" />
+        </div>
+      )}
+      {currentSrc && (
+        <img
+          key={currentSrc}
+          src={currentSrc}
+          alt={name}
+          width={54}
+          height={54}
+          style={{ 
+            width: '54px', 
+            height: '54px', 
+            minWidth: '54px', 
+            minHeight: '54px', 
+            maxWidth: '54px', 
+            maxHeight: '54px',
+            objectFit: 'cover',
+            display: 'block',
+            borderRadius: '14px'
+          }}
+          className="object-cover select-none"
+          onLoad={handleLoad}
+          onError={handleError}
+          referrerPolicy="no-referrer"
+          loading="lazy"
+        />
+      )}
+    </div>
+  );
+};
 
 interface HistoryViewProps {
   history: WorkoutSession[];
@@ -18,7 +126,11 @@ interface HistoryViewProps {
 }
 
 export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate, onUpdateHistory, onSaveAsRoutine }) => {
-  const [analysisPeriod, setAnalysisPeriod] = useState<'week' | 'month' | 'year'>('week');
+  const context = useContext(AppContext);
+  const entitlement = useEntitlement();
+  const [showPaywall, setShowPaywall] = useState(false);
+  const [analysisPeriod, setAnalysisPeriod] = useState<'week' | 'month'>('week');
+  const [selectedVolumeMuscle, setSelectedVolumeMuscle] = useState<MuscleGroup | null>(null);
   const [chartWeekOffset, setChartWeekOffset] = useState(0);
 
   const chartWeekStart = useMemo(() => {
@@ -110,50 +222,111 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
     onSaveAsRoutine(combinedSession);
   };
 
-  const allMuscleGroups: MuscleGroup[] = ['chest', 'back', 'quads', 'shoulders', 'arms', 'core'];
+  const muscleGroupsList: MuscleGroup[] = ['chest', 'arms', 'back', 'core', 'quads', 'glutes', 'shoulders', 'fullbody'];
 
-  const analysisData = useMemo(() => {
+  const volumeAnalysis = useMemo(() => {
     const now = new Date();
     let start: Date;
-    if (analysisPeriod === 'week') start = startOfWeek(now, { weekStartsOn: 1 });
-    else if (analysisPeriod === 'month') start = startOfMonth(now);
-    else start = startOfYear(now);
+    let end: Date;
+    if (analysisPeriod === 'week') {
+      start = startOfWeek(now, { weekStartsOn: 1 });
+      end = endOfWeek(now, { weekStartsOn: 1 });
+    } else {
+      // 真正的「本月」時間區間 (當月 1 號 00:00 至 當月底 23:59:59)
+      start = startOfMonth(now);
+      end = endOfMonth(now);
+    }
 
-    const periodHistory = history.filter(s => s.startTime >= start.getTime());
-    const results: Record<string, number> = {};
-    allMuscleGroups.forEach(m => results[m] = 0);
+    const startMs = start.getTime();
+    const endMs = end.getTime();
+
+    const periodHistory = history.filter(s => s.startTime >= startMs && s.startTime <= endMs);
+
+    const stats: Record<MuscleGroup, {
+      sets: number;
+      exercises: Record<string, number>;
+    }> = {
+      chest: { sets: 0, exercises: {} },
+      back: { sets: 0, exercises: {} },
+      quads: { sets: 0, exercises: {} },
+      hamstrings: { sets: 0, exercises: {} },
+      shoulders: { sets: 0, exercises: {} },
+      arms: { sets: 0, exercises: {} },
+      core: { sets: 0, exercises: {} },
+      glutes: { sets: 0, exercises: {} },
+      fullbody: { sets: 0, exercises: {} }
+    };
 
     periodHistory.forEach(session => {
       session.exercises.forEach(ex => {
-        if (results[ex.muscleGroup] !== undefined) {
-          const setCount = ex.sets.length;
-          results[ex.muscleGroup] += setCount;
+        let mg: MuscleGroup = ex.muscleGroup || getMuscleGroup(ex.name);
+        const n = ex.name.toLowerCase();
+        if (n.includes('硬舉') || n.includes('deadlift') || n.includes('波比') || n.includes('burpee') || n.includes('壺鈴') || n.includes('swing') || n.includes('全身') || mg === 'fullbody') {
+          stats.fullbody.sets += ex.sets.length;
+          stats.fullbody.exercises[ex.name] = (stats.fullbody.exercises[ex.name] || 0) + ex.sets.length;
         }
+        // 統整腿部 (膕繩或 legs 歸入 quads 腿部)
+        if (mg === 'hamstrings' || (mg as string) === 'legs') {
+          mg = 'quads';
+        }
+        if (!stats[mg]) {
+          stats[mg] = { sets: 0, exercises: {} };
+        }
+        const count = ex.sets.length;
+        stats[mg].sets += count;
+        stats[mg].exercises[ex.name] = (stats[mg].exercises[ex.name] || 0) + count;
       });
     });
 
-    return results;
+    const isMonthly = analysisPeriod === 'month';
+    const muscleMapData: Record<MuscleGroup, MuscleLoadInfo> = {} as any;
+
+    (Object.keys(stats) as MuscleGroup[]).forEach(g => {
+      const totalSets = stats[g].sets;
+      // 月度判定標準：月總組數 ÷ 4 = 平均每週組數
+      const evalSets = isMonthly ? totalSets / 4 : totalSets;
+      let level: LoadLevel = 'none';
+      let levelLabel = '未訓練';
+      let color = '#CBD5E1';
+
+      if (totalSets === 0) {
+        level = 'none';
+        levelLabel = '未訓練';
+        color = '#CBD5E1';
+      } else if (evalSets <= 10) {
+        level = 'light';
+        levelLabel = '輕量等級';
+        color = '#22C55E';
+      } else if (evalSets <= 15) {
+        level = 'moderate';
+        levelLabel = '適中等級';
+        color = '#F97316';
+      } else {
+        level = 'exhausted';
+        levelLabel = '力竭等級';
+        color = '#EF4444';
+      }
+
+      const d = getMuscleGroupDisplay(g);
+
+      muscleMapData[g] = {
+        group: g,
+        nameCn: d.cn,
+        nameEn: d.en,
+        sets: totalSets,
+        evalSets,
+        level,
+        levelLabel,
+        color
+      };
+    });
+
+    return {
+      stats,
+      muscleMapData,
+      isMonthly
+    };
   }, [history, analysisPeriod]);
-
-  const multiplier = analysisPeriod === 'month' ? 4 : 1;
-  const thresholds = {
-    light: 10 * multiplier,
-    moderate: 15 * multiplier,
-  };
-
-  const getHeatColor = (setCount: number) => {
-    if (setCount === 0) return '#E2E8F0'; 
-    if (setCount <= thresholds.light) return '#82CC00';  // 輕量
-    if (setCount <= thresholds.moderate) return '#FACC15';  // 適中
-    return '#FF3B30';                      // 力竭
-  };
-
-  const getLoadStatus = (setCount: number) => {
-    if (setCount === 0) return { label: '休息恢復', color: 'text-black' };
-    if (setCount <= thresholds.light) return { label: `輕量(1-${thresholds.light}組)`, color: 'text-[#82CC00]' };
-    if (setCount <= thresholds.moderate) return { label: `適中(${thresholds.light + 1}-${thresholds.moderate}組)`, color: 'text-yellow-500' };
-    return { label: `力竭(${thresholds.moderate + 1}+組)`, color: 'text-red-500' };
-  };
 
   return (
     <div className="space-y-10">
@@ -165,6 +338,14 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
                訓練日報 <span className="text-black">/ {format(selectedDate, 'MM.dd')}</span>
              </h2>
           </div>
+          <button
+            onClick={() => context?.navigateTab && context.navigateTab('achievements')}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-black text-[#CCFF00] hover:bg-black/90 active:scale-95 text-xs font-black transition-all shadow-xs"
+            title="查看鋼鐵成就系統"
+          >
+            <Trophy className="w-3.5 h-3.5 fill-[#CCFF00]" />
+            <span>成就系統</span>
+          </button>
         </div>
 
         <AnimatePresence mode="popLayout">
@@ -194,7 +375,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
                     <span style={{ backgroundColor: lightTheme.card, color: lightTheme.text }} className="flex items-center gap-2 border border-black/5 px-3 py-1.5 rounded-xl text-sm font-black shadow-inner">
                       <Timer className="w-3.5 h-3.5 text-black" /> {dailyStats.totalMinutes} 分鐘
                     </span>
-                    <span style={{ backgroundColor: lightTheme.card, color: '#6E6E73' }} className="border border-black/5 px-3 py-1.5 rounded-xl text-sm font-black">
+                    <span style={{ backgroundColor: lightTheme.card, color: '#000000' }} className="border border-black/5 px-3 py-1.5 rounded-xl text-sm font-black text-black">
                       {dailyStats.totalExercises.length} 項動作
                     </span>
                   </div>
@@ -207,17 +388,14 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
               <div className="space-y-7">
                 {filteredHistory.map((session) => (
                   <div key={session.id} className="space-y-4">
-                    <div className="flex items-center justify-between px-2">
-                       <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                    <div className="flex items-center px-2">
+                       <span className="text-[10px] font-black text-black uppercase tracking-widest">
                          {format(new Date(session.startTime), 'HH:mm')} 開始
                        </span>
-                       <button onClick={() => handleDeleteSession(session.id)} className="text-slate-200 hover:text-red-400 active:scale-90 transition-all">
-                         <Trash2 className="w-4 h-4" />
-                       </button>
                     </div>
-                    <div className="space-y-6">
+                    <div className="space-y-3.5">
                       {session.exercises.map(ex => (
-                        <div key={ex.id} style={{ backgroundColor: lightTheme.card }} className="p-6 rounded-[32px] border border-black/5 shadow-sm space-y-6 relative overflow-hidden group">
+                        <div key={ex.id} style={{ backgroundColor: lightTheme.card }} className="p-3.5 sm:p-4 rounded-[22px] border border-black/5 shadow-xs space-y-3 relative overflow-hidden group">
                           {/* 刪除確認遮罩 */}
                           <AnimatePresence>
                             {confirmDelete?.exerciseId === ex.id && (
@@ -225,19 +403,19 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}
-                                className="absolute inset-0 z-[110] bg-red-500/95 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center"
+                                className="absolute inset-0 z-[110] bg-red-600/95 backdrop-blur-sm flex flex-col items-center justify-center p-4 text-center rounded-[22px]"
                               >
-                                <p className="text-white font-black text-xl mb-4 uppercase tracking-tighter">確定要刪除此動作？</p>
-                                <div className="flex gap-3 w-full">
+                                <p className="text-white font-black text-base sm:text-lg mb-3 uppercase tracking-tight">確定要刪除此動作？</p>
+                                <div className="flex gap-2.5 w-full max-w-[280px]">
                                   <button 
                                     onClick={() => executeDeleteExercise(session.id, ex.id)}
-                                    className="flex-1 bg-white text-red-500 py-3 rounded-2xl font-black uppercase text-sm active:scale-95 transition-all"
+                                    className="flex-1 bg-white text-red-600 py-2 sm:py-2.5 rounded-xl font-black uppercase text-xs sm:text-sm active:scale-95 transition-all shadow-sm"
                                   >
                                     確認刪除
                                   </button>
                                   <button 
                                     onClick={() => setConfirmDelete(null)}
-                                    className="flex-1 bg-black/20 text-white py-3 rounded-2xl font-black uppercase text-sm active:scale-95 transition-all"
+                                    className="flex-1 bg-black/30 text-white py-2 sm:py-2.5 rounded-xl font-black uppercase text-xs sm:text-sm active:scale-95 transition-all"
                                   >
                                     取消
                                   </button>
@@ -246,6 +424,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
                             )}
                           </AnimatePresence>
 
+                          {/* 動作卡片右上角紅色垃圾桶（更深紅色、清晰醒目） */}
                           <button 
                             type="button"
                             onClick={(e) => {
@@ -253,41 +432,43 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
                               e.stopPropagation();
                               setConfirmDelete({ sessionId: session.id, exerciseId: ex.id });
                             }}
-                            className="absolute top-3 right-3 w-12 h-12 flex items-center justify-center text-red-500/40 hover:text-red-500 active:scale-75 transition-all z-[100] cursor-pointer bg-red-50 rounded-full border border-red-100/50"
+                            className="absolute top-2.5 right-2.5 w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-red-600 hover:text-red-700 active:scale-75 transition-all z-[100] cursor-pointer bg-red-100 hover:bg-red-200/90 rounded-full border border-red-200 shadow-xs"
                             title="刪除此動作"
                           >
-                            <Trash2 className="w-5 h-5" />
+                            <Trash2 className="w-4 h-4 stroke-[2.3]" />
                           </button>
                           
-                          <div className="flex items-center gap-4">
-                            <div className="w-16 h-16 rounded-xl overflow-hidden bg-slate-100 shrink-0 flex items-center justify-center border border-black/5">
-                              <ExerciseSmallGif name={ex.name} />
-                            </div>
+                          {/* 動作名稱與 GIF（嚴格尺寸鎖定，專為當日總訓練防溢出與防超大設計） */}
+                          <div className="flex items-center gap-3.5 pr-8">
+                            <DailyWorkoutExerciseGif name={ex.name} />
                             <div className="flex-1 min-w-0">
-                              <span style={{ color: lightTheme.text }} className="text-xl font-black uppercase tracking-tight leading-tight py-1 block">{ex.name}</span>
-                              <div className="text-[11px] font-black text-slate-400 uppercase tracking-widest mt-1">
+                              <span style={{ color: lightTheme.text }} className="text-[16px] font-black uppercase tracking-tight leading-snug py-0.5 block truncate">
+                                {ex.name}
+                              </span>
+                              <div className="text-[11px] font-black text-black uppercase tracking-wider mt-0.5">
                                 {getMuscleGroupDisplay(ex.muscleGroup).cn} • {ex.sets.length} 組
                               </div>
                             </div>
                           </div>
                           
-                          <div className="grid grid-cols-1 gap-2">
+                          {/* 各組數據列表（#1 改為黑色、間距收斂） */}
+                          <div className="grid grid-cols-1 gap-1.5">
                             {ex.sets.map((set, sIdx) => (
-                              <div key={set.id} className="flex items-center justify-between py-2.5 px-4 bg-white/50 rounded-2xl border border-black/[0.03]">
-                                <div className="flex items-center gap-3">
-                                  <span className="text-[11px] font-black text-slate-300 w-4">#{sIdx + 1}</span>
+                              <div key={set.id} className="flex items-center justify-between py-1.5 px-3 bg-white/60 rounded-xl border border-black/[0.03]">
+                                <div className="flex items-center gap-2.5">
+                                  <span className="text-[12px] font-black text-black w-6 shrink-0">#{sIdx + 1}</span>
                                   <div className="flex items-center gap-1">
-                                    <span style={{ color: lightTheme.text }} className="text-lg font-black">{set.weight}</span>
+                                    <span style={{ color: lightTheme.text }} className="text-base font-black">{set.weight}</span>
                                     <span className="text-[10px] font-black text-black uppercase">kg</span>
                                   </div>
                                 </div>
-                                <div className="flex items-center gap-4">
+                                <div className="flex items-center gap-3">
                                   <div className="flex items-center gap-1">
-                                    <span style={{ color: lightTheme.text }} className="text-lg font-black">{set.reps}</span>
+                                    <span style={{ color: lightTheme.text }} className="text-base font-black">{set.reps}</span>
                                     <span className="text-[10px] font-black text-black uppercase">reps</span>
                                   </div>
-                                  <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${set.completed ? 'bg-[#CCFF00] text-black' : 'bg-slate-100 text-slate-200'}`}>
-                                    <Check className="w-3.5 h-3.5 stroke-[4]" />
+                                  <div className={`w-5 h-5 rounded-md flex items-center justify-center ${set.completed ? 'bg-[#CCFF00] text-black' : 'bg-slate-100 text-slate-300'}`}>
+                                    <Check className="w-3 h-3 stroke-[3.5]" />
                                   </div>
                                 </div>
                               </div>
@@ -312,75 +493,202 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
         </AnimatePresence>
       </div>
 
-      <div style={{ backgroundColor: lightTheme.bg }} className="rounded-[44px] p-8 border border-black/5 space-y-9 shadow-xl">
+      <div className="bg-white rounded-[32px] sm:rounded-[36px] p-5 sm:p-7 border border-slate-100 shadow-sm space-y-5 overflow-hidden relative">
+        {/* Pro 鎖定遮罩 (未訂閱者顯示) */}
+        {!entitlement.isPro && (
+          <div 
+            onClick={() => setShowPaywall(true)}
+            className="absolute inset-0 z-30 bg-white/80 backdrop-blur-[3px] flex flex-col items-center justify-center p-6 text-center cursor-pointer transition-all hover:bg-white/75 group"
+          >
+            <div className="w-14 h-14 rounded-2xl bg-black text-[#CCFF00] flex items-center justify-center mb-3 shadow-lg group-hover:scale-105 transition-transform">
+              <Lock className="w-7 h-7 stroke-[2.5]" />
+            </div>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#CCFF00] text-black text-xs font-black shadow-xs mb-2">
+              <Sparkles className="w-3.5 h-3.5 text-black" />
+              <span>IronLog Pro 專屬功能</span>
+            </div>
+            <h4 className="text-base font-black text-slate-900 mb-1">
+              訓練容量分布與肌群熱力圖
+            </h4>
+            <p className="text-xs text-slate-600 font-medium max-w-xs mb-4">
+              升級 Pro 解鎖肌肉群容量分佈、肌力成長趨勢與進階訓練分析
+            </p>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowPaywall(true);
+              }}
+              className="py-2.5 px-5 bg-black hover:bg-slate-800 text-[#CCFF00] rounded-xl font-black text-xs shadow-md active:scale-95 transition-all flex items-center gap-2"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>升級 Pro 解鎖完整分析</span>
+            </button>
+          </div>
+        )}
+
+        <div className={!entitlement.isPro ? 'filter blur-xs pointer-events-none select-none opacity-50 space-y-5' : 'space-y-5'}>
+        {/* Header */}
         <div className="flex justify-between items-center">
-           <div className="flex items-center gap-4">
-              <div style={{ backgroundColor: lightTheme.card }} className="w-12 h-12 border border-black/5 rounded-xl flex items-center justify-center shadow-inner">
-                <BarChart3 className="w-6 h-6 text-black" />
+           <div className="flex items-center gap-3 sm:gap-3.5">
+              <div className="w-10 h-10 sm:w-11 sm:h-11 border border-slate-200/80 rounded-2xl flex items-center justify-center bg-white shadow-xs">
+                <BarChart3 className="w-5 h-5 text-slate-900" />
               </div>
               <div>
-                <h3 style={{ color: lightTheme.text }} className="text-lg font-black uppercase tracking-tighter pr-2">訓練容量分布</h3>
-                <p className="text-[10px] font-black text-black uppercase tracking-widest mt-1">累積負荷分析</p>
+                <div className="flex items-center gap-1.5">
+                  <h3 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">訓練容量分布</h3>
+                  {!entitlement.isPro && (
+                    <span className="text-[10px] font-black text-black bg-[#CCFF00] px-2 py-0.5 rounded-full flex items-center gap-1">
+                      <Lock className="w-2.5 h-2.5" /> Pro
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-black font-semibold mt-0.5">累積負荷分析 • 依組數統計各肌群訓練量</p>
               </div>
            </div>
-           <div style={{ backgroundColor: lightTheme.card }} className="flex p-1.5 rounded-2xl border border-black/5 shadow-inner">
+           {/* Week / Month Toggle */}
+           <div className="bg-slate-100 p-1 rounded-full flex items-center">
               {(['week', 'month'] as const).map(p => (
-                <button key={p} onClick={() => setAnalysisPeriod(p)} className={`px-5 py-2 rounded-xl text-[11px] font-black uppercase transition-all ${analysisPeriod === p ? 'bg-black text-white shadow-md' : 'text-slate-300'}`}>
+                <button 
+                  key={p} 
+                  onClick={() => {
+                    setAnalysisPeriod(p);
+                  }} 
+                  className={`px-3.5 py-1 sm:py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+                    analysisPeriod === p ? 'bg-black text-white shadow-xs' : 'text-slate-400 hover:text-slate-600'
+                  }`}
+                >
                   {p === 'week' ? '週' : '月'}
                 </button>
               ))}
            </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-6">
-           {allMuscleGroups.map(muscle => {
-             const setTotal = analysisData[muscle] || 0;
-             const progressPercentage = Math.min(100, (setTotal / (20 * multiplier)) * 100);
-             const barColor = getHeatColor(setTotal);
-             const loadStatus = getLoadStatus(setTotal);
-             
-             return (
-               <div key={muscle} className="space-y-3">
-                  <div className="flex justify-between items-end px-1">
-                     <div className="space-y-1">
-                        <span className="text-[13px] font-black uppercase text-black block">{getMuscleGroupDisplay(muscle).cn}</span>
-                        <div className={`text-[13px] font-black uppercase flex items-center gap-1.5 ${loadStatus.color}`}>
-                           <div className="w-1.5 h-1.5 rounded-full bg-current opacity-40" />
-                           {loadStatus.label}
-                        </div>
-                     </div>
-                     <div className="text-right">
-                        <span className={setTotal > 0 ? "text-2xl font-black text-black" : "text-slate-200 font-black text-xl"}>{setTotal}</span>
-                        <span className="text-[9px] font-black text-black uppercase ml-1.5">Sets</span>
-                     </div>
-                  </div>
-                  <div style={{ backgroundColor: lightTheme.card }} className="h-3.5 w-full rounded-full overflow-hidden border border-black/5 shadow-inner p-0.5">
-                     <motion.div 
-                       initial={{ width: 0 }} 
-                       animate={{ width: `${progressPercentage}%`, backgroundColor: barColor }} 
-                       transition={{ duration: 1.5, ease: "circOut" }}
-                       className="h-full rounded-full shadow-sm" 
-                     />
-                  </div>
-               </div>
-             );
-           })}
-        </div>
+        {/* Interactive Body Muscle Map (Front + Back) with Legend */}
+        <BodyMuscleMap
+          muscleData={volumeAnalysis.muscleMapData}
+          selectedGroup={selectedVolumeMuscle}
+          onSelectGroup={(g) => setSelectedVolumeMuscle(prev => prev === g ? null : g)}
+          isMonthly={volumeAnalysis.isMonthly}
+        />
 
-        {/* 負荷強度圖例 - 依照使用者要求調整格式 */}
-        <div className="flex items-center justify-between pt-4 border-t border-black/5">
-           <div className="flex items-center gap-1">
-              <div className="w-3 h-3 rounded-sm bg-[#82CC00] shadow-sm" />
-              <span className="text-[13px] font-black uppercase text-slate-400 tracking-tighter">輕量(1-{thresholds.light}組)</span>
-           </div>
-           <div className="flex items-center gap-1">
-              <div className="w-3 h-3 rounded-sm bg-[#FACC15] shadow-sm" />
-              <span className="text-[13px] font-black uppercase text-slate-400 tracking-tighter">適中({thresholds.light + 1}-{thresholds.moderate}組)</span>
-           </div>
-           <div className="flex items-center gap-1">
-              <div className="w-3 h-3 rounded-sm bg-[#FF3B30] shadow-sm" />
-              <span className="text-[13px] font-black uppercase text-slate-400 tracking-tighter">力竭({thresholds.moderate + 1}+組)</span>
-           </div>
+        {/* Selected Muscle Detail View OR Muscle Group Grid */}
+        <AnimatePresence mode="wait">
+          {selectedVolumeMuscle ? (
+            <motion.div
+              key={`detail-${selectedVolumeMuscle}`}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2 }}
+              className="pt-2 border-t border-slate-100 space-y-4"
+            >
+              {/* Top Row: Muscle Name & Load Level */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <span
+                    className="w-4 h-4 rounded-full shrink-0 shadow-xs"
+                    style={{ backgroundColor: volumeAnalysis.muscleMapData[selectedVolumeMuscle].color }}
+                  />
+                  <h4 className="text-base font-bold text-slate-900">
+                    {volumeAnalysis.muscleMapData[selectedVolumeMuscle].nameCn}
+                  </h4>
+                </div>
+                <div className="text-right">
+                  <div className="text-base font-black text-slate-900 leading-tight">
+                    {volumeAnalysis.muscleMapData[selectedVolumeMuscle].sets} 組
+                  </div>
+                  <div 
+                    className="text-xs font-bold leading-tight mt-0.5"
+                    style={{ color: volumeAnalysis.muscleMapData[selectedVolumeMuscle].color }}
+                  >
+                    {volumeAnalysis.muscleMapData[selectedVolumeMuscle].levelLabel}
+                  </div>
+                </div>
+              </div>
+
+              {/* Progress Bar */}
+              <div className="w-full h-2.5 sm:h-3 bg-slate-100 rounded-full overflow-hidden">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ 
+                    width: `${Math.min(100, Math.max(volumeAnalysis.muscleMapData[selectedVolumeMuscle].sets > 0 ? 8 : 0, (volumeAnalysis.muscleMapData[selectedVolumeMuscle].sets / (volumeAnalysis.isMonthly ? 64 : 16)) * 100))}%` 
+                  }}
+                  transition={{ duration: 0.5, ease: "easeOut" }}
+                  style={{ backgroundColor: volumeAnalysis.muscleMapData[selectedVolumeMuscle].color }}
+                  className="h-full rounded-full shadow-xs"
+                />
+              </div>
+
+              {/* Major Exercises Breakdown */}
+              <div className="space-y-2 pt-1">
+                <div className="text-sm font-bold text-slate-900 mb-2">
+                  主要動作
+                </div>
+                {Object.entries(volumeAnalysis.stats[selectedVolumeMuscle]?.exercises || {}).length > 0 ? (
+                  <div className="divide-y divide-slate-100">
+                    {Object.entries(volumeAnalysis.stats[selectedVolumeMuscle].exercises)
+                      .sort((a, b) => b[1] - a[1])
+                      .map(([exName, count]) => (
+                        <div key={exName} className="py-2.5 flex items-center justify-between">
+                          <span className="text-[13px] font-medium text-slate-700">{exName}</span>
+                          <span className="text-[13px] font-bold text-slate-900">
+                            {count} 組
+                          </span>
+                        </div>
+                      ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-slate-400 py-3 text-center">
+                    本{volumeAnalysis.isMonthly ? '月' : '週'}尚無此肌群的訓練動作紀錄
+                  </p>
+                )}
+              </div>
+
+              {/* Return to Overview Button */}
+              <button
+                onClick={() => setSelectedVolumeMuscle(null)}
+                className="w-full py-2 text-xs font-semibold text-slate-400 hover:text-slate-700 transition-colors flex items-center justify-center gap-1 cursor-pointer pt-1"
+              >
+                <X className="w-3.5 h-3.5" /> 返回肌群列表
+              </button>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="grid-overview"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="pt-2 border-t border-slate-100"
+            >
+              <div className="grid grid-cols-2 gap-3">
+                {muscleGroupsList.map(muscle => {
+                  const data = volumeAnalysis.muscleMapData[muscle];
+                  return (
+                    <button
+                      key={muscle}
+                      onClick={() => setSelectedVolumeMuscle(muscle)}
+                      className="flex items-center gap-3 p-3.5 sm:p-4 rounded-2xl bg-white hover:bg-slate-50 border border-slate-100 shadow-xs transition-all active:scale-98 text-left cursor-pointer group"
+                    >
+                      <span 
+                        className="w-4 h-4 rounded-full shrink-0 shadow-xs" 
+                        style={{ backgroundColor: data.color }} 
+                      />
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-[13px] font-bold text-slate-800 leading-none truncate">
+                          {data.nameCn}
+                        </span>
+                        <span className="text-[14px] font-black text-slate-900 mt-1.5 leading-none">
+                          {data.sets} 組
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
         </div>
       </div>
 
@@ -392,8 +700,8 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
                 <Clock className="w-5 h-5 text-black" />
               </div>
               <div>
-                <h3 className="text-base font-black uppercase tracking-tighter pr-2 text-black">每週訓練時數</h3>
-                <p className="text-[10px] font-black text-black opacity-50 uppercase tracking-widest mt-0.5">
+                <h3 className="text-base font-black uppercase tracking-tighter text-black">每週訓練時數</h3>
+                <p className="text-[10px] font-black text-black uppercase tracking-widest mt-0.5">
                   {format(chartWeekStart, 'yyyy.MM.dd')} - {format(endOfWeek(chartWeekStart, { weekStartsOn: 1 }), 'MM.dd')}
                 </p>
               </div>
@@ -424,7 +732,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
           <ResponsiveContainer width="100%" height="100%">
             <BarChart 
               data={weeklyActivityData} 
-              margin={{ top: 20, right: 10, left: -10, bottom: 10 }}
+              margin={{ top: 25, right: 12, left: -4, bottom: 10 }}
               barGap={0}
             >
               <CartesianGrid vertical={false} stroke="#F1F5F9" strokeDasharray="3 3" />
@@ -432,23 +740,35 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
                 dataKey="name" 
                 axisLine={{ stroke: '#E2E8F0', strokeWidth: 1 }}
                 tickLine={false}
-                tick={{ fontSize: 10, fontWeight: 900, fill: '#000000' }}
-                dy={10}
+                tick={{ fontSize: 16, fontWeight: 900, fill: '#000000' }}
+                dy={8}
               />
               <YAxis 
+                domain={[0, 180]}
+                ticks={[0, 30, 60, 90, 120, 150, 180]}
+                width={42}
                 axisLine={{ stroke: '#E2E8F0', strokeWidth: 1 }}
                 tickLine={false}
-                tick={{ fontSize: 10, fontWeight: 900, fill: '#000000' }}
-                dx={-5}
-              />
+                tick={{ fontSize: 11, fontWeight: 900, fill: '#000000' }}
+                dx={-4}
+              >
+                <Label 
+                  value="分鐘" 
+                  position="top" 
+                  offset={10} 
+                  fill="#000000" 
+                  fontSize={11} 
+                  fontWeight={900} 
+                />
+              </YAxis>
               <Tooltip 
-                cursor={{ fill: 'rgba(0,0,0,0.02)' }}
+                cursor={{ fill: 'rgba(0,0,0,0.03)' }}
                 content={({ active, payload }) => {
                   if (active && payload && payload.length) {
                     return (
-                      <div className="bg-black text-white px-3 py-2 rounded-xl text-[10px] font-black shadow-xl border border-white/10">
-                        <p>{payload[0].payload.date}</p>
-                        <p className="text-[#CCFF00]">{payload[0].value} 分鐘</p>
+                      <div className="bg-black text-white px-3.5 py-2.5 rounded-xl text-xs font-black shadow-xl border border-white/10">
+                        <p className="text-slate-300">{payload[0].payload.date}（週{payload[0].payload.name}）</p>
+                        <p className="text-white font-extrabold text-sm mt-0.5">{payload[0].value} 分鐘</p>
                       </div>
                     );
                   }
@@ -457,13 +777,13 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
               />
               <Bar 
                 dataKey="minutes" 
-                radius={[8, 8, 8, 8]}
+                radius={[6, 6, 6, 6]}
                 barSize={32}
               >
                 {weeklyActivityData.map((entry, index) => (
                   <Cell 
                     key={`cell-${index}`} 
-                    fill={entry.isToday ? '#000000' : '#CCFF00'} 
+                    fill={entry.minutes > 0 ? '#000000' : 'transparent'} 
                   />
                 ))}
               </Bar>
@@ -471,16 +791,32 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, selectedDate,
           </ResponsiveContainer>
         </div>
 
-        <div className="grid grid-cols-7 gap-0 pl-[45px] pr-2">
+        <div className="grid grid-cols-7 gap-0 pl-[38px] pr-[12px]">
            {weeklyActivityData.map((day, idx) => (
              <div key={idx} className="flex flex-col items-center">
-               <div className={`text-[8px] font-black uppercase text-black ${day.isToday ? 'opacity-100' : 'opacity-40'}`}>
+               <div 
+                 className={`text-[13px] sm:text-[14px] font-black tracking-tight ${
+                   day.minutes > 0 
+                     ? 'text-black' 
+                     : day.isToday 
+                       ? 'text-slate-800' 
+                       : 'text-slate-300'
+                 }`}
+               >
                  {day.minutes}m
                </div>
              </div>
            ))}
         </div>
       </div>
+
+      {/* Pro Paywall Modal */}
+      <ProPaywall
+        isOpen={showPaywall}
+        onClose={() => setShowPaywall(false)}
+        featureTitle="訓練容量分布與趨勢分析"
+        featureDescription="升級 Pro 解鎖肌肉群容量分佈、肌力成長趨勢與進階訓練分析。"
+      />
     </div>
   );
 };

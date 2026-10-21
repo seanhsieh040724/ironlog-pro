@@ -1,4 +1,4 @@
-export type MuscleGroup = 'chest' | 'back' | 'quads' | 'hamstrings' | 'shoulders' | 'arms' | 'core' | 'glutes';
+export type MuscleGroup = 'chest' | 'back' | 'quads' | 'hamstrings' | 'shoulders' | 'arms' | 'core' | 'glutes' | 'fullbody';
 
 export interface SetEntry {
   id: string;
@@ -27,7 +27,9 @@ export interface Exercise {
 export interface WorkoutSession {
   id: string;
   startTime: number;
-  timerStartedAt?: number; // 新增：點擊「開始訓練」的時間戳記
+  timerStartedAt?: number | null; // 點擊「開始」或「繼續」時的時間戳記（暫停或未開始時為 null）
+  timerAccumulatedMs?: number; // 暫停時已累積之毫秒數
+  timerStatus?: 'idle' | 'running' | 'paused'; // 運動計時器狀態
   endTime?: number;
   title: string;
   exercises: ExerciseEntry[];
@@ -66,6 +68,21 @@ export interface UserGoal {
   dietaryPlan?: string;
 }
 
+export interface FoodItem {
+  id: string;
+  name: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack';
+  timestamp: number;
+  dateKey?: string;
+  isAiAnalyzed?: boolean;
+  addedToDaily?: boolean;
+  notes?: string;
+}
+
 export interface Achievement {
   id: string;
   type: 'PR_BREAK' | 'STREAK' | 'VOLUME';
@@ -74,7 +91,51 @@ export interface Achievement {
   exerciseName?: string;
 }
 
-export type AppTab = 'routines' | 'history' | 'workout' | 'diet' | 'coach' | 'settings';
+export type AppTab = 'routines' | 'history' | 'workout' | 'diet' | 'coach' | 'settings' | 'achievements';
+
+export type SubscriptionStatus = 
+  | 'inactive'
+  | 'active'
+  | 'pending'
+  | 'expired'
+  | 'revoked'
+  | 'unknown';
+
+export interface StoreKitProduct {
+  id: string;
+  displayName: string;
+  description: string;
+  displayPrice: string;
+  price: number;
+  currencyCode: string;
+  subscriptionPeriod?: {
+    unit: 'day' | 'week' | 'month' | 'year';
+    value: number;
+  };
+}
+
+export interface EntitlementInfo {
+  isPro: boolean;
+  status: SubscriptionStatus;
+  productId: string | null;
+  expirationDate: number | null;
+  willAutoRenew: boolean;
+  isSandbox?: boolean;
+  originalPurchaseDate?: number | null;
+}
+
+export interface PurchaseResult {
+  success: boolean;
+  entitlement?: EntitlementInfo;
+  userCancelled?: boolean;
+  error?: string;
+}
+
+export interface RestoreResult {
+  success: boolean;
+  entitlement?: EntitlementInfo;
+  error?: string;
+}
 
 declare global {
   interface Window {
@@ -83,7 +144,11 @@ declare global {
         notificationHandler?: {
           postMessage: (message: any) => void;
         };
+        storeKitHandler?: {
+          postMessage: (message: any) => void;
+        };
       };
     };
+    __IRONLOG_STOREKIT_CALLBACK__?: (payload: any) => void;
   }
 }

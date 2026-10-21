@@ -1,27 +1,18 @@
 import React, { useContext, useMemo, useState, useEffect, useRef } from 'react';
 import { AppContext } from '../App';
-import { BodyMetric, UserGoal } from '../types';
+import { BodyMetric, UserGoal, FoodItem } from '../types';
 import { getBMIAnalysis, calculateSuggestedCalories, calculateMacros, calculateWaterIntake } from '../utils/fitnessMath';
 import { 
   Target, Activity, Trash2, Flame, Edit3, CheckCircle2, Save, Beef, Soup, 
   Droplets, GlassWater, Plus, Share2, ScanBarcode, Camera, Sparkles, 
   Loader2, Calendar, History, Upload, Sparkle, Check, X, 
-  ChevronRight, Utensils, Dumbbell, Clock, Info, Search, RefreshCw, Layers
+  ChevronRight, ChevronLeft, Utensils, Dumbbell, Clock, Info, Search, RefreshCw, Layers, Lock
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { analyzeFoodImage } from '../services/aiService';
+import { analyzeFoodImage, sanitizeFoodAnalysisText, parseFoodAnalysisResult } from '../services/aiService';
+import { useEntitlement } from '../services/storeKitBridge';
+import { ProPaywall } from './ProPaywall';
 import Markdown from 'react-markdown';
-
-interface FoodItem {
-  id: string;
-  name: string;
-  calories: number;
-  protein: number;
-  carbs: number;
-  fat: number;
-  mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack';
-  timestamp: number;
-}
 
 interface ExerciseBurnItem {
   id: string;
@@ -57,13 +48,46 @@ export const DietView: React.FC = () => {
   // Tab: 營養攝取 vs 超市掃描
   const [activeSubTab, setActiveSubTab] = useState<'macros' | 'scanner'>('macros');
 
-  // 今日日期字串 (YYYY-MM-DD) 用於紀錄分類
-  const todayKey = useMemo(() => {
-    const d = new Date();
+  // 日期處理輔助函式
+  const formatDateKey = (d: Date): string => {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-  }, []);
+  };
 
-  // 今日攝取的食物紀錄
+  const parseDateKey = (key: string): Date => {
+    const parts = key.split('-').map(Number);
+    if (parts.length === 3 && !parts.some(isNaN)) {
+      return new Date(parts[0], parts[1] - 1, parts[2]);
+    }
+    return new Date();
+  };
+
+  const getCurrentMealType = (): 'breakfast' | 'lunch' | 'dinner' | 'snack' => {
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 11) return 'breakfast';
+    if (hour >= 11 && hour < 15) return 'lunch';
+    if (hour >= 17 && hour < 22) return 'dinner';
+    return 'snack';
+  };
+
+  // 今日日期字串 (YYYY-MM-DD) 用於紀錄分類
+  const todayKey = useMemo(() => formatDateKey(new Date()), []);
+
+  // 當前選取的檢視日期（預設為今日）
+  const [selectedDateKey, setSelectedDateKey] = useState<string>(todayKey);
+
+  // 登記曾有紀錄的日期索引
+  const trackRecordedDate = (dateKey: string) => {
+    try {
+      const saved = localStorage.getItem('ironlog_diet_recorded_dates');
+      const dates: string[] = saved ? JSON.parse(saved) : [];
+      if (!dates.includes(dateKey)) {
+        dates.push(dateKey);
+        localStorage.setItem('ironlog_diet_recorded_dates', JSON.stringify(dates));
+      }
+    } catch {}
+  };
+
+  // 當前選取日期的食物紀錄
   const [foodLogs, setFoodLogs] = useState<FoodItem[]>(() => {
     try {
       const saved = localStorage.getItem(`ironlog_food_logs_${todayKey}`);
@@ -72,7 +96,7 @@ export const DietView: React.FC = () => {
     return [];
   });
 
-  // 今日運動消耗紀錄
+  // 當前選取日期的運動消耗紀錄
   const [exerciseLogs, setExerciseLogs] = useState<ExerciseBurnItem[]>(() => {
     try {
       const saved = localStorage.getItem(`ironlog_exercise_logs_${todayKey}`);
@@ -81,7 +105,7 @@ export const DietView: React.FC = () => {
     return [];
   });
 
-  // 今日飲水量
+  // 當前選取日期的飲水量
   const [waterIntakeCurrent, setWaterIntakeCurrent] = useState<number>(() => {
     try {
       const saved = localStorage.getItem(`ironlog_water_${todayKey}`);
@@ -90,6 +114,30 @@ export const DietView: React.FC = () => {
       return 0;
     }
   });
+
+  // 當選定日期改變時，自動載入該日期的紀錄
+  useEffect(() => {
+    try {
+      const savedFoods = localStorage.getItem(`ironlog_food_logs_${selectedDateKey}`);
+      setFoodLogs(savedFoods ? JSON.parse(savedFoods) : []);
+    } catch {
+      setFoodLogs([]);
+    }
+
+    try {
+      const savedExercises = localStorage.getItem(`ironlog_exercise_logs_${selectedDateKey}`);
+      setExerciseLogs(savedExercises ? JSON.parse(savedExercises) : []);
+    } catch {
+      setExerciseLogs([]);
+    }
+
+    try {
+      const savedWater = localStorage.getItem(`ironlog_water_${selectedDateKey}`);
+      setWaterIntakeCurrent(savedWater ? Number(savedWater) : 0);
+    } catch {
+      setWaterIntakeCurrent(0);
+    }
+  }, [selectedDateKey]);
 
   // Modal 狀態
   const [showRecalcModal, setShowRecalcModal] = useState(false);
@@ -128,26 +176,55 @@ export const DietView: React.FC = () => {
     caloriesBurned: '320'
   });
 
+  // StoreKit Pro 權限狀態與 Paywall
+  const entitlement = useEntitlement();
+  const [showPaywall, setShowPaywall] = useState(false);
+  const [paywallFeature, setPaywallFeature] = useState<{ title: string; desc: string }>({
+    title: 'IronLog Pro',
+    desc: ''
+  });
+
   // AI 掃描與相片分析
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<string | null>(() => {
-    return localStorage.getItem('ironlog_last_food_analysis') || null;
+    const saved = localStorage.getItem('ironlog_last_food_analysis');
+    return saved ? sanitizeFoodAnalysisText(saved) : null;
   });
+  const [isCurrentAnalysisAdded, setIsCurrentAnalysisAdded] = useState<boolean>(() => {
+    try {
+      const lastAnalysis = localStorage.getItem('ironlog_last_food_analysis');
+      const lastAdded = localStorage.getItem('ironlog_last_food_analysis_added');
+      return !!(lastAnalysis && lastAdded && lastAdded === lastAnalysis);
+    } catch {
+      return false;
+    }
+  });
+
+  const parsedFood = useMemo(() => {
+    return analysisResult ? parseFoodAnalysisResult(analysisResult) : null;
+  }, [analysisResult]);
+
   const [supermarketSearch, setSupermarketSearch] = useState('');
 
-  // 儲存今日飲食與運動紀錄
+  // 儲存當前選取日期的飲食與運動紀錄
   useEffect(() => {
-    localStorage.setItem(`ironlog_food_logs_${todayKey}`, JSON.stringify(foodLogs));
-  }, [foodLogs, todayKey]);
+    localStorage.setItem(`ironlog_food_logs_${selectedDateKey}`, JSON.stringify(foodLogs));
+    if (foodLogs.length > 0) {
+      trackRecordedDate(selectedDateKey);
+    }
+  }, [foodLogs, selectedDateKey]);
 
   useEffect(() => {
-    localStorage.setItem(`ironlog_exercise_logs_${todayKey}`, JSON.stringify(exerciseLogs));
-  }, [exerciseLogs, todayKey]);
+    localStorage.setItem(`ironlog_exercise_logs_${selectedDateKey}`, JSON.stringify(exerciseLogs));
+    if (exerciseLogs.length > 0) {
+      trackRecordedDate(selectedDateKey);
+    }
+  }, [exerciseLogs, selectedDateKey]);
 
   useEffect(() => {
-    localStorage.setItem(`ironlog_water_${todayKey}`, String(waterIntakeCurrent));
-  }, [waterIntakeCurrent, todayKey]);
+    localStorage.setItem(`ironlog_water_${selectedDateKey}`, String(waterIntakeCurrent));
+  }, [waterIntakeCurrent, selectedDateKey]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -220,9 +297,9 @@ export const DietView: React.FC = () => {
       type: recalcForm.goalType as any,
       targetWeight: Number(recalcForm.targetWeight) || Number(recalcForm.weight) || 75,
       activityLevel: recalcForm.activityLevel as any,
-      proteinRatio: recalcForm.proteinRatio,
-      carbRatio: recalcForm.carbRatio,
-      fatRatio: recalcForm.fatRatio
+      proteinRatio: entitlement.isPro ? recalcForm.proteinRatio : (globalGoal.proteinRatio || 35),
+      carbRatio: entitlement.isPro ? recalcForm.carbRatio : (globalGoal.carbRatio || 25),
+      fatRatio: entitlement.isPro ? recalcForm.fatRatio : (globalGoal.fatRatio || 40)
     };
     setGlobalGoal(updatedGoal);
     localStorage.setItem('ironlog_v3_goal', JSON.stringify(updatedGoal));
@@ -257,7 +334,8 @@ export const DietView: React.FC = () => {
       carbs: Number(foodForm.carbs) || 0,
       fat: Number(foodForm.fat) || 0,
       mealType: foodForm.mealType,
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      dateKey: selectedDateKey
     };
 
     setFoodLogs(prev => [newItem, ...prev]);
@@ -310,27 +388,158 @@ export const DietView: React.FC = () => {
     showToast('已複製今日營養攝取摘要至剪貼簿！');
   };
 
-  // 圖片 AI 辨識分析
+  // 圖片 AI 辨識分析（加入手機端照片自動適度縮放壓縮，避免數位相機原始 10MB+ 超大圖導致傳輸逾時或記憶體溢出）
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setSelectedImage(reader.result as string);
+      reader.onload = (event) => {
+        const rawResult = event.target?.result as string;
+        if (!rawResult) return;
+
+        // 使用 Canvas 將手機端高畫質相片等比例縮放至最高邊長 1200px 並轉為高品質 JPEG
+        const img = new Image();
+        img.onload = () => {
+          try {
+            const canvas = document.createElement('canvas');
+            const MAX_DIM = 1200;
+            let { width, height } = img;
+            if (width > MAX_DIM || height > MAX_DIM) {
+              if (width > height) {
+                height = Math.round((height * MAX_DIM) / width);
+                width = MAX_DIM;
+              } else {
+                width = Math.round((width * MAX_DIM) / height);
+                height = MAX_DIM;
+              }
+            }
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+              ctx.drawImage(img, 0, 0, width, height);
+              const compressedBase64 = canvas.toDataURL('image/jpeg', 0.85);
+              setSelectedImage(compressedBase64);
+              setAnalysisResult(null);
+              setIsCurrentAnalysisAdded(false);
+              localStorage.removeItem('ironlog_last_food_analysis_added');
+              return;
+            }
+          } catch (err) {
+            console.warn('Image compression fallback:', err);
+          }
+          setSelectedImage(rawResult);
+          setAnalysisResult(null);
+          setIsCurrentAnalysisAdded(false);
+          localStorage.removeItem('ironlog_last_food_analysis_added');
+        };
+        img.onerror = () => {
+          setSelectedImage(rawResult);
+          setAnalysisResult(null);
+          setIsCurrentAnalysisAdded(false);
+          localStorage.removeItem('ironlog_last_food_analysis_added');
+        };
+        img.src = rawResult;
       };
       reader.readAsDataURL(file);
+      // 清除 input 數值，方便連續重拍或選擇同一檔名
+      e.target.value = '';
     }
   };
 
   const handleAnalyzeFood = async () => {
     if (!selectedImage || isAnalyzing) return;
+    if (!entitlement.isPro) {
+      setPaywallFeature({
+        title: 'AI 食物拍照分析',
+        desc: '升級 IronLog Pro 即可享有無限次 AI 拍照辨識食物卡路里與三大營養素。'
+      });
+      setShowPaywall(true);
+      return;
+    }
     setIsAnalyzing(true);
     setAnalysisResult(null);
+    setIsCurrentAnalysisAdded(false);
+    localStorage.removeItem('ironlog_last_food_analysis_added');
 
-    const result = await analyzeFoodImage(selectedImage);
-    setAnalysisResult(result);
-    localStorage.setItem('ironlog_last_food_analysis', result);
+    const rawResult = await analyzeFoodImage(selectedImage);
+    const sanitized = sanitizeFoodAnalysisText(rawResult);
+    setAnalysisResult(sanitized);
+    localStorage.setItem('ironlog_last_food_analysis', sanitized);
     setIsAnalyzing(false);
+  };
+
+  // 加入今日攝取
+  const handleAddToDailyIntake = () => {
+    if (isCurrentAnalysisAdded) return;
+    if (!parsedFood || !parsedFood.isValid) {
+      showToast('無法辨識有效熱量數值，請重新拍攝。');
+      return;
+    }
+
+    const newItem: FoodItem = {
+      id: crypto.randomUUID(),
+      name: parsedFood.name || 'AI 拍照分析食物',
+      calories: parsedFood.calories,
+      protein: parsedFood.protein,
+      carbs: parsedFood.carbs,
+      fat: parsedFood.fat,
+      mealType: getCurrentMealType(),
+      timestamp: Date.now(),
+      dateKey: todayKey,
+      isAiAnalyzed: true,
+      addedToDaily: true
+    };
+
+    // 取得今日最新的紀錄清單並儲存
+    let todayFoods: FoodItem[] = [];
+    try {
+      const saved = localStorage.getItem(`ironlog_food_logs_${todayKey}`);
+      if (saved) todayFoods = JSON.parse(saved);
+    } catch {}
+
+    const updatedTodayFoods = [newItem, ...todayFoods];
+    localStorage.setItem(`ironlog_food_logs_${todayKey}`, JSON.stringify(updatedTodayFoods));
+    trackRecordedDate(todayKey);
+
+    // 若使用者目前就在瀏覽今日，即時同步更新畫面；若在歷史日期，切回今日並更新
+    if (selectedDateKey === todayKey) {
+      setFoodLogs(updatedTodayFoods);
+    } else {
+      setSelectedDateKey(todayKey);
+      setFoodLogs(updatedTodayFoods);
+    }
+
+    setIsCurrentAnalysisAdded(true);
+    if (analysisResult) {
+      localStorage.setItem('ironlog_last_food_analysis_added', analysisResult);
+    }
+    showToast(`已加入今日攝取 · ${parsedFood.calories} kcal`);
+  };
+
+  // 重新拍攝
+  const handleRetakePhoto = () => {
+    setSelectedImage(null);
+    setAnalysisResult(null);
+    setIsAnalyzing(false);
+    setIsCurrentAnalysisAdded(false);
+    localStorage.removeItem('ironlog_last_food_analysis');
+    localStorage.removeItem('ironlog_last_food_analysis_added');
+    setTimeout(() => {
+      fileInputRef.current?.click();
+    }, 120);
+  };
+
+  const handleSelectMacroRatio = (protein: number, carbs: number, fat: number) => {
+    if (!entitlement.isPro) {
+      setPaywallFeature({
+        title: 'TDEE 營養比例自訂',
+        desc: '升級 IronLog Pro 即可自由調整高蛋白、低碳水或運動員專屬巨量營養素比例。'
+      });
+      setShowPaywall(true);
+      return;
+    }
+    setRecalcForm({ ...recalcForm, proteinRatio: protein, carbRatio: carbs, fatRatio: fat });
   };
 
   // 超市常見健身餐品範本清單
@@ -363,11 +572,12 @@ export const DietView: React.FC = () => {
       protein: preset.p,
       carbs: preset.c,
       fat: preset.f,
-      mealType: 'lunch',
-      timestamp: Date.now()
+      mealType: getCurrentMealType(),
+      timestamp: Date.now(),
+      dateKey: selectedDateKey
     };
     setFoodLogs(prev => [newItem, ...prev]);
-    showToast(`已加入「${preset.name}」到今日攝取！`);
+    showToast(`已加入「${preset.name}」到攝取紀錄！`);
   };
 
   // 快速加入食物預設模板
@@ -433,11 +643,56 @@ export const DietView: React.FC = () => {
             transition={{ duration: 0.15 }}
             className="space-y-4"
           >
+            {/* 日期選擇器與歷史回看 */}
+            <div className="bg-white rounded-[24px] p-3.5 border border-black/5 shadow-2xs flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => {
+                  const prev = parseDateKey(selectedDateKey);
+                  prev.setDate(prev.getDate() - 1);
+                  setSelectedDateKey(formatDateKey(prev));
+                }}
+                className="w-8 h-8 rounded-xl bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-700 transition-colors active:scale-95"
+                title="前一天"
+              >
+                <ChevronLeft className="w-4 h-4 stroke-[2.5]" />
+              </button>
+
+              <div className="flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-[#82CC00]" />
+                <span className="text-xs sm:text-sm font-black text-slate-900">
+                  {selectedDateKey === todayKey ? `今天 (${selectedDateKey})` : selectedDateKey}
+                </span>
+                {selectedDateKey !== todayKey && (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedDateKey(todayKey)}
+                    className="text-[10px] font-black bg-[#CCFF00] hover:bg-[#b8e600] text-black px-2.5 py-0.5 rounded-full transition-all active:scale-95 shadow-2xs"
+                  >
+                    回到今天
+                  </button>
+                )}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  const next = parseDateKey(selectedDateKey);
+                  next.setDate(next.getDate() + 1);
+                  setSelectedDateKey(formatDateKey(next));
+                }}
+                className="w-8 h-8 rounded-xl bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-700 transition-colors active:scale-95"
+                title="後一天"
+              >
+                <ChevronRight className="w-4 h-4 stroke-[2.5]" />
+              </button>
+            </div>
+
             {/* 卡片 1：每日熱量目標 (與截圖 100% 結構一致) */}
             <div className="bg-white rounded-[28px] p-6 border border-black/5 shadow-sm space-y-3">
               <div className="flex items-center justify-between">
                 <h2 className="text-base md:text-lg font-black text-slate-900 tracking-tight">
-                  每日熱量目標
+                  {selectedDateKey === todayKey ? '每日熱量目標' : `${selectedDateKey} 熱量目標`}
                 </h2>
                 <button
                   onClick={() => {
@@ -490,7 +745,7 @@ export const DietView: React.FC = () => {
               {/* 頂部標題與分享圖示 */}
               <div className="flex items-center justify-between">
                 <h2 className="text-base md:text-lg font-black text-slate-900 tracking-tight">
-                  今日營養攝取（Today's Macros）
+                  {selectedDateKey === todayKey ? "今日營養攝取（Today's Macros）" : `${selectedDateKey} 營養攝取`}
                 </h2>
                 <button
                   onClick={handleShareMacros}
@@ -507,13 +762,42 @@ export const DietView: React.FC = () => {
               </p>
 
               {/* 剩餘可攝取大卡 Banner (綠色主題高亮膠囊) */}
-              <div className="bg-[#CCFF00]/15 border border-[#82CC00]/30 rounded-2xl p-4 text-center">
+              <div className={`rounded-2xl p-4 text-center border transition-all ${
+                remainingCalories < -100
+                  ? 'bg-amber-500/10 border-amber-500/30'
+                  : Math.abs(remainingCalories) <= 100 && consumed.calories > 0
+                    ? 'bg-sky-500/10 border-sky-500/30'
+                    : 'bg-[#CCFF00]/15 border-[#82CC00]/30'
+              }`}>
                 <span className="text-sm md:text-base font-black text-slate-900 flex items-center justify-center gap-1.5">
                   <span>🔥</span>
-                  <span>剩餘可攝取：{remainingCalories} 大卡</span>
+                  <span>
+                    {remainingCalories < -100
+                      ? `今日已超過目標 ${Math.abs(remainingCalories)} kcal`
+                      : Math.abs(remainingCalories) <= 100 && consumed.calories > 0
+                        ? `今日熱量已接近目標（已攝取 ${consumed.calories} kcal）`
+                        : `今日還有 ${remainingCalories} kcal（剩餘可攝取）`}
+                  </span>
                 </span>
+
+                {/* 總熱量進度條 */}
+                <div className="mt-2.5 space-y-1">
+                  <div className="flex justify-between items-center text-[11px] font-bold text-slate-600 px-0.5">
+                    <span>已攝取 {consumed.calories} kcal</span>
+                    <span>目標 {targetCalories} kcal</span>
+                  </div>
+                  <div className="h-2 w-full bg-black/5 rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full rounded-full transition-all duration-300 ${
+                        remainingCalories < -100 ? 'bg-amber-500' : 'bg-[#82CC00]'
+                      }`}
+                      style={{ width: `${Math.min(100, targetCalories > 0 ? (consumed.calories / targetCalories) * 100 : 0)}%` }}
+                    />
+                  </div>
+                </div>
+
                 {totalBurnedCalories > 0 && (
-                  <span className="text-[10px] text-slate-600 font-bold mt-1 block">
+                  <span className="text-[10px] text-slate-600 font-bold mt-1.5 block">
                     (已包含今日運動消耗 +{totalBurnedCalories} 大卡)
                   </span>
                 )}
@@ -627,7 +911,9 @@ export const DietView: React.FC = () => {
             {(foodLogs.length > 0 || exerciseLogs.length > 0) && (
               <div className="bg-white rounded-[28px] p-6 border border-black/5 shadow-sm space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-black text-slate-900">今日飲食與消耗紀錄</h3>
+                  <h3 className="text-sm font-black text-slate-900">
+                    {selectedDateKey === todayKey ? '今日飲食與消耗紀錄' : `${selectedDateKey} 飲食與消耗紀錄`}
+                  </h3>
                   <span className="text-[11px] font-bold text-slate-400">
                     共 {foodLogs.length} 筆食物 · {exerciseLogs.length} 筆運動
                   </span>
@@ -638,18 +924,31 @@ export const DietView: React.FC = () => {
                   {foodLogs.map((item) => (
                     <div key={item.id} className="py-3 flex items-center justify-between text-xs">
                       <div className="flex items-center gap-2.5 min-w-0">
-                        <span className="w-2 h-2 rounded-full bg-[#82CC00] shrink-0" />
+                        <span className={`w-2 h-2 rounded-full shrink-0 ${item.isAiAnalyzed ? 'bg-amber-500' : 'bg-[#82CC00]'}`} />
                         <div className="min-w-0">
-                          <p className="font-black text-slate-900 truncate">{item.name}</p>
-                          <p className="text-[10px] text-slate-400 font-bold mt-0.5">
-                            {item.calories} kcal · 蛋 {item.protein}g · 碳 {item.carbs}g · 脂 {item.fat}g
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <p className="font-black text-slate-900 truncate">{item.name}</p>
+                            {item.isAiAnalyzed && (
+                              <span className="text-[9px] font-black text-black bg-[#CCFF00] px-1.5 py-0.5 rounded-full shrink-0">
+                                AI 拍照
+                              </span>
+                            )}
+                            {item.timestamp && (
+                              <span className="text-[10px] text-slate-400 font-medium">
+                                {new Date(item.timestamp).toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-[10px] text-slate-500 font-bold mt-0.5">
+                            <span className="text-[#82CC00] font-black">{item.calories} kcal</span> · 蛋 {item.protein}g · 碳 {item.carbs}g · 脂 {item.fat}g
                           </p>
                         </div>
                       </div>
 
                       <button
                         onClick={() => handleDeleteFoodItem(item.id)}
-                        className="p-1.5 text-slate-400 hover:text-rose-500 rounded-lg transition-colors"
+                        className="p-1.5 text-slate-400 hover:text-rose-500 rounded-lg transition-colors shrink-0"
+                        title="刪除紀錄"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -671,13 +970,22 @@ export const DietView: React.FC = () => {
 
                       <button
                         onClick={() => handleDeleteExerciseItem(ex.id)}
-                        className="p-1.5 text-slate-400 hover:text-rose-500 rounded-lg transition-colors"
+                        className="p-1.5 text-slate-400 hover:text-rose-500 rounded-lg transition-colors shrink-0"
+                        title="刪除紀錄"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>
                   ))}
                 </div>
+
+                {/* 總攝取彙總欄 */}
+                {foodLogs.length > 0 && (
+                  <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-black text-slate-900">
+                    <span>當日總攝取</span>
+                    <span className="text-sm font-black text-[#82CC00]">{consumed.calories} kcal</span>
+                  </div>
+                )}
               </div>
             )}
           </motion.div>
@@ -752,10 +1060,18 @@ export const DietView: React.FC = () => {
                 >
                   {isAnalyzing ? (
                     <Loader2 className="w-4 h-4 animate-spin text-black" />
+                  ) : !entitlement.isPro ? (
+                    <Lock className="w-4 h-4 text-black stroke-[2.5]" />
                   ) : (
                     <Sparkle className="w-4 h-4 text-black" />
                   )}
-                  <span>{isAnalyzing ? 'AI 正在分析卡路里與三大營養素...' : '開始 AI 辨識分析'}</span>
+                  <span>
+                    {isAnalyzing 
+                      ? 'AI 正在分析卡路里與三大營養素...' 
+                      : entitlement.isPro 
+                        ? '開始 AI 辨識分析' 
+                        : '🔒 Pro 專屬 · 開始 AI 辨識分析'}
+                  </span>
                 </button>
               )}
 
@@ -781,9 +1097,50 @@ export const DietView: React.FC = () => {
                         <p className="text-xs text-slate-500 font-bold">正在比對食品庫數據，計算卡路里與巨量營養素...</p>
                       </div>
                     ) : (
-                      <div className="prose prose-sm text-slate-800 text-xs leading-relaxed font-medium markdown-body overflow-x-auto">
-                        <Markdown>{analysisResult || ''}</Markdown>
-                      </div>
+                      <>
+                        <div className="prose prose-sm text-slate-800 text-xs leading-relaxed font-medium markdown-body overflow-x-auto whitespace-pre-line">
+                          <Markdown>{analysisResult ? sanitizeFoodAnalysisText(analysisResult) : ''}</Markdown>
+                        </div>
+
+                        {/* 分析完成後操作按鈕：加入今日攝取 & 重新拍攝 */}
+                        {analysisResult && (
+                          <div className="pt-3 border-t border-slate-200/80 flex flex-col sm:flex-row gap-2.5">
+                            {parsedFood && parsedFood.isValid ? (
+                              <button
+                                type="button"
+                                onClick={handleAddToDailyIntake}
+                                disabled={isCurrentAnalysisAdded}
+                                className={`flex-1 py-3 px-4 rounded-2xl font-black text-xs md:text-sm flex items-center justify-center gap-2 transition-all ${
+                                  isCurrentAnalysisAdded
+                                    ? 'bg-slate-200 text-slate-500 cursor-not-allowed border border-slate-300'
+                                    : 'bg-[#CCFF00] hover:bg-[#b8e600] text-black active:scale-98 shadow-md'
+                                }`}
+                              >
+                                {isCurrentAnalysisAdded ? (
+                                  <>
+                                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                                    <span>✓ 已加入今日攝取</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Plus className="w-4 h-4 stroke-[3]" />
+                                    <span>＋ 加入今日攝取</span>
+                                  </>
+                                )}
+                              </button>
+                            ) : null}
+
+                            <button
+                              type="button"
+                              onClick={handleRetakePhoto}
+                              className="flex-1 py-3 px-4 rounded-2xl font-black text-xs md:text-sm bg-white hover:bg-slate-100 text-slate-800 border border-slate-200 flex items-center justify-center gap-2 active:scale-98 transition-all shadow-2xs"
+                            >
+                              <RefreshCw className="w-4 h-4" />
+                              <span>↻ 重新拍攝</span>
+                            </button>
+                          </div>
+                        )}
+                      </>
                     )}
                   </motion.div>
                 )}
@@ -1035,42 +1392,58 @@ export const DietView: React.FC = () => {
 
                 {/* 三大營養素比例 */}
                 <div>
-                  <label className="block text-[11px] text-slate-500 mb-1">
-                    三大營養素比例 (蛋白 {recalcForm.proteinRatio}% · 碳水 {recalcForm.carbRatio}% · 脂肪 {recalcForm.fatRatio}%)
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-[11px] text-slate-500 font-bold">
+                      三大營養素比例 (蛋白 {recalcForm.proteinRatio}% · 碳水 {recalcForm.carbRatio}% · 脂肪 {recalcForm.fatRatio}%)
+                    </label>
+                    {!entitlement.isPro && (
+                      <span className="text-[10px] font-black text-black bg-[#CCFF00] px-2 py-0.5 rounded-full flex items-center gap-1 border border-black/10">
+                        <Lock className="w-2.5 h-2.5 stroke-[2.5]" /> Pro
+                      </span>
+                    )}
+                  </div>
                   <div className="grid grid-cols-3 gap-2">
                     <button
                       type="button"
-                      onClick={() => setRecalcForm({ ...recalcForm, proteinRatio: 35, carbRatio: 25, fatRatio: 40 })}
-                      className={`py-1.5 rounded-xl border text-[10px] font-bold ${
+                      onClick={() => handleSelectMacroRatio(35, 25, 40)}
+                      className={`py-1.5 rounded-xl border text-[10px] font-bold transition-all relative ${
                         recalcForm.proteinRatio === 35 && recalcForm.carbRatio === 25
                           ? 'bg-black text-white border-black'
                           : 'bg-slate-50 text-slate-700 border-slate-200'
                       }`}
                     >
                       高蛋白低碳 35/25/40
+                      {!entitlement.isPro && !(recalcForm.proteinRatio === 35 && recalcForm.carbRatio === 25) && (
+                        <Lock className="w-2.5 h-2.5 absolute top-1 right-1 text-slate-400" />
+                      )}
                     </button>
                     <button
                       type="button"
-                      onClick={() => setRecalcForm({ ...recalcForm, proteinRatio: 30, carbRatio: 45, fatRatio: 25 })}
-                      className={`py-1.5 rounded-xl border text-[10px] font-bold ${
+                      onClick={() => handleSelectMacroRatio(30, 45, 25)}
+                      className={`py-1.5 rounded-xl border text-[10px] font-bold transition-all relative ${
                         recalcForm.proteinRatio === 30 && recalcForm.carbRatio === 45
                           ? 'bg-black text-white border-black'
                           : 'bg-slate-50 text-slate-700 border-slate-200'
                       }`}
                     >
                       均衡增肌 30/45/25
+                      {!entitlement.isPro && (
+                        <Lock className="w-2.5 h-2.5 absolute top-1 right-1 text-slate-400" />
+                      )}
                     </button>
                     <button
                       type="button"
-                      onClick={() => setRecalcForm({ ...recalcForm, proteinRatio: 40, carbRatio: 35, fatRatio: 25 })}
-                      className={`py-1.5 rounded-xl border text-[10px] font-bold ${
+                      onClick={() => handleSelectMacroRatio(40, 35, 25)}
+                      className={`py-1.5 rounded-xl border text-[10px] font-bold transition-all relative ${
                         recalcForm.proteinRatio === 40
                           ? 'bg-black text-white border-black'
                           : 'bg-slate-50 text-slate-700 border-slate-200'
                       }`}
                     >
                       運動員 40/35/25
+                      {!entitlement.isPro && (
+                        <Lock className="w-2.5 h-2.5 absolute top-1 right-1 text-slate-400" />
+                      )}
                     </button>
                   </div>
                 </div>
@@ -1409,6 +1782,14 @@ export const DietView: React.FC = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Pro 訂閱 Paywall */}
+      <ProPaywall
+        isOpen={showPaywall}
+        onClose={() => setShowPaywall(false)}
+        featureTitle={paywallFeature.title}
+        featureDescription={paywallFeature.desc}
+      />
     </div>
   );
 };

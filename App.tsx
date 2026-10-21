@@ -1,5 +1,5 @@
-import React, { useState, useEffect, createContext, useMemo } from 'react';
-import { WorkoutView } from './components/WorkoutView';
+import React, { useState, useEffect, createContext, useMemo, useRef, useCallback, useLayoutEffect } from 'react';
+import { WorkoutView, resetWorkoutScrollPosition } from './components/WorkoutView';
 import { RoutineView } from './components/RoutineView';
 import { HistoryView } from './components/HistoryView';
 import { DietView } from './components/DietView';
@@ -8,11 +8,16 @@ import { SettingsView } from './components/SettingsView';
 import { RestTimer } from './components/RestTimer';
 import { CalendarStrip } from './components/CalendarStrip';
 import { WorkoutSummaryModal } from './components/WorkoutSummaryModal';
+import { AchievementsView } from './components/AchievementsView';
 import { AppTab, WorkoutSession, BodyMetric, UserGoal, RoutineTemplate } from './types';
 import { Dumbbell, History, LayoutGrid, Calendar, Apple, Bot, Settings } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { format } from 'date-fns';
+import { format, isSameDay } from 'date-fns';
 import { ContainerStyle, lightTheme } from './themeStyles';
+import { isNativeStoreKitAvailable, getCurrentEntitlements } from './utils/storeKit';
+import { triggerHapticSuccess } from './utils/feedback';
+import { evaluateAllAchievements, calculateUserLevel } from './utils/achievements';
+import { RankTierEmblem } from './components/AchievementBadges';
 
 export interface AppContextType {
   history: WorkoutSession[];
@@ -24,6 +29,7 @@ export interface AppContextType {
   customRoutines: RoutineTemplate[];
   setCustomRoutines: React.Dispatch<React.SetStateAction<RoutineTemplate[]>>;
   triggerRestTimer: (seconds?: number) => void;
+  navigateTab?: (tab: AppTab) => void;
 }
 
 export const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -46,6 +52,62 @@ const App: React.FC = () => {
   const [showSplash, setShowSplash] = useState(true);
 
   const [restTimer, setRestTimer] = useState({ active: false, seconds: 90 });
+
+  const mainRef = useRef<HTMLElement | null>(null);
+
+  // 統一重設垂直捲動容器至最頂端（包括主 <main> 容器與全域 window/document）
+  const resetScrollToTop = useCallback((smooth = false) => {
+    if (mainRef.current) {
+      if (smooth) {
+        mainRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        mainRef.current.scrollTop = 0;
+      }
+    }
+    if (smooth) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      window.scrollTo(0, 0);
+      if (document.documentElement) document.documentElement.scrollTop = 0;
+      if (document.body) document.body.scrollTop = 0;
+    }
+  }, []);
+
+  // 每次 activeTab 改變，以多重保險機制確保新頁面絕對由最頂端開始
+  useLayoutEffect(() => {
+    resetWorkoutScrollPosition();
+    resetScrollToTop(false);
+
+    const f1 = requestAnimationFrame(() => {
+      resetScrollToTop(false);
+      const f2 = requestAnimationFrame(() => {
+        resetScrollToTop(false);
+      });
+      return () => cancelAnimationFrame(f2);
+    });
+
+    const timer = setTimeout(() => {
+      resetScrollToTop(false);
+    }, 220); // 覆蓋 AnimatePresence 過場（0.2s）後的完成狀態
+
+    return () => {
+      cancelAnimationFrame(f1);
+      clearTimeout(timer);
+    };
+  }, [activeTab, resetScrollToTop]);
+
+  const handleTabClick = (tab: AppTab) => {
+    if (tab === activeTab) {
+      // 再次點選已選中的導覽項目：平滑捲動回頂端
+      resetWorkoutScrollPosition();
+      resetScrollToTop(true);
+    } else {
+      // 切換至新分頁：立即重設捲動至頂端
+      resetWorkoutScrollPosition();
+      resetScrollToTop(false);
+      setActiveTab(tab);
+    }
+  };
 
   useEffect(() => {
     // 模擬載入與過場動畫時間
@@ -82,6 +144,12 @@ const App: React.FC = () => {
       window.webkit.messageHandlers.notificationHandler.postMessage({ action: 'requestPermission' });
     }
 
+    if (isNativeStoreKitAvailable()) {
+      getCurrentEntitlements().catch((err) => {
+        console.warn('[StoreKit] Failed to initialize entitlements on startup:', err);
+      });
+    }
+
     setIsLoaded(true);
   }, []);
 
@@ -101,16 +169,20 @@ const App: React.FC = () => {
     setRestTimer({ active: true, seconds });
   };
 
+  const { unlockedList } = useMemo(() => evaluateAllAchievements(history), [history]);
+  const userLevel = useMemo(() => calculateUserLevel(history, unlockedList), [history, unlockedList]);
+
   const contextValue = useMemo(() => ({
     history, setHistory, 
     bodyMetrics, setBodyMetrics, 
     goal, setGoal, 
     customRoutines, setCustomRoutines,
-    triggerRestTimer
-  }), [history, bodyMetrics, goal, customRoutines]);
+    triggerRestTimer,
+    navigateTab: handleTabClick
+  }), [history, bodyMetrics, goal, customRoutines, handleTabClick]);
 
-  const handleSaveWorkout = () => {
-    if (!currentSession) return;
+  const handleSaveWorkout = (): boolean => {
+    if (!currentSession) return false;
 
     const completedExercises = currentSession.exercises.filter(ex => 
       ex.sets.some(set => set.completed)
@@ -118,17 +190,51 @@ const App: React.FC = () => {
 
     if (completedExercises.length === 0) {
       alert('請至少勾選一個完成的組數再儲存訓練紀錄。');
-      return;
+      return false;
     }
+
+    const now = Date.now();
+    // 確保 startTime 屬於當天（計算總運動時長，含累積與當前執行中時間）
+    const totalWorkoutDurationMs = (currentSession.timerAccumulatedMs || 0) + 
+      (currentSession.timerStartedAt && currentSession.timerStatus === 'running' ? (now - currentSession.timerStartedAt) : 0);
+    const sessionStartTime = totalWorkoutDurationMs > 0 ? (now - totalWorkoutDurationMs) : (currentSession.timerStartedAt || currentSession.startTime || now);
+    const isStartedToday = isSameDay(new Date(sessionStartTime), new Date(now));
+    const finalStartTime = isStartedToday ? sessionStartTime : now;
 
     const completedSession: WorkoutSession = { 
       ...currentSession, 
-      exercises: completedExercises,
-      endTime: Date.now() 
+      startTime: finalStartTime,
+      endTime: now,
+      exercises: completedExercises
     };
 
-    setHistory([completedSession, ...history]);
-    setSessionForSummary(completedSession);
+    // 1. 立即同步寫入歷史紀錄與 LocalStorage，確保導頁時資料已齊全
+    const updatedHistory = [completedSession, ...history];
+    setHistory(updatedHistory);
+    try {
+      localStorage.setItem('ironlog_v3_history', JSON.stringify(updatedHistory));
+    } catch (e) {
+      console.error('Failed to sync history to localStorage', e);
+    }
+
+    // 2. 觸發 iOS 原生風格輕微觸覺震動回饋（備援低調短促溫和提示音）
+    triggerHapticSuccess();
+
+    // 3. 重設下一次訓練的空白 Session，並清除彈窗
+    setCurrentSession({
+      id: crypto.randomUUID(),
+      startTime: Date.now(),
+      title: `${format(new Date(), 'MM/dd')} 訓練`,
+      exercises: []
+    });
+    setSessionForSummary(null);
+
+    // 4. 自然且快速直接導向今日「訓練日報」
+    const today = new Date();
+    setSelectedDate(today);
+    setActiveTab('history');
+
+    return true;
   };
 
   const handleSaveAsRoutine = (session: WorkoutSession) => {
@@ -230,29 +336,49 @@ const App: React.FC = () => {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
             style={ContainerStyle} 
-            className="flex flex-col max-w-md mx-auto relative overflow-hidden"
+            className="flex flex-col max-w-md mx-auto relative overflow-hidden h-full h-[100dvh] w-full"
           >
-            <main className="flex-1 pb-32 px-5 pt-16 overflow-y-auto no-scrollbar">
-              {/* 頂部固定日期標示 */}
+            <main 
+              ref={mainRef} 
+              className="flex-1 pb-32 px-5 pt-16 overflow-y-auto no-scrollbar overscroll-y-contain"
+              style={{ 
+                overscrollBehaviorY: 'contain', 
+                WebkitOverflowScrolling: 'touch' 
+              }}
+            >
+              {/* 頂部固定日期標示與成就等級快捷入口 */}
               {activeTab === 'workout' && (
-                <div className="flex items-center justify-between mt-4 mb-8 px-1">
-                  <div className="flex items-center gap-4">
+                <div className="flex items-center justify-between mt-4 mb-8 px-1 gap-3">
+                  <div className="flex items-center gap-3.5 min-w-0">
                     <div style={{ backgroundColor: lightTheme.card }} className="w-12 h-12 rounded-2xl flex items-center justify-center border border-black/5 shadow-sm shrink-0">
                       <Calendar className="w-6 h-6 text-black" />
                     </div>
-                    <div>
-                      <h1 style={{ color: lightTheme.text }} className="text-3xl font-black uppercase tracking-tighter leading-none">
+                    <div className="min-w-0">
+                      <h1 style={{ color: lightTheme.text }} className="text-2xl sm:text-3xl font-black uppercase tracking-tighter leading-none truncate">
                         {(() => {
                           const d = new Date();
                           const weekDays = ['週日', '週一', '週二', '週三', '週四', '週五', '週六'];
                           return `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()} ${weekDays[d.getDay()]}`;
                         })()}
                       </h1>
-                      <p className="text-[11px] font-black text-black uppercase tracking-[0.2em] mt-1.5">
+                      <p className="text-[11px] font-black text-black/60 uppercase tracking-[0.2em] mt-1.5 truncate">
                         TODAY'S WORKOUT
                       </p>
                     </div>
                   </div>
+
+                  {/* 獨立小型等級徽章 */}
+                  <button 
+                    onClick={() => handleTabClick('achievements')}
+                    className="flex items-center gap-1.5 pl-1.5 pr-3 py-1 rounded-full bg-white border border-slate-200/90 hover:border-black/25 hover:bg-slate-50 active:scale-95 transition-all shadow-sm shrink-0 cursor-pointer"
+                    aria-label={`查看鋼鐵成就系統 - 目前等級 ${userLevel.levelFormatted}`}
+                    title={`成就殿堂 · 目前等級 ${userLevel.levelFormatted} (${userLevel.title})`}
+                  >
+                    <RankTierEmblem level={userLevel.level} size="xs" />
+                    <span className="text-xs sm:text-sm font-black tracking-tight text-slate-900 font-mono">
+                      {userLevel.levelFormatted}
+                    </span>
+                  </button>
                 </div>
               )}
 
@@ -263,6 +389,9 @@ const App: React.FC = () => {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.2 }}
+                  onAnimationComplete={() => {
+                    resetScrollToTop(false);
+                  }}
                 >
                   {activeTab === 'workout' && (
                     <WorkoutView 
@@ -288,40 +417,50 @@ const App: React.FC = () => {
                       />
                     </div>
                   )}
-                  {activeTab === 'routines' && <RoutineView onStartRoutine={(template) => {
-                    const newSess: WorkoutSession = {
-                      id: crypto.randomUUID(),
-                      startTime: Date.now(),
-                      title: template.name,
-                      exercises: template.exercises.map(te => ({
+                  {activeTab === 'routines' && <RoutineView 
+                    onStartRoutine={(template) => {
+                      const newSess: WorkoutSession = {
                         id: crypto.randomUUID(),
-                        name: te.name,
-                        muscleGroup: te.muscleGroup,
-                        sets: Array.from({ length: te.defaultSets || 4 }).map((_, idx) => ({
+                        startTime: Date.now(),
+                        title: template.name,
+                        exercises: template.exercises.map(te => ({
                           id: crypto.randomUUID(),
-                          weight: idx === 0 ? te.defaultWeight : 0, 
-                          reps: te.defaultReps,
-                          completed: false
+                          name: te.name,
+                          muscleGroup: te.muscleGroup,
+                          sets: Array.from({ length: te.defaultSets || 4 }).map((_, idx) => ({
+                            id: crypto.randomUUID(),
+                            weight: idx === 0 ? te.defaultWeight : 0, 
+                            reps: te.defaultReps,
+                            completed: false
+                          }))
                         }))
-                      }))
-                    };
-                    setCurrentSession(newSess);
-                    setActiveTab('workout');
-                  }} />}
+                      };
+                      setCurrentSession(newSess);
+                      setActiveTab('workout');
+                    }}
+                    onWorkoutSaved={() => {
+                      setSelectedDate(new Date());
+                      setActiveTab('history');
+                    }}
+                  />}
                   {activeTab === 'diet' && <DietView />}
                   {activeTab === 'coach' && <CoachView />}
                   {activeTab === 'settings' && <SettingsView />}
+                  {activeTab === 'achievements' && <AchievementsView onBack={() => handleTabClick('workout')} />}
                 </motion.div>
               </AnimatePresence>
             </main>
 
-            <nav style={{ backgroundColor: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(20px)' }} className="fixed bottom-0 left-0 right-0 max-w-md mx-auto border-t border-black/5 safe-bottom z-50 px-2 py-4 flex justify-between items-center rounded-t-[40px] shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
-              <TabButton active={activeTab === 'routines'} onClick={() => setActiveTab('routines')} icon={<LayoutGrid />} label="課表" />
-              <TabButton active={activeTab === 'history'} onClick={() => setActiveTab('history')} icon={<History />} label="歷史" />
-              <TabButton active={activeTab === 'workout'} onClick={() => setActiveTab('workout')} icon={<Dumbbell />} label="主頁" />
-              <TabButton active={activeTab === 'diet'} onClick={() => setActiveTab('diet')} icon={<Apple />} label="飲食分析" />
-              <TabButton active={activeTab === 'coach'} onClick={() => setActiveTab('coach')} icon={<Bot />} label="教練" />
-              <TabButton active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} icon={<Settings />} label="設定" />
+            <nav 
+              style={{ backgroundColor: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(20px)' }} 
+              className="fixed bottom-0 left-0 right-0 max-w-md mx-auto border-t border-black/5 safe-bottom z-50 px-2 py-4 flex justify-between items-center rounded-t-[40px] shadow-[0_-10px_40px_rgba(0,0,0,0.05)] select-none touch-none"
+            >
+              <TabButton active={activeTab === 'routines'} onClick={() => handleTabClick('routines')} icon={<LayoutGrid />} label="課表" />
+              <TabButton active={activeTab === 'history'} onClick={() => handleTabClick('history')} icon={<History />} label="歷史" />
+              <TabButton active={activeTab === 'workout'} onClick={() => handleTabClick('workout')} icon={<Dumbbell />} label="主頁" />
+              <TabButton active={activeTab === 'diet'} onClick={() => handleTabClick('diet')} icon={<Apple />} label="飲食分析" />
+              <TabButton active={activeTab === 'coach'} onClick={() => handleTabClick('coach')} icon={<Bot />} label="教練" />
+              <TabButton active={activeTab === 'settings'} onClick={() => handleTabClick('settings')} icon={<Settings />} label="設定" />
             </nav>
 
             <RestTimer 

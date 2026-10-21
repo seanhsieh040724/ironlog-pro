@@ -1,10 +1,11 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useContext } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Trophy, Clock, Flame, Copy, Check, X, Share2, Sparkles, Award, Star, ListCollapse 
 } from 'lucide-react';
 import { WorkoutSession } from '../types';
 import { lightTheme } from '../themeStyles';
+import { AppContext } from '../App';
 
 interface WorkoutSummaryModalProps {
   session: WorkoutSession | null;
@@ -12,6 +13,7 @@ interface WorkoutSummaryModalProps {
 }
 
 export const WorkoutSummaryModal: React.FC<WorkoutSummaryModalProps> = ({ session, onClose }) => {
+  const context = useContext(AppContext);
   const [copied, setCopied] = useState(false);
   const [showTextPreview, setShowTextPreview] = useState(false);
 
@@ -245,12 +247,25 @@ export const WorkoutSummaryModal: React.FC<WorkoutSummaryModalProps> = ({ sessio
             )}
           </button>
           
-          <button
-            onClick={onClose}
-            className="w-full font-black h-12 bg-black text-white hover:bg-black/90 active:scale-[0.98] rounded-2xl uppercase text-[13px] tracking-wider transition-all flex items-center justify-center"
-          >
-            關閉並返回首頁
-          </button>
+          <div className="flex gap-2.5">
+            <button
+              onClick={() => {
+                onClose();
+                if (context?.navigateTab) {
+                  context.navigateTab('achievements');
+                }
+              }}
+              className="flex-1 font-black h-12 bg-black text-[#CCFF00] hover:bg-black/90 active:scale-[0.98] rounded-2xl uppercase text-[12px] tracking-wider transition-all flex items-center justify-center gap-1.5 border border-black/10 shadow-xs"
+            >
+              <Trophy className="w-4 h-4 fill-[#CCFF00]" /> 查看成就系統
+            </button>
+            <button
+              onClick={onClose}
+              className="flex-1 font-black h-12 bg-slate-100 text-slate-700 hover:bg-slate-200 active:scale-[0.98] rounded-2xl uppercase text-[12px] tracking-wider transition-all flex items-center justify-center"
+            >
+              返回歷史
+            </button>
+          </div>
         </div>
       </motion.div>
     </div>
