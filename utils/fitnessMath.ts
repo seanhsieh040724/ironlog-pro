@@ -141,11 +141,31 @@ export const CHEST_EXERCISES_WITH_MP4: Record<string, string> = {
   '標準俯地挺身': '標準俯地挺身',
   '橫向器械上斜臥推': '橫向器械上斜臥推',
   '史密斯上斜臥推': '史密斯上斜臥推',
-  // Historical / Backward Compatibility Aliases:
+  // Historical / Backward Compatibility & Input Aliases:
   '跪姿繩索夾胸': '跪姿繩索夾胸',
   '上斜器械飛鳥': '上斜CABLE飛鳥',
   '器械上斜臥推': '橫向器械上斜臥推',
   '器械上斜胸推': '橫向器械上斜臥推',
+  '器械上斜推胸': '橫向器械上斜臥推',
+  '器械胸推': '坐姿器械胸推',
+  '器械推胸': '坐姿器械胸推',
+  '俯地挺身': '標準俯地挺身',
+  '雙槓臂屈伸': '雙槓撐體',
+  '雙槓屈臂伸': '雙槓撐體',
+  '繩索夾胸': '站姿繩索夾胸',
+  '平板飛鳥': '平板啞鈴飛鳥',
+  '啞鈴飛鳥': '平板啞鈴飛鳥',
+  '上斜飛鳥': '上斜啞鈴飛鳥',
+  '史密斯推胸': '史密斯平板臥推',
+};
+
+/**
+ * Checks whether an exercise is configured as an MP4 demonstration.
+ */
+export const isChestMp4Exercise = (name: string): boolean => {
+  if (!name) return false;
+  const cleanName = name.trim();
+  return Boolean(CHEST_EXERCISES_WITH_MP4[cleanName]);
 };
 
 /**
@@ -195,6 +215,12 @@ export const getExercisePosterUrl = (name: string): string | null => {
 export const getExerciseGifSources = (name: string): string[] => {
   if (!name) return [];
   const cleanName = name.trim();
+
+  // Chest exercises strictly use MP4 and dedicated static poster, NEVER fall back to legacy GIFs
+  if (isChestMp4Exercise(cleanName)) {
+    return [];
+  }
+
   const encodedName = encodeURIComponent(cleanName);
   
   const sources: string[] = [
