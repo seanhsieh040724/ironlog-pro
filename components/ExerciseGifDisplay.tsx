@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { getExerciseGifSources, getMuscleGroup, getMuscleGroupDisplay, getExerciseMp4Url, getExercisePosterUrl, isChestMp4Exercise } from '../utils/fitnessMath';
+import { getExerciseGifSources, getMuscleGroup, getMuscleGroupDisplay, getExerciseMp4Url, getExercisePosterUrl, isMp4Exercise } from '../utils/fitnessMath';
 import { Loader2, Dumbbell, Play, Pause, RotateCcw, AlertCircle } from 'lucide-react';
 import { lightTheme } from '../themeStyles';
 
@@ -340,11 +340,11 @@ export const ExerciseGifDisplay: React.FC<ExerciseGifDisplayProps> = ({
   containerClassName = "relative overflow-hidden rounded-[24px] shadow-sm border border-black/5 min-h-[240px] flex items-center justify-center"
 }) => {
   const cleanName = (name || '').trim();
-  const isMp4 = isChestMp4Exercise(cleanName);
+  const isMp4 = isMp4Exercise(cleanName);
   const mp4Url = getExerciseMp4Url(cleanName);
   const posterUrl = getExercisePosterUrl(cleanName);
 
-  // If this is an MP4 chest exercise, use dedicated MP4 Player with poster (NEVER fall through to GIF)
+  // If this is an MP4 exercise (Chest or Back), use dedicated MP4 Player with poster (NEVER fall through to GIF)
   if (isMp4) {
     return (
       <ExerciseMp4Player

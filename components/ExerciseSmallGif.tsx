@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { getExerciseGifSources, getMuscleGroup, getMuscleGroupDisplay, getExercisePosterUrl, isChestMp4Exercise } from '../utils/fitnessMath';
+import { getExerciseGifSources, getMuscleGroup, getMuscleGroupDisplay, getExercisePosterUrl, isMp4Exercise } from '../utils/fitnessMath';
 import { Loader2, Dumbbell } from 'lucide-react';
 
 interface ExerciseSmallGifProps {
@@ -8,10 +8,10 @@ interface ExerciseSmallGifProps {
 
 export const ExerciseSmallGif: React.FC<ExerciseSmallGifProps> = ({ name }) => {
   const cleanName = (name || '').trim();
-  const isMp4 = isChestMp4Exercise(cleanName);
+  const isMp4 = isMp4Exercise(cleanName);
   const posterUrl = getExercisePosterUrl(cleanName);
 
-  // For MP4 chest exercises: Dedicated static poster thumbnail
+  // For MP4 exercises (Chest & Back): Dedicated static poster thumbnail
   const [posterLoading, setPosterLoading] = useState(true);
   const [posterFailed, setPosterFailed] = useState(false);
 
@@ -47,7 +47,7 @@ export const ExerciseSmallGif: React.FC<ExerciseSmallGifProps> = ({ name }) => {
     setGifFailedAll(false);
   }, []);
 
-  // 1. MP4 Chest Exercises: STRICTLY use dedicated static poster, NEVER fallback to GIF
+  // 1. MP4 Exercises (Chest & Back): STRICTLY use dedicated static poster, NEVER fallback to GIF
   if (isMp4) {
     if (posterFailed || !posterUrl) {
       const mg = getMuscleGroup(cleanName);
