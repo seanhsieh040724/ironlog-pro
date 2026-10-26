@@ -90,7 +90,7 @@ export const getMuscleGroup = (name: string): MuscleGroup => {
   if (n.includes('彎舉') || n.includes('下壓') || n.includes('三頭') || n.includes('二頭') || n.includes('腕') || n.includes('臂屈伸') || n.includes('窄握') || n.includes('碎顱者') || n.includes('curl') || n.includes('tricep') || n.includes('bicep') || n.includes('arm')) return 'arms';
   if (n.includes('捲腹') || n.includes('起坐') || n.includes('抬腿') || n.includes('核心') || n.includes('棒式') || n.includes('abs') || n.includes('core') || n.includes('crunch') || n.includes('plank')) return 'core';
   if (n.includes('蹲') || n.includes('腿') || n.includes('squat') || n.includes('leg') || n.includes('踏車') || n.includes('quad') || n.includes('calve') || n.includes('臀推') || n.includes('thrust') || n.includes('hip') || n.includes('提踵') || n.includes('calf') || n.includes('相撲') || n.includes('sumo') || n.includes('六角槓') || n.includes('trap bar') || n.includes('臀')) return 'quads';
-  if (n.includes('肩') || n.includes('平舉') || n.includes('聳肩') || n.includes('shoulder') || n.includes('press') || n.includes('lateral') || n.includes('面拉') || n.includes('後三角') || n.includes('反向飛鳥')) return 'shoulders';
+  if (n.includes('肩') || n.includes('平舉') || n.includes('聳肩') || n.includes('shoulder') || n.includes('press') || n.includes('lateral') || n.includes('面拉') || n.includes('後三角') || n.includes('反向飛鳥') || n.includes('內旋')) return 'shoulders';
   if (n.includes('臥推') || n.includes('胸') || n.includes('chest') || n.includes('夾胸') || n.includes('bench') || n.includes('fly') || n.includes('飛鳥') || n.includes('撐體') || n.includes('俯地挺身')) return 'chest';
   if (n.includes('划船') || n.includes('下拉') || n.includes('引體') || n.includes('row') || n.includes('lat') || n.includes('硬舉') || n.includes('back') || n.includes('pull') || n.includes('deadlift')) return 'back';
   if (n.includes('臀') || n.includes('glute')) return 'glutes';
@@ -114,7 +114,8 @@ export const EXERCISE_MEDIA_ALIASES: Record<string, string> = {
   '器械上斜胸推': '橫向器械上斜臥推',
   '史密斯上斜臥推': '槓鈴上斜臥推',
   '史密斯平板臥推': '槓鈴平板臥推',
-  '史密斯肩推': '站姿槓鈴肩推',
+  '俯身啞鈴反向飛鳥': 'CABLE肩內旋',
+  'CABLE 肩內旋': 'CABLE肩內旋',
 };
 
 /**
@@ -191,11 +192,43 @@ export const BACK_EXERCISES_WITH_MP4: Record<string, string> = {
 };
 
 /**
- * Combined registry of all exercises (Chest & Back) with MP4 demonstrations.
+ * All verified Shoulder movements that have hosted MP4 video demonstrations.
+ * Verified on https://ironlog-pro.vercel.app/assets/
+ */
+export const SHOULDER_EXERCISES_WITH_MP4: Record<string, string> = {
+  '坐姿啞鈴肩推': '坐姿啞鈴肩推',
+  '站姿槓鈴肩推': '站姿槓鈴肩推',
+  '阿諾肩推': '阿諾肩推',
+  '器械肩推': '器械肩推',
+  '史密斯肩推': '史密斯肩推',
+  '啞鈴側平舉': '啞鈴側平舉',
+  '繩索單邊側平舉': '繩索單邊側平舉',
+  '器械側平舉': '器械側平舉',
+  '啞鈴前平舉': '啞鈴前平舉',
+  '蝴蝶機反向飛鳥': '蝴蝶機反向飛鳥',
+  '繩索面拉': '繩索面拉',
+  'CABLE 肩內旋': 'CABLE肩內旋',
+  'CABLE肩內旋': 'CABLE肩內旋',
+  // Historical, Input & Backward Compatibility Aliases:
+  '俯身啞鈴反向飛鳥': 'CABLE肩內旋',
+  '滑輪肩內旋': 'CABLE肩內旋',
+  '繩索肩內旋': 'CABLE肩內旋',
+  '肩內旋': 'CABLE肩內旋',
+  '啞鈴肩推': '坐姿啞鈴肩推',
+  '槓鈴肩推': '站姿槓鈴肩推',
+  '側平舉': '啞鈴側平舉',
+  '前平舉': '啞鈴前平舉',
+  '面拉': '繩索面拉',
+  '反向飛鳥': '蝴蝶機反向飛鳥',
+};
+
+/**
+ * Combined registry of all exercises (Chest, Back & Shoulders) with MP4 demonstrations.
  */
 export const EXERCISES_WITH_MP4: Record<string, string> = {
   ...CHEST_EXERCISES_WITH_MP4,
   ...BACK_EXERCISES_WITH_MP4,
+  ...SHOULDER_EXERCISES_WITH_MP4,
 };
 
 /**
@@ -211,6 +244,12 @@ export const isBackMp4Exercise = (name: string): boolean => {
   if (!name) return false;
   const cleanName = name.trim();
   return Boolean(BACK_EXERCISES_WITH_MP4[cleanName]);
+};
+
+export const isShoulderMp4Exercise = (name: string): boolean => {
+  if (!name) return false;
+  const cleanName = name.trim();
+  return Boolean(SHOULDER_EXERCISES_WITH_MP4[cleanName]);
 };
 
 export const isMp4Exercise = (name: string): boolean => {
@@ -419,7 +458,11 @@ const EXERCISE_METHODS: Record<string, string> = {
 
   "繩索面拉": "01 雙手握住繩索把手，向後退一步使繩索繃緊，手臂向前伸直，稍微挺胸。\n\n02 緩慢讓繩索拉回前方，控制背部與肩後的張力，感受到後三角肌的舒張。\n\n03 感覺後三角肌與上背肌群收縮，將繩索拉向臉部方向，手肘向外張開。",
 
-  "俯身啞鈴反向飛鳥": "01 雙腳微彎、俯身與地面接近平行，背部平平直，雙手持啞鈴自然垂下。\n\n02 緩慢下降啞鈴回原位，維持手肘微彎的角度，感受到後三角肌的舒張。\n\n03 感覺後三角肌收縮，將啞鈴向兩側後上方舉起，專注於後肩的擠壓感受。",
+  "CABLE 肩內旋": "01 準備姿勢：將滑輪調整至手肘水平高度，身體側對滑輪機，手肘彎曲約 90 度並貼近身體，前臂起始位置朝外握住把手。\n\n02 執行方式：保持手肘貼近身體，以肩關節為軸心帶動前臂向身體內側旋轉，穩定控制速度，完成後緩慢回到起始位置。\n\n03 注意事項與肌群：主要訓練肩胛下肌等肩部內旋肌群。保持軀幹穩定，切勿轉身或甩動借力；手肘全程不可離開身體，使用平穩可控重量避免肩部不適。",
+
+  "CABLE肩內旋": "01 準備姿勢：將滑輪調整至手肘水平高度，身體側對滑輪機，手肘彎曲約 90 度並貼近身體，前臂起始位置朝外握住把手。\n\n02 執行方式：保持手肘貼近身體，以肩關節為軸心帶動前臂向身體內側旋轉，穩定控制速度，完成後緩慢回到起始位置。\n\n03 注意事項與肌群：主要訓練肩胛下肌等肩部內旋肌群。保持軀幹穩定，切勿轉身或甩動借力；手肘全程不可離開身體，使用平穩可控重量避免肩部不適。",
+
+  "俯身啞鈴反向飛鳥": "01 準備姿勢：將滑輪調整至手肘水平高度，身體側對滑輪機，手肘彎曲約 90 度並貼近身體，前臂起始位置朝外握住把手。\n\n02 執行方式：保持手肘貼近身體，以肩關節為軸心帶動前臂向身體內側旋轉，穩定控制速度，完成後緩慢回到起始位置。\n\n03 注意事項與肌群：主要訓練肩胛下肌等肩部內旋肌群。保持軀幹穩定，切勿轉身或甩動借力；手肘全程不可離開身體，使用平穩可控重量避免肩部不適。",
 
   // 腿部 (Legs)
   "槓鈴深蹲": "01 槓鈴架於上背後三角肌及斜方肌上，雙腳與肩同寬，核心收緊並維持背部平直。\n\n02 緩慢下蹲，控制重心於腳掌中央，直到大腿與地面平行或略低，感受臀部與大腿肌群的舒張。\n\n03 感覺腿部肌群收縮發力，腳掌踩穩地面，將身體向上推回起始位置。",

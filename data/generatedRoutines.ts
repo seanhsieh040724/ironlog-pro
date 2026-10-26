@@ -368,7 +368,7 @@ export interface WeeklyRoutineSystem {
             exercises: [
               { id: 'm-f5-e7', name: '站姿槓鈴肩推', muscleGroup: 'shoulders', defaultSets: 4, defaultReps: 8, defaultWeight: 0 },
               { id: 'm-f5-e8', name: '啞鈴側平舉', muscleGroup: 'shoulders', defaultSets: 4, defaultReps: 12, defaultWeight: 0 },
-              { id: 'm-f5-e9', name: '俯身啞鈴反向飛鳥', muscleGroup: 'shoulders', defaultSets: 3, defaultReps: 15, defaultWeight: 0 }
+              { id: 'm-f5-e9', name: 'CABLE 肩內旋', muscleGroup: 'shoulders', defaultSets: 3, defaultReps: 15, defaultWeight: 0 }
             ]
           },
           {
@@ -717,7 +717,7 @@ export interface WeeklyRoutineSystem {
             exercises: [
               { id: 'f-f4-e13', name: '上斜啞鈴划船', muscleGroup: 'back', defaultSets: 4, defaultReps: 10, defaultWeight: 0 },
               { id: 'f-f4-e14', name: '啞鈴平板臥推', muscleGroup: 'chest', defaultSets: 3, defaultReps: 12, defaultWeight: 0 },
-              { id: 'f-f4-e15', name: '俯身啞鈴反向飛鳥', muscleGroup: 'shoulders', defaultSets: 3, defaultReps: 15, defaultWeight: 0 },
+              { id: 'f-f4-e15', name: 'CABLE 肩內旋', muscleGroup: 'shoulders', defaultSets: 3, defaultReps: 15, defaultWeight: 0 },
               { id: 'f-f4-e16', name: '棒式', muscleGroup: 'core', defaultSets: 3, defaultReps: 1, defaultWeight: 0 }
             ]
           }
