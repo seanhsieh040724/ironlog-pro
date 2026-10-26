@@ -160,6 +160,45 @@ export const CHEST_EXERCISES_WITH_MP4: Record<string, string> = {
 };
 
 /**
+ * All verified Back movements that have hosted MP4 video demonstrations.
+ * Verified on https://ironlog-pro.vercel.app/assets/
+ */
+export const BACK_EXERCISES_WITH_MP4: Record<string, string> = {
+  '高位下拉': '高位下拉',
+  '引體向上': '引體向上',
+  '槓鈴划船': '槓鈴划船',
+  '單臂啞鈴划船': '單臂啞鈴划船',
+  '坐姿器械划船': '坐姿器械划船',
+  '俯臥T槓划船': '俯臥T槓划船',
+  '反握高位划船': '反握高位划船',
+  '傳統硬舉': '傳統硬舉',
+  '引體向上輔助': '引體向上輔助',
+  'V把坐姿划船': 'V把坐姿划船',
+  '寬距坐姿划船': '寬距坐姿划船',
+  '反握高位下拉': '反握高位下拉',
+  '分動器械下拉': '分動器械下拉',
+  '滑輪直臂下拉': '滑輪直臂下拉',
+  '上斜啞鈴划船': '上斜啞鈴划船',
+  // Historical / Input Aliases:
+  '硬舉': '傳統硬舉',
+  'T槓划船': '俯臥T槓划船',
+  'T桿划船': '俯臥T槓划船',
+  '直臂下拉': '滑輪直臂下拉',
+  '器械划船': '坐姿器械划船',
+  '輔助引體向上': '引體向上輔助',
+  '器械下拉': '分動器械下拉',
+  '啞鈴划船': '單臂啞鈴划船',
+};
+
+/**
+ * Combined registry of all exercises (Chest & Back) with MP4 demonstrations.
+ */
+export const EXERCISES_WITH_MP4: Record<string, string> = {
+  ...CHEST_EXERCISES_WITH_MP4,
+  ...BACK_EXERCISES_WITH_MP4,
+};
+
+/**
  * Checks whether an exercise is configured as an MP4 demonstration.
  */
 export const isChestMp4Exercise = (name: string): boolean => {
@@ -168,14 +207,26 @@ export const isChestMp4Exercise = (name: string): boolean => {
   return Boolean(CHEST_EXERCISES_WITH_MP4[cleanName]);
 };
 
+export const isBackMp4Exercise = (name: string): boolean => {
+  if (!name) return false;
+  const cleanName = name.trim();
+  return Boolean(BACK_EXERCISES_WITH_MP4[cleanName]);
+};
+
+export const isMp4Exercise = (name: string): boolean => {
+  if (!name) return false;
+  const cleanName = name.trim();
+  return Boolean(EXERCISES_WITH_MP4[cleanName]);
+};
+
 /**
- * Returns the hosted MP4 URL for an exercise if it is a chest movement with verified MP4 demonstration.
- * Returns null for non-chest exercises or exercises without MP4.
+ * Returns the hosted MP4 URL for an exercise if it is a chest or back movement with verified MP4 demonstration.
+ * Returns null for exercises without MP4.
  */
 export const getExerciseMp4Url = (name: string): string | null => {
   if (!name) return null;
   const cleanName = name.trim();
-  const targetAssetName = CHEST_EXERCISES_WITH_MP4[cleanName];
+  const targetAssetName = EXERCISES_WITH_MP4[cleanName];
   if (!targetAssetName) return null;
   return `https://ironlog-pro.vercel.app/assets/${encodeURIComponent(targetAssetName)}.mp4`;
 };
@@ -186,7 +237,7 @@ export const getExerciseMp4Url = (name: string): string | null => {
 export const getExercisePrimaryFallbackGifUrl = (name: string): string | null => {
   if (!name) return null;
   const cleanName = name.trim();
-  const targetAssetName = CHEST_EXERCISES_WITH_MP4[cleanName];
+  const targetAssetName = EXERCISES_WITH_MP4[cleanName];
   if (!targetAssetName) return null;
   return `https://ironlog-pro.vercel.app/assets/${encodeURIComponent(targetAssetName)}.gif`;
 };
@@ -194,12 +245,12 @@ export const getExercisePrimaryFallbackGifUrl = (name: string): string | null =>
 /**
  * Returns the static poster preview image URL for an exercise with MP4 demonstration.
  * Serves static asset path /assets/posters/[targetAssetName].jpg
- * Returns null for non-chest exercises or exercises without MP4.
+ * Returns null for exercises without MP4.
  */
 export const getExercisePosterUrl = (name: string): string | null => {
   if (!name) return null;
   const cleanName = name.trim();
-  const targetAssetName = CHEST_EXERCISES_WITH_MP4[cleanName];
+  const targetAssetName = EXERCISES_WITH_MP4[cleanName];
   if (!targetAssetName) return null;
   return `/assets/posters/${encodeURIComponent(targetAssetName)}.jpg`;
 };
@@ -216,8 +267,8 @@ export const getExerciseGifSources = (name: string): string[] => {
   if (!name) return [];
   const cleanName = name.trim();
 
-  // Chest exercises strictly use MP4 and dedicated static poster, NEVER fall back to legacy GIFs
-  if (isChestMp4Exercise(cleanName)) {
+  // MP4 exercises (Chest & Back) strictly use MP4 and dedicated static poster, NEVER fall back to legacy GIFs
+  if (isMp4Exercise(cleanName)) {
     return [];
   }
 
