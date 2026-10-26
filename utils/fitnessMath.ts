@@ -223,12 +223,51 @@ export const SHOULDER_EXERCISES_WITH_MP4: Record<string, string> = {
 };
 
 /**
- * Combined registry of all exercises (Chest, Back & Shoulders) with MP4 demonstrations.
+ * All verified Leg movements that have hosted MP4 video demonstrations.
+ * Verified on https://ironlog-pro.vercel.app/assets/
+ */
+export const LEG_EXERCISES_WITH_MP4: Record<string, string> = {
+  '槓鈴深蹲': '槓鈴深蹲',
+  '啞鈴高腳杯蹲': '啞鈴高腳杯蹲',
+  '上斜器械腿推': '上斜器械腿推',
+  '水平器械腿推': '水平器械腿推',
+  '槓鈴臀推': '槓鈴臀推',
+  '保加利亞啞鈴分腿蹲': '保加利亞啞鈴分腿蹲',
+  '哈克深蹲': '哈克深蹲',
+  '俯臥腿後勾': '俯臥腿後勾',
+  '坐姿腿後勾': '坐姿腿後勾',
+  '器械站姿提踵': '器械站姿提踵',
+  '相撲硬舉': '相撲硬舉',
+  '器械腿外展': '器械腿外展',
+  '器械腿內收': '器械腿內收',
+  '六角槓硬舉': '六角槓硬舉',
+  // Historical, Input & Alias Mappings:
+  '深蹲': '槓鈴深蹲',
+  '高腳杯深蹲': '啞鈴高腳杯蹲',
+  '高腳杯蹲': '啞鈴高腳杯蹲',
+  '器械腿推': '上斜器械腿推',
+  '斜板腿推': '上斜器械腿推',
+  '腿推': '上斜器械腿推',
+  '臀推': '槓鈴臀推',
+  '分腿蹲': '保加利亞啞鈴分腿蹲',
+  '保加利亞分腿蹲': '保加利亞啞鈴分腿蹲',
+  '哈克蹲': '哈克深蹲',
+  '腿後勾': '俯臥腿後勾',
+  '提踵': '器械站姿提踵',
+  '站姿提踵': '器械站姿提踵',
+  '腿外展': '器械腿外展',
+  '腿內收': '器械腿內收',
+  '六角槓': '六角槓硬舉',
+};
+
+/**
+ * Combined registry of all exercises (Chest, Back, Shoulders & Legs) with MP4 demonstrations.
  */
 export const EXERCISES_WITH_MP4: Record<string, string> = {
   ...CHEST_EXERCISES_WITH_MP4,
   ...BACK_EXERCISES_WITH_MP4,
   ...SHOULDER_EXERCISES_WITH_MP4,
+  ...LEG_EXERCISES_WITH_MP4,
 };
 
 /**
@@ -250,6 +289,12 @@ export const isShoulderMp4Exercise = (name: string): boolean => {
   if (!name) return false;
   const cleanName = name.trim();
   return Boolean(SHOULDER_EXERCISES_WITH_MP4[cleanName]);
+};
+
+export const isLegMp4Exercise = (name: string): boolean => {
+  if (!name) return false;
+  const cleanName = name.trim();
+  return Boolean(LEG_EXERCISES_WITH_MP4[cleanName]);
 };
 
 export const isMp4Exercise = (name: string): boolean => {
@@ -306,7 +351,7 @@ export const getExerciseGifSources = (name: string): string[] => {
   if (!name) return [];
   const cleanName = name.trim();
 
-  // MP4 exercises (Chest & Back) strictly use MP4 and dedicated static poster, NEVER fall back to legacy GIFs
+  // MP4 exercises (Chest, Back, Shoulders & Legs) strictly use MP4 and dedicated static poster, NEVER fall back to legacy GIFs
   if (isMp4Exercise(cleanName)) {
     return [];
   }
