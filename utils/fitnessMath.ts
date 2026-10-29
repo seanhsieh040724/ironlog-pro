@@ -88,7 +88,7 @@ export const getMuscleGroupDisplay = (mg: MuscleGroup | string): { cn: string, e
 export const getMuscleGroup = (name: string): MuscleGroup => {
   const n = name.toLowerCase();
   if (n.includes('彎舉') || n.includes('下壓') || n.includes('三頭') || n.includes('二頭') || n.includes('腕') || n.includes('臂屈伸') || n.includes('窄握') || n.includes('碎顱者') || n.includes('curl') || n.includes('tricep') || n.includes('bicep') || n.includes('arm')) return 'arms';
-  if (n.includes('捲腹') || n.includes('起坐') || n.includes('抬腿') || n.includes('核心') || n.includes('棒式') || n.includes('abs') || n.includes('core') || n.includes('crunch') || n.includes('plank')) return 'core';
+  if (n.includes('捲腹') || n.includes('起坐') || n.includes('抬腿') || n.includes('核心') || n.includes('棒式') || n.includes('腹') || n.includes('轉體') || n.includes('登山者') || n.includes('abs') || n.includes('core') || n.includes('crunch') || n.includes('plank')) return 'core';
   if (n.includes('蹲') || n.includes('腿') || n.includes('squat') || n.includes('leg') || n.includes('踏車') || n.includes('quad') || n.includes('calve') || n.includes('臀推') || n.includes('thrust') || n.includes('hip') || n.includes('提踵') || n.includes('calf') || n.includes('相撲') || n.includes('sumo') || n.includes('六角槓') || n.includes('trap bar') || n.includes('臀')) return 'quads';
   if (n.includes('肩') || n.includes('平舉') || n.includes('聳肩') || n.includes('shoulder') || n.includes('press') || n.includes('lateral') || n.includes('面拉') || n.includes('後三角') || n.includes('反向飛鳥') || n.includes('內旋')) return 'shoulders';
   if (n.includes('臥推') || n.includes('胸') || n.includes('chest') || n.includes('夾胸') || n.includes('bench') || n.includes('fly') || n.includes('飛鳥') || n.includes('撐體') || n.includes('俯地挺身')) return 'chest';
@@ -124,6 +124,18 @@ export const EXERCISE_MEDIA_ALIASES: Record<string, string> = {
   'cable直槓過頭臂屈伸': 'CABLE繩索過頭臂屈伸',
   'CABLE 直槓過頭臂屈伸': 'CABLE繩索過頭臂屈伸',
   'CABLE直槓過頭臂屈伸': 'CABLE繩索過頭臂屈伸',
+  'cable跪姿捲腹': 'CABLE跪姿捲腹',
+  'CABLE 跪姿捲腹': 'CABLE跪姿捲腹',
+  'cable單側捲腹': 'CABLE單側捲腹',
+  'CABLE 單側捲腹': 'CABLE單側捲腹',
+  '平板支撐': '棒式',
+  '側平板支撐': '側棒式',
+  '懸垂舉腿': '懸垂抬腿',
+  '健腹輪推行': '健腹輪',
+  '滑輪跪姿捲腹': 'CABLE跪姿捲腹',
+  '滑輪單側捲腹': 'CABLE單側捲腹',
+  '滑輪捲腹': 'CABLE跪姿捲腹',
+  '羅馬椅舉腿': '羅馬椅抬腿',
 };
 
 /**
@@ -313,7 +325,40 @@ export const ARM_EXERCISES_WITH_MP4: Record<string, string> = {
 };
 
 /**
- * Combined registry of all exercises (Chest, Back, Shoulders, Legs & Arms) with MP4 demonstrations.
+ * All verified Core movements that have hosted MP4 video demonstrations.
+ * Verified on https://ironlog-pro.vercel.app/assets/
+ */
+export const CORE_EXERCISES_WITH_MP4: Record<string, string> = {
+  '仰臥起坐': '仰臥起坐',
+  '羅馬椅抬腿': '羅馬椅抬腿',
+  '棒式': '棒式',
+  '俄羅斯轉體': '俄羅斯轉體',
+  '健腹輪': '健腹輪',
+  '器械捲腹': '器械捲腹',
+  '懸垂抬腿': '懸垂抬腿',
+  '登山者': '登山者',
+  '側棒式': '側棒式',
+  'CABLE跪姿捲腹': 'CABLE跪姿捲腹',
+  'cable跪姿捲腹': 'CABLE跪姿捲腹',
+  'CABLE 跪姿捲腹': 'CABLE跪姿捲腹',
+  '下斜捲腹': '下斜捲腹',
+  'CABLE單側捲腹': 'CABLE單側捲腹',
+  'cable單側捲腹': 'CABLE單側捲腹',
+  'CABLE 單側捲腹': 'CABLE單側捲腹',
+  // Common aliases:
+  '平板支撐': '棒式',
+  '側平板支撐': '側棒式',
+  '懸垂舉腿': '懸垂抬腿',
+  '健腹輪推行': '健腹輪',
+  '滑輪跪姿捲腹': 'CABLE跪姿捲腹',
+  '滑輪單側捲腹': 'CABLE單側捲腹',
+  '滑輪捲腹': 'CABLE跪姿捲腹',
+  '羅馬椅舉腿': '羅馬椅抬腿',
+  '登山步': '登山者',
+};
+
+/**
+ * Combined registry of all exercises (Chest, Back, Shoulders, Legs, Arms & Core) with MP4 demonstrations.
  */
 export const EXERCISES_WITH_MP4: Record<string, string> = {
   ...CHEST_EXERCISES_WITH_MP4,
@@ -321,6 +366,7 @@ export const EXERCISES_WITH_MP4: Record<string, string> = {
   ...SHOULDER_EXERCISES_WITH_MP4,
   ...LEG_EXERCISES_WITH_MP4,
   ...ARM_EXERCISES_WITH_MP4,
+  ...CORE_EXERCISES_WITH_MP4,
 };
 
 /**
@@ -354,6 +400,12 @@ export const isArmMp4Exercise = (name: string): boolean => {
   if (!name) return false;
   const cleanName = name.trim();
   return Boolean(ARM_EXERCISES_WITH_MP4[cleanName]);
+};
+
+export const isCoreMp4Exercise = (name: string): boolean => {
+  if (!name) return false;
+  const cleanName = name.trim();
+  return Boolean(CORE_EXERCISES_WITH_MP4[cleanName]);
 };
 
 export const isMp4Exercise = (name: string): boolean => {
@@ -410,7 +462,7 @@ export const getExerciseGifSources = (name: string): string[] => {
   if (!name) return [];
   const cleanName = name.trim();
 
-  // MP4 exercises (Chest, Back, Shoulders, Legs & Arms) strictly use MP4 and dedicated static poster, NEVER fall back to legacy GIFs
+  // MP4 exercises (Chest, Back, Shoulders, Legs, Arms & Core) strictly use MP4 and dedicated static poster, NEVER fall back to legacy GIFs
   if (isMp4Exercise(cleanName)) {
     return [];
   }
@@ -667,9 +719,17 @@ const EXERCISE_METHODS: Record<string, string> = {
 
   "cable跪姿捲腹": "01 跪在滑輪機前，雙手握住繩索並置於耳側，身體微前傾，背部微拱。\n\n02 緩慢讓滑輪拉力帶動軀幹向上回位，控制肌肉拉長速度，感受腹肌的舒張。\n\n03 感覺腹肌強力收縮，用力將手肘向膝蓋方向拉近，在底部深壓腹部。",
 
+  "CABLE跪姿捲腹": "01 跪在滑輪機前，雙手握住繩索並置於耳側，身體微前傾，背部微拱。\n\n02 緩慢讓滑輪拉力帶動軀幹向上回位，控制肌肉拉長速度，感受腹肌的舒張。\n\n03 感覺腹肌強力收縮，用力將手肘向膝蓋方向拉近，在底部深壓腹部。",
+
+  "CABLE 跪姿捲腹": "01 跪在滑輪機前，雙手握住繩索並置於耳側，身體微前傾，背部微拱。\n\n02 緩慢讓滑輪拉力帶動軀幹向上回位，控制肌肉拉長速度，感受腹肌的舒張。\n\n03 感覺腹肌強力收縮，用力將手肘向膝蓋方向拉近，在底部深壓腹部。",
+
   "下斜捲腹": "01 躺在下斜凳上，雙腳勾住護擋固定身體，手部輕扶頭部兩側。\n\n02 緩慢將上半身向後下降，對抗重力控制節節，感受到腹部肌群深度的舒張。\n\n03 感覺腹肌收縮，將胸部向腿部方向捲起，專注於腹部上端的擠壓感受。",
 
-  "cable單側捲腹": "01 側面面向滑輪機並握住把手，單手或雙手握把，維持站姿且核心鎖定。\n\n02 緩慢控制滑輪回收，讓軀幹向滑輪方向微側彎，感受另一側腹斜肌的舒張。\n\n03 感覺側腹肌群收縮，將軀幹向反方向下拉捲曲，強化腰側線條。"
+  "cable單側捲腹": "01 側面面向滑輪機並握住把手，單手或雙手握把，維持站姿且核心鎖定。\n\n02 緩慢控制滑輪回收，讓軀幹向滑輪方向微側彎，感受另一側腹斜肌的舒張。\n\n03 感覺側腹肌群收縮，將軀幹向反方向下拉捲曲，強化腰側線條。",
+
+  "CABLE單側捲腹": "01 側面面向滑輪機並握住把手，單手或雙手握把，維持站姿且核心鎖定。\n\n02 緩慢控制滑輪回收，讓軀幹向滑輪方向微側彎，感受另一側腹斜肌的舒張。\n\n03 感覺側腹肌群收縮，將軀幹向反方向下拉捲曲，強化腰側線條。",
+
+  "CABLE 單側捲腹": "01 側面面向滑輪機並握住把手，單手或雙手握把，維持站姿且核心鎖定。\n\n02 緩慢控制滑輪回收，讓軀幹向滑輪方向微側彎，感受另一側腹斜肌的舒張。\n\n03 感覺側腹肌群收縮，將軀幹向反方向下拉捲曲，強化腰側線條。"
 };
 
 export const getExerciseMethod = (name: string): string => {

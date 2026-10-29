@@ -3,11 +3,12 @@ import { WorkoutSession, ExerciseEntry, SetEntry, MuscleGroup } from '../types';
 import { 
   Plus, Trash2, Search, Save, PlusCircle, 
   Check, MinusCircle, Target, Sparkles, ChevronRight, ChevronLeft, Loader2, AlertCircle, BookOpen, PlusSquare, Play, Timer,
-  ChevronUp, ChevronDown, Pause, RotateCcw
+  ChevronUp, ChevronDown, Pause, RotateCcw, TrendingUp
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ExerciseSmallGif } from './ExerciseSmallGif';
 import { ExerciseGifDisplay } from './ExerciseGifDisplay';
+import { ExercisePrChart } from './ExercisePrChart';
 import { getMuscleGroup, getMuscleGroupDisplay, getExerciseMethod, EXERCISE_MEDIA_ALIASES } from '../utils/fitnessMath';
 import { AppContext } from '../App';
 import { lightTheme, CardStyle, TextStyle, InputStyle, ActionButtonStyle } from '../themeStyles';
@@ -135,6 +136,39 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
       .sort((a, b) => b.startTime - a.startTime)[0]
       ?.exercises.find(e => e.name === currentDetailEx.name);
   }, [currentDetailEx?.name, context?.history]);
+
+  // 動作詳情分頁：'guide' (說明) | 'input' (錄入) | 'chart' (圖表)
+  const [detailTab, setDetailTab] = useState<'guide' | 'input' | 'chart'>('guide');
+
+  // 當使用者點進不同動作時，預設顯示「說明」分頁
+  useEffect(() => {
+    if (activeExerciseId) {
+      setDetailTab('guide');
+    }
+  }, [activeExerciseId]);
+
+  // 將運動方法文字結構化為步驟清單（準備姿勢、執行方式、注意事項）
+  const exerciseMethodSections = useMemo(() => {
+    if (!currentDetailEx?.name) return [];
+    const raw = getExerciseMethod(currentDetailEx.name);
+    const parts = raw.split(/\n\n+/).filter(Boolean);
+    if (parts.length >= 3) {
+      return parts.map((part, idx) => {
+        const clean = part.replace(/^0?[1-9]\s*/, '').trim();
+        const colonIdx = clean.indexOf('：');
+        let title = idx === 0 ? '準備姿勢' : idx === 1 ? '執行方式' : '注意事項';
+        let content = clean;
+        if (colonIdx > 0 && colonIdx < 14) {
+          title = clean.substring(0, colonIdx).trim();
+          content = clean.substring(colonIdx + 1).trim();
+        }
+        return { step: idx + 1, title, content };
+      });
+    }
+    return [
+      { step: 1, title: '動作要領與規範', content: raw }
+    ];
+  }, [currentDetailEx?.name]);
 
   // 同步分類與搜尋狀態至模組層，跨 Tab 與 Mount 保留
   useEffect(() => {
@@ -543,264 +577,414 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({ session, onUpdate, onF
             initial={{ opacity: 0, x: 20 }} 
             animate={{ opacity: 1, x: 0 }} 
             exit={{ opacity: 0, x: 20 }} 
-            className="space-y-6 pb-40"
+            className="space-y-3 pb-32"
           >
-            <div className="relative flex items-center justify-center mb-8 px-1 min-h-[48px]">
+            {/* 頂部導覽列：返回按鈕 + 動作名稱 + 肌群標籤 */}
+            <div className="flex items-center justify-between px-1 pt-1 min-h-[44px]">
               <button 
+                type="button"
                 onClick={() => {
                   preservedWorkoutState.shouldRestore = true;
                   setActiveExerciseId(null);
                 }} 
-                className="absolute left-1 p-2 active:scale-90 transition-all shrink-0 z-10"
+                className="p-1.5 -ml-1.5 rounded-xl active:bg-black/5 active:scale-95 transition-all shrink-0 z-10 flex items-center gap-1 text-black font-black text-sm cursor-pointer"
+                title="返回動作清單"
               >
-                <ChevronLeft className="w-8 h-8 text-black stroke-[4]" />
+                <ChevronLeft className="w-7 h-7 text-black stroke-[3.5]" />
+                <span className="hidden sm:inline">返回清單</span>
               </button>
-              <h2 style={{ color: lightTheme.text }} className="text-2xl sm:text-3xl font-black uppercase leading-tight py-1 text-center px-12">
-                {currentDetailEx?.name}
-              </h2>
-            </div>
-
-            <div className="w-full relative px-1">
-              <ExerciseGifDisplay name={currentDetailEx?.name || ''} />
-            </div>
-
-            <div style={{ backgroundColor: lightTheme.card }} className="mx-1 p-6 rounded-[28px] border border-black/5 space-y-3.5 shadow-sm">
-              <div className="flex items-center gap-2.5 text-black">
-                <BookOpen className="w-5 h-5" />
-                <h3 className="text-[12px] font-black uppercase tracking-widest">運動方法</h3>
+              <div className="flex-1 px-2 text-center min-w-0">
+                <h2 style={{ color: lightTheme.text }} className="text-xl sm:text-2xl font-black uppercase tracking-tight truncate">
+                  {currentDetailEx?.name}
+                </h2>
               </div>
-              <p className="text-base font-medium text-black leading-relaxed whitespace-pre-line">
-                {getExerciseMethod(currentDetailEx?.name || "")}
-              </p>
+              <div className="shrink-0 flex items-center">
+                <span className="px-2.5 py-1 rounded-full text-[11px] font-black uppercase tracking-wider bg-slate-100 text-slate-700">
+                  {getMuscleGroupDisplay(getMuscleGroup(currentDetailEx?.name || '')).cn}
+                </span>
+              </div>
             </div>
 
-            <div className="space-y-5 px-1">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2.5 sm:gap-4">
-                  <div className="flex items-center gap-2">
-                    <Target className="w-5 h-5 text-black" />
-                    <h3 style={{ color: lightTheme.text }} className="text-base font-black uppercase">訓練錄入</h3>
+            {/* iOS 原生風格三段式分頁控制器：固定名稱「說明」、「錄入」、「圖表」 */}
+            <div className="bg-slate-100/90 backdrop-blur-xs p-1 rounded-2xl flex items-center justify-between gap-1 select-none border border-black/5">
+              <button
+                type="button"
+                onClick={() => setDetailTab('guide')}
+                className={`flex-1 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                  detailTab === 'guide'
+                    ? 'bg-black text-white shadow-xs'
+                    : 'text-slate-500 hover:text-black hover:bg-black/5'
+                }`}
+              >
+                <BookOpen className="w-3.5 h-3.5" />
+                <span>說明</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setDetailTab('input')}
+                className={`flex-1 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                  detailTab === 'input'
+                    ? 'bg-black text-white shadow-xs'
+                    : 'text-slate-500 hover:text-black hover:bg-black/5'
+                }`}
+              >
+                <Target className="w-3.5 h-3.5" />
+                <span>錄入</span>
+                {currentDetailEx?.sets && currentDetailEx.sets.length > 0 && (
+                  <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-black ${
+                    detailTab === 'input' ? 'bg-[#CCFF00] text-black' : 'bg-black/10 text-slate-700'
+                  }`}>
+                    {currentDetailEx.sets.length}
+                  </span>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => setDetailTab('chart')}
+                className={`flex-1 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                  detailTab === 'chart'
+                    ? 'bg-black text-white shadow-xs'
+                    : 'text-slate-500 hover:text-black hover:bg-black/5'
+                }`}
+              >
+                <TrendingUp className="w-3.5 h-3.5" />
+                <span>圖表</span>
+              </button>
+            </div>
+
+            {/* 分頁 1：「說明」- 白色背景影片、弱化邊框、iPhone 首屏適應 */}
+            {detailTab === 'guide' && (
+              <div className="space-y-3">
+                {/* 1. 影片示範區域：純白背景融為一體，無厚重描邊 */}
+                <div className="w-full bg-white rounded-2xl overflow-hidden flex items-center justify-center">
+                  <ExerciseGifDisplay name={currentDetailEx?.name || ''} />
+                </div>
+
+                {/* 2. 運動方法教學說明：精緻步驟化排版 */}
+                <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-black/5 shadow-xs space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 text-black">
+                      <BookOpen className="w-4 h-4 text-black stroke-[2.5]" />
+                      <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider">動作要領與技巧</h3>
+                    </div>
+                    <span className="text-[10px] font-bold text-slate-400">標準動作規範</span>
                   </div>
-                  <div className="flex items-center gap-1.5 px-2.5 py-1 bg-black/5 border border-black/10 rounded-lg">
-                    <Timer className={`w-3.5 h-3.5 ${timerStatus === 'running' ? 'animate-pulse text-[#82CC00]' : 'text-black'}`} />
-                    <span className="text-[12px] font-black font-sans text-black">{elapsedTime}</span>
+
+                  <div className="space-y-2 pt-0.5">
+                    {exerciseMethodSections.map((sec, idx) => (
+                      <div key={idx} className="flex items-start gap-2.5 bg-slate-50/80 p-2 sm:p-2.5 rounded-xl">
+                        <span className="w-4 h-4 rounded-md bg-black text-[#CCFF00] text-[10px] font-black flex items-center justify-center shrink-0 mt-0.5">
+                          {sec.step}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <span className="text-xs font-black text-black block mb-0.5">{sec.title}</span>
+                          <p className="text-xs sm:text-[13px] text-slate-700 font-medium leading-relaxed">
+                            {sec.content}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
-                <div className="flex items-center gap-2 sm:gap-3 flex-wrap justify-end">
-                  {timerStatus === 'idle' && (
-                    <button 
-                      onClick={startWorkoutTimer} 
-                      className="flex items-center gap-1 text-black text-[11px] font-black uppercase active:scale-95 transition-transform"
-                    >
-                      <Play className="w-3.5 h-3.5 fill-current" /> 開始
-                    </button>
-                  )}
-                  {timerStatus === 'running' && (
-                    <>
-                      <button 
-                        onClick={pauseWorkoutTimer} 
-                        className="flex items-center gap-1 text-black text-[11px] font-black uppercase active:scale-95 transition-transform"
-                      >
-                        <Pause className="w-3.5 h-3.5 fill-current" /> 暫停
-                      </button>
-                      <button 
-                        onClick={resetWorkoutTimer} 
-                        className="flex items-center gap-1 text-black/70 hover:text-black text-[11px] font-black uppercase active:scale-95 transition-transform"
-                      >
-                        <RotateCcw className="w-3.5 h-3.5" /> 重置
-                      </button>
-                    </>
-                  )}
-                  {timerStatus === 'paused' && (
-                    <>
-                      <button 
-                        onClick={resumeWorkoutTimer} 
-                        className="flex items-center gap-1 text-black text-[11px] font-black uppercase active:scale-95 transition-transform"
-                      >
-                        <Play className="w-3.5 h-3.5 fill-current" /> 繼續
-                      </button>
-                      <button 
-                        onClick={resetWorkoutTimer} 
-                        className="flex items-center gap-1 text-black/70 hover:text-black text-[11px] font-black uppercase active:scale-95 transition-transform"
-                      >
-                        <RotateCcw className="w-3.5 h-3.5" /> 重置
-                      </button>
-                    </>
-                  )}
-                  <button onClick={() => onUpdate({ ...session, exercises: session.exercises.map(ex => ex.id === currentDetailEx!.id ? { ...ex, sets: [...ex.sets, { id: crypto.randomUUID(), weight: ex.sets[ex.sets.length-1]?.weight || 0, reps: ex.sets[ex.sets.length-1]?.reps || 10, completed: false }] } : ex) })} className="flex items-center gap-1 text-black text-[11px] font-black uppercase active:scale-95 transition-transform">
-                    <PlusCircle className="w-4 h-4" /> 加一組
+
+                {/* 3. 快速切換至錄入 */}
+                <div className="pt-0.5">
+                  <button
+                    type="button"
+                    onClick={() => setDetailTab('input')}
+                    style={{ backgroundColor: lightTheme.accent, color: '#000000' }}
+                    className="w-full h-11 sm:h-12 rounded-xl font-black text-xs sm:text-sm uppercase flex items-center justify-center gap-2 shadow-xs active:scale-95 transition-all cursor-pointer"
+                  >
+                    <Target className="w-4 h-4 stroke-[2.5]" />
+                    <span>前往訓練錄入</span>
                   </button>
                 </div>
               </div>
-              <div className="space-y-4">
-                <AnimatePresence initial={false}>
-                  {currentDetailEx!.sets.map((set, index) => (
-                    <motion.div 
-                      key={set.id}
-                      layout
-                      initial={{ opacity: 0, y: 15, scale: 0.96 }}
-                      animate={{ 
-                        opacity: 1, 
-                        y: 0, 
-                        scale: set.completed ? [1, 1.03, 1] : 1 
-                      }}
-                      exit={{ opacity: 0, scale: 0.95, y: -15, transition: { duration: 0.15 } }}
-                      transition={{ 
-                        type: 'spring', 
-                        stiffness: 400, 
-                        damping: 28,
-                        layout: { type: 'spring', stiffness: 350, damping: 28 },
-                        scale: { type: 'keyframes', ease: 'easeInOut', duration: 0.3 }
-                      }}
-                      className={`grid grid-cols-12 gap-1 sm:gap-2.5 items-center p-3.5 sm:p-5 rounded-[34px] border border-black transition-all ${set.completed ? 'bg-[#CCFF00]' : 'bg-white shadow-sm'}`}
-                    >
-                      <div className="col-span-1 flex justify-center">
-                        <button onClick={() => onUpdate({ ...session, exercises: session.exercises.map(e => e.id !== currentDetailEx!.id ? e : { ...e, sets: e.sets.filter(s => s.id !== set.id) }) })} className="text-black p-1 active:text-red-500">
-                          <Trash2 className="w-6 h-6" />
+            )}
+
+            {/* 分頁 2：「錄入」- 保持現有重量、次數、組數、計時與儲存機制 */}
+            {detailTab === 'input' && (
+              <div className="space-y-3.5">
+                {/* 頂部操作條：計時器與加一組 */}
+                <div className="flex items-center justify-between px-1 bg-white p-2.5 rounded-2xl border border-black/5 shadow-xs">
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5 px-2.5 py-1 bg-black/5 border border-black/10 rounded-lg">
+                      <Timer className={`w-3.5 h-3.5 ${timerStatus === 'running' ? 'animate-pulse text-[#82CC00]' : 'text-black'}`} />
+                      <span className="text-[12px] font-black font-sans text-black">{elapsedTime}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {timerStatus === 'idle' && (
+                        <button 
+                          onClick={startWorkoutTimer} 
+                          className="flex items-center gap-1 text-black text-[11px] font-black uppercase px-2 py-1 rounded bg-black/5 hover:bg-black/10 active:scale-95 transition-all cursor-pointer"
+                        >
+                          <Play className="w-3 h-3 fill-current" /> 開始
                         </button>
-                      </div>
-                      <div className="col-span-1 text-xl sm:text-2xl font-black text-black text-center">
-                        {index + 1}
-                      </div>
-                      
-                      <div className="col-span-4 flex items-center justify-center gap-1.5 sm:gap-2.5">
-                        <div className="relative">
-                          <input 
-                            type="number" 
-                            value={set.weight || ''} 
-                            placeholder="0" 
-                            onChange={(e) => {
-                              const newWeight = Number(e.target.value);
-                              onUpdate({ 
-                                ...session, 
-                                exercises: session.exercises.map(ex => {
-                                  if (ex.id === currentDetailEx!.id) {
-                                    const newSets = ex.sets.map((s, i) => {
-                                      if (i >= index) return { ...s, weight: newWeight };
-                                      return s;
-                                    });
-                                    return { ...ex, sets: newSets };
-                                  }
-                                  return ex;
-                                }) 
-                              });
-                            }} 
-                            style={{ color: '#000000' }}
-                            className="w-[53px] sm:w-[61px] bg-slate-100 rounded-xl py-2.5 sm:py-3 text-center text-[20px] sm:text-[23px] font-black outline-none border border-black/5 focus:border-black/20 transition-all shadow-inner [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield] appearance-none px-0.5" 
-                          />
+                      )}
+                      {timerStatus === 'running' && (
+                        <>
+                          <button 
+                            onClick={pauseWorkoutTimer} 
+                            className="flex items-center gap-1 text-black text-[11px] font-black uppercase px-2 py-1 rounded bg-black/5 hover:bg-black/10 active:scale-95 transition-all cursor-pointer"
+                          >
+                            <Pause className="w-3 h-3 fill-current" /> 暫停
+                          </button>
+                          <button 
+                            onClick={resetWorkoutTimer} 
+                            className="flex items-center gap-1 text-black/70 hover:text-black text-[11px] font-black uppercase px-2 py-1 rounded bg-black/5 hover:bg-black/10 active:scale-95 transition-all cursor-pointer"
+                          >
+                            <RotateCcw className="w-3 h-3" /> 重置
+                          </button>
+                        </>
+                      )}
+                      {timerStatus === 'paused' && (
+                        <>
+                          <button 
+                            onClick={resumeWorkoutTimer} 
+                            className="flex items-center gap-1 text-black text-[11px] font-black uppercase px-2 py-1 rounded bg-black/5 hover:bg-black/10 active:scale-95 transition-all cursor-pointer"
+                          >
+                            <Play className="w-3 h-3 fill-current" /> 繼續
+                          </button>
+                          <button 
+                            onClick={resetWorkoutTimer} 
+                            className="flex items-center gap-1 text-black/70 hover:text-black text-[11px] font-black uppercase px-2 py-1 rounded bg-black/5 hover:bg-black/10 active:scale-95 transition-all cursor-pointer"
+                          >
+                            <RotateCcw className="w-3 h-3" /> 重置
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  <button 
+                    type="button"
+                    onClick={() => onUpdate({ 
+                      ...session, 
+                      exercises: session.exercises.map(ex => ex.id === currentDetailEx!.id 
+                        ? { 
+                            ...ex, 
+                            sets: [...ex.sets, { 
+                              id: crypto.randomUUID(), 
+                              weight: ex.sets[ex.sets.length-1]?.weight || 0, 
+                              reps: ex.sets[ex.sets.length-1]?.reps || 10, 
+                              completed: false 
+                            }] 
+                          } 
+                        : ex
+                      ) 
+                    })} 
+                    className="flex items-center gap-1 px-3 py-1.5 bg-black text-[#CCFF00] rounded-xl text-xs font-black uppercase active:scale-95 transition-transform cursor-pointer shadow-xs"
+                  >
+                    <PlusCircle className="w-3.5 h-3.5 stroke-[2.5]" />
+                    <span>加一組</span>
+                  </button>
+                </div>
+
+                {/* 各組輸入卡片清單 */}
+                <div className="space-y-2">
+                  <AnimatePresence initial={false}>
+                    {currentDetailEx!.sets.map((set, index) => (
+                      <motion.div 
+                        key={set.id}
+                        layout
+                        initial={{ opacity: 0, y: 10, scale: 0.98 }}
+                        animate={{ 
+                          opacity: 1, 
+                          y: 0, 
+                          scale: set.completed ? [1, 1.02, 1] : 1 
+                        }}
+                        exit={{ opacity: 0, scale: 0.95, y: -10, transition: { duration: 0.15 } }}
+                        className={`flex items-center justify-between p-2.5 sm:p-3.5 rounded-2xl border transition-all ${
+                          set.completed 
+                            ? 'bg-[#CCFF00] border-black shadow-xs' 
+                            : 'bg-white border-black/10 shadow-xs'
+                        }`}
+                      >
+                        {/* 序號與刪除 */}
+                        <div className="flex items-center gap-1 w-12 sm:w-14 shrink-0">
+                          <button 
+                            type="button"
+                            onClick={() => onUpdate({ 
+                              ...session, 
+                              exercises: session.exercises.map(e => e.id !== currentDetailEx!.id ? e : { 
+                                ...e, 
+                                sets: e.sets.filter(s => s.id !== set.id) 
+                              }) 
+                            })} 
+                            className="text-black/60 hover:text-red-500 p-1 active:scale-90 transition-colors cursor-pointer"
+                            title="刪除此組"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                          <span className="text-base font-black text-black font-mono">
+                            #{index + 1}
+                          </span>
+                        </div>
+
+                        {/* 重量輸入 */}
+                        <div className="flex flex-col items-center">
+                          <div className="flex items-center gap-1">
+                            <input 
+                              type="number" 
+                              value={set.weight || ''} 
+                              placeholder="0" 
+                              onChange={(e) => {
+                                const newWeight = Number(e.target.value);
+                                onUpdate({ 
+                                  ...session, 
+                                  exercises: session.exercises.map(ex => {
+                                    if (ex.id === currentDetailEx!.id) {
+                                      const newSets = ex.sets.map((s, i) => {
+                                        if (i >= index) return { ...s, weight: newWeight };
+                                        return s;
+                                      });
+                                      return { ...ex, sets: newSets };
+                                    }
+                                    return ex;
+                                  }) 
+                                });
+                              }} 
+                              style={{ color: '#000000' }}
+                              className="w-13 sm:w-16 bg-slate-100/90 rounded-xl py-1.5 sm:py-2 text-center text-lg sm:text-xl font-black outline-none border border-black/10 focus:border-black transition-all shadow-inner px-0.5" 
+                            />
+                            <span className="text-xs font-black text-black uppercase">kg</span>
+                          </div>
                           {lastPerformedExercise && lastPerformedExercise.sets[index] && (
-                            <div className="absolute -bottom-[18px] left-1/2 -translate-x-1/2 text-[11px] sm:text-[12px] font-black text-black uppercase tracking-wider whitespace-nowrap">
+                            <span className="text-[10px] font-bold text-black/70 mt-0.5 whitespace-nowrap">
                               上次: {lastPerformedExercise.sets[index].weight}kg
-                            </div>
+                            </span>
                           )}
                         </div>
-                        <span className="text-[12px] sm:text-[13px] font-black text-black uppercase shrink-0">kg</span>
-                      </div>
 
-                      <div className="col-span-4 flex items-center justify-center gap-1 sm:gap-1.5">
-                        <div className="relative">
-                          <input 
-                            type="number" 
-                            value={set.reps || ''} 
-                            placeholder="0" 
-                            onChange={(e) => onUpdate({ ...session, exercises: session.exercises.map(ex => ex.id === currentDetailEx!.id ? { ...ex, sets: ex.sets.map(s => s.id === set.id ? { ...s, reps: Number(e.target.value) } : s) } : ex) })} 
-                            style={{ color: '#000000' }}
-                            className="w-[44px] sm:w-[50px] bg-slate-100 rounded-xl py-2.5 sm:py-3 text-center text-[19px] sm:text-[22px] font-black outline-none border border-black/5 focus:border-black/20 transition-all shadow-inner [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield] appearance-none px-0.5" 
-                          />
+                        {/* 次數輸入 */}
+                        <div className="flex flex-col items-center">
+                          <div className="flex items-center gap-1">
+                            <input 
+                              type="number" 
+                              value={set.reps || ''} 
+                              placeholder="0" 
+                              onChange={(e) => onUpdate({ 
+                                ...session, 
+                                exercises: session.exercises.map(ex => ex.id === currentDetailEx!.id ? { 
+                                  ...ex, 
+                                  sets: ex.sets.map(s => s.id === set.id ? { ...s, reps: Number(e.target.value) } : s) 
+                                } : ex) 
+                              })} 
+                              style={{ color: '#000000' }}
+                              className="w-12 sm:w-14 bg-slate-100/90 rounded-xl py-1.5 sm:py-2 text-center text-lg sm:text-xl font-black outline-none border border-black/10 focus:border-black transition-all shadow-inner px-0.5" 
+                            />
+                            <div className="flex flex-col gap-0.5">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const cur = set.reps || 0;
+                                  onUpdate({ 
+                                    ...session, 
+                                    exercises: session.exercises.map(ex => 
+                                      ex.id === currentDetailEx!.id 
+                                        ? { ...ex, sets: ex.sets.map(s => s.id === set.id ? { ...s, reps: cur + 1 } : s) } 
+                                        : ex
+                                    ) 
+                                  });
+                                }}
+                                className="w-4 h-4 bg-slate-200 hover:bg-slate-300 rounded flex items-center justify-center text-black active:scale-90 cursor-pointer"
+                                title="加1次"
+                              >
+                                <ChevronUp className="w-3 h-3 stroke-[3]" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const cur = set.reps || 0;
+                                  onUpdate({ 
+                                    ...session, 
+                                    exercises: session.exercises.map(ex => 
+                                      ex.id === currentDetailEx!.id 
+                                        ? { ...ex, sets: ex.sets.map(s => s.id === set.id ? { ...s, reps: Math.max(0, cur - 1) } : s) } 
+                                        : ex
+                                    ) 
+                                  });
+                                }}
+                                className="w-4 h-4 bg-slate-200 hover:bg-slate-300 rounded flex items-center justify-center text-black active:scale-90 cursor-pointer"
+                                title="減1次"
+                              >
+                                <ChevronDown className="w-3 h-3 stroke-[3]" />
+                              </button>
+                            </div>
+                            <span className="text-xs font-black text-black uppercase">次</span>
+                          </div>
                           {lastPerformedExercise && lastPerformedExercise.sets[index] && (
-                            <div className="absolute -bottom-[18px] left-1/2 -translate-x-1/2 text-[11px] sm:text-[12px] font-black text-black uppercase tracking-wider whitespace-nowrap">
+                            <span className="text-[10px] font-bold text-black/70 mt-0.5 whitespace-nowrap">
                               上次: {lastPerformedExercise.sets[index].reps}次
-                            </div>
+                            </span>
                           )}
                         </div>
-                        <div className="flex flex-col justify-center items-center gap-0.5 shrink-0">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const cur = set.reps || 0;
-                              onUpdate({ 
-                                ...session, 
-                                exercises: session.exercises.map(ex => 
-                                  ex.id === currentDetailEx!.id 
-                                    ? { ...ex, sets: ex.sets.map(s => s.id === set.id ? { ...s, reps: cur + 1 } : s) } 
-                                    : ex
-                                ) 
-                              });
-                            }}
-                            className="w-5 h-5 sm:w-5 sm:h-5 bg-slate-200 hover:bg-slate-300 active:bg-slate-400 rounded flex items-center justify-center text-black transition-all active:scale-90"
-                            title="加1次"
-                          >
-                            <ChevronUp className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[3]" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const cur = set.reps || 0;
-                              onUpdate({ 
-                                ...session, 
-                                exercises: session.exercises.map(ex => 
-                                  ex.id === currentDetailEx!.id 
-                                    ? { ...ex, sets: ex.sets.map(s => s.id === set.id ? { ...s, reps: Math.max(0, cur - 1) } : s) } 
-                                    : ex
-                                ) 
-                              });
-                            }}
-                            className="w-5 h-5 sm:w-5 sm:h-5 bg-slate-200 hover:bg-slate-300 active:bg-slate-400 rounded flex items-center justify-center text-black transition-all active:scale-90"
-                            title="減1次"
-                          >
-                            <ChevronDown className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[3]" />
-                          </button>
-                        </div>
-                        <span className="text-[12px] sm:text-[13px] font-black text-black uppercase shrink-0">rep</span>
-                      </div>
 
-                      <div className="col-span-2 flex justify-end">
+                        {/* 完成確認開關 */}
                         <motion.button 
+                          type="button"
                           whileTap={{ scale: 0.9 }}
                           onClick={() => { 
                             const newComp = !set.completed; 
                             if(newComp && context) context.triggerRestTimer(); 
-                            onUpdate({ ...session, exercises: session.exercises.map(ex => ex.id === currentDetailEx!.id ? { ...ex, sets: ex.sets.map(s => s.id === set.id ? { ...s, completed: newComp } : s) } : ex) }); 
+                            onUpdate({ 
+                              ...session, 
+                              exercises: session.exercises.map(ex => ex.id === currentDetailEx!.id ? { 
+                                ...ex, 
+                                sets: ex.sets.map(s => s.id === set.id ? { ...s, completed: newComp } : s) 
+                              } : ex) 
+                            }); 
                           }} 
-                          className={`w-[58px] h-[58px] rounded-xl flex items-center justify-center transition-all border shadow-sm ${set.completed ? 'bg-[#CCFF00] border-[#CCFF00] text-black' : 'bg-slate-50 border-black/5 text-black'}`}
+                          className={`w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center transition-all border shadow-xs cursor-pointer ${
+                            set.completed 
+                              ? 'bg-black text-[#CCFF00] border-black' 
+                              : 'bg-slate-100 hover:bg-slate-200 border-black/10 text-slate-400'
+                          }`}
                         >
-                          <motion.div
-                            animate={{ 
-                              scale: set.completed ? [1, 1.25, 1] : 1,
-                              rotate: set.completed ? [0, 10, -10, 0] : 0
-                            }}
-                            transition={{ duration: 0.3, ease: "easeInOut" }}
-                          >
-                            <Check className="w-7 h-7 stroke-[4]" />
-                          </motion.div>
+                          <Check className="w-5 h-5 stroke-[3.5]" />
                         </motion.button>
-                      </div>
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                </div>
+
+                {/* 儲存訓練按鈕 */}
+                <div className="pt-2">
+                  <button 
+                    type="button"
+                    onClick={() => {
+                      if (!session.timerStartedAt && session.timerStatus !== 'running') {
+                         onUpdate({ ...session, timerStartedAt: Date.now(), timerStatus: 'running' });
+                      }
+                      const result = onFinish();
+                      if (result !== false) {
+                        preservedWorkoutState.shouldRestore = false;
+                        preservedWorkoutState.scrollMain = 0;
+                        preservedWorkoutState.scrollWindow = 0;
+                        preservedWorkoutState.lastExerciseName = '';
+                        setActiveExerciseId(null);
+                      }
+                    }} 
+                    style={{ backgroundColor: '#000000', color: '#FFFFFF' }}
+                    className="w-full font-black h-12 sm:h-13 rounded-2xl uppercase text-base active:scale-95 transition-all shadow-md flex items-center justify-center gap-2.5 cursor-pointer tracking-tight"
+                  >
+                    <Save className="w-4 h-4 stroke-[2.5]" style={{ color: lightTheme.accent }} />
+                    <span>儲存訓練</span>
+                  </button>
+                </div>
               </div>
-              <div className="pt-6 pb-12">
-                <button 
-                  onClick={() => {
-                    if (!session.timerStartedAt && session.timerStatus !== 'running') {
-                       onUpdate({ ...session, timerStartedAt: Date.now(), timerStatus: 'running' });
-                    }
-                    const result = onFinish();
-                    if (result !== false) {
-                      preservedWorkoutState.shouldRestore = false;
-                      preservedWorkoutState.scrollMain = 0;
-                      preservedWorkoutState.scrollWindow = 0;
-                      preservedWorkoutState.lastExerciseName = '';
-                      setActiveExerciseId(null);
-                    }
-                  }} 
-                  style={{ backgroundColor: '#000000', color: '#FFFFFF' }}
-                  className="w-full font-black h-14 rounded-2xl uppercase text-lg active:scale-95 transition-all shadow-xl flex items-center justify-center gap-3 tracking-tighter"
-                >
-                  <Save className="w-5 h-5 stroke-[2.5]" style={{ color: lightTheme.accent }} /> 儲存訓練
-                </button>
+            )}
+
+            {/* 分頁 3：「圖表」- 呈現此動作在歷史訓練中的 PR 成長折線圖 */}
+            {detailTab === 'chart' && (
+              <div className="space-y-3">
+                <ExercisePrChart
+                  exerciseName={currentDetailEx?.name || ''}
+                  history={context?.history || []}
+                  onGoToLog={() => setDetailTab('input')}
+                />
               </div>
-            </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

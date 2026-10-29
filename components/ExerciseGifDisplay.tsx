@@ -17,7 +17,7 @@ interface ExerciseMp4PlayerProps {
 }
 
 /**
- * Dedicated MP4 Player for Chest Movements.
+ * Dedicated MP4 Player for Exercise Movements (Chest, Back, Shoulders, Legs, Arms & Core).
  * - Prioritizes dedicated static poster on iPhone/Safari without flashing gray.
  * - Handles play/pause on user interaction without autoplay.
  * - Retains static poster preview on load errors with a retry button.
@@ -123,18 +123,18 @@ const ExerciseMp4Player: React.FC<ExerciseMp4PlayerProps> = ({
   }, [cleanName]);
 
   return (
-    <div style={{ backgroundColor: lightTheme.card }} className={containerClassName}>
+    <div style={{ backgroundColor: '#FFFFFF' }} className={containerClassName}>
       {/* 1. Error state with retry overlay while keeping static poster visible */}
       {videoHasError ? (
-        <div className="w-full h-full relative flex items-center justify-center">
+        <div className="w-full h-full relative flex items-center justify-center bg-white">
           {posterUrl && (
             <img
               src={posterUrl}
               alt={cleanName}
-              className="w-full h-auto max-h-[360px] object-contain rounded-[15px] block select-none opacity-85"
+              className="w-full h-auto max-h-[220px] sm:max-h-[260px] md:max-h-[300px] object-contain rounded-2xl block select-none opacity-85 mx-auto"
             />
           )}
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/45 backdrop-blur-[2px] p-4 text-center z-20 rounded-[24px]">
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/45 backdrop-blur-[2px] p-4 text-center z-20 rounded-2xl">
             <div className="bg-black/90 px-4 py-3 rounded-2xl border border-white/20 text-white flex flex-col items-center gap-2 shadow-2xl max-w-[260px]">
               <div className="flex items-center gap-1.5 text-amber-300 text-xs font-black">
                 <AlertCircle className="w-4 h-4 shrink-0" />
@@ -159,9 +159,9 @@ const ExerciseMp4Player: React.FC<ExerciseMp4PlayerProps> = ({
           {/* 2. Loading Spinner (only shown when buffering during play or if poster is loading) */}
           {isVideoLoading && (!posterUrl || isPlaying) && (
             <div 
-              style={{ backgroundColor: !posterUrl ? lightTheme.card : undefined }} 
+              style={{ backgroundColor: !posterUrl ? '#FFFFFF' : undefined }} 
               className={`absolute inset-0 flex flex-col items-center justify-center gap-3 z-10 pointer-events-none ${
-                posterUrl ? 'bg-black/30 backdrop-blur-[2px]' : ''
+                posterUrl ? 'bg-black/30 backdrop-blur-[2px]' : 'bg-white'
               }`}
             >
               <Loader2 className={`w-8 h-8 animate-spin ${posterUrl ? 'text-white' : 'text-black'}`} />
@@ -176,7 +176,7 @@ const ExerciseMp4Player: React.FC<ExerciseMp4PlayerProps> = ({
             <img
               src={posterUrl}
               alt={cleanName}
-              className="absolute inset-0 w-full h-full object-contain pointer-events-none select-none rounded-[15px] z-[5]"
+              className="absolute inset-0 w-full h-full object-contain pointer-events-none select-none rounded-2xl z-[5] bg-white"
             />
           )}
 
@@ -190,7 +190,7 @@ const ExerciseMp4Player: React.FC<ExerciseMp4PlayerProps> = ({
             loop
             preload="metadata"
             style={{ objectFit: 'contain' }}
-            className="w-full h-auto max-h-[360px] object-contain rounded-[15px] block cursor-pointer select-none"
+            className="w-full h-auto max-h-[220px] sm:max-h-[260px] md:max-h-[300px] object-contain rounded-2xl block cursor-pointer select-none mx-auto bg-white"
             onLoadedMetadata={() => setIsVideoLoading(false)}
             onLoadedData={() => setIsVideoLoading(false)}
             onCanPlay={() => setIsVideoLoading(false)}
@@ -292,10 +292,10 @@ const ExerciseGifPlayer: React.FC<ExerciseGifPlayerProps> = ({
   const muscleDisplay = getMuscleGroupDisplay(muscleGroup);
 
   return (
-    <div style={{ backgroundColor: lightTheme.card }} className={containerClassName}>
+    <div style={{ backgroundColor: '#FFFFFF' }} className={containerClassName}>
       {isGifLoading && (
         <div 
-          style={{ backgroundColor: lightTheme.card }} 
+          style={{ backgroundColor: '#FFFFFF' }} 
           className="absolute inset-0 flex flex-col items-center justify-center gap-3 z-10"
         >
           <Loader2 className="w-8 h-8 animate-spin text-black" />
@@ -304,7 +304,7 @@ const ExerciseGifPlayer: React.FC<ExerciseGifPlayerProps> = ({
       )}
 
       {hasGifError ? (
-        <div className="flex flex-col items-center justify-center py-12 px-6 text-center space-y-3">
+        <div className="flex flex-col items-center justify-center py-12 px-6 text-center space-y-3 bg-white">
           <div className="w-16 h-16 rounded-2xl bg-[#CCFF00]/25 flex items-center justify-center text-slate-900 border border-[#82CC00]/30 shadow-sm">
             <Dumbbell className="w-8 h-8 stroke-[2.5]" />
           </div>
@@ -336,8 +336,8 @@ const ExerciseGifPlayer: React.FC<ExerciseGifPlayerProps> = ({
 
 export const ExerciseGifDisplay: React.FC<ExerciseGifDisplayProps> = ({
   name,
-  className = "w-full h-auto object-cover rounded-[15px] block",
-  containerClassName = "relative overflow-hidden rounded-[24px] shadow-sm border border-black/5 min-h-[240px] flex items-center justify-center"
+  className = "w-full h-auto object-cover rounded-2xl block",
+  containerClassName = "relative overflow-hidden rounded-2xl flex items-center justify-center bg-white min-h-[180px] sm:min-h-[220px]"
 }) => {
   const cleanName = (name || '').trim();
   const isMp4 = isMp4Exercise(cleanName);
