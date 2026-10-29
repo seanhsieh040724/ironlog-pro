@@ -344,7 +344,7 @@ export const ExerciseGifDisplay: React.FC<ExerciseGifDisplayProps> = ({
   const mp4Url = getExerciseMp4Url(cleanName);
   const posterUrl = getExercisePosterUrl(cleanName);
 
-  // If this is an MP4 exercise (Chest or Back), use dedicated MP4 Player with poster (NEVER fall through to GIF)
+  // If this is an MP4 exercise (Chest, Back, Shoulders or Legs), use dedicated MP4 Player with poster (NEVER fall through to GIF)
   if (isMp4) {
     return (
       <ExerciseMp4Player
@@ -356,7 +356,7 @@ export const ExerciseGifDisplay: React.FC<ExerciseGifDisplayProps> = ({
     );
   }
 
-  // Non-chest exercises: Standard GIF player
+  // Non-MP4 exercises (Arms, Core, etc.): Standard GIF player
   return (
     <ExerciseGifPlayer
       cleanName={cleanName}

@@ -11,7 +11,7 @@ export const ExerciseSmallGif: React.FC<ExerciseSmallGifProps> = ({ name }) => {
   const isMp4 = isMp4Exercise(cleanName);
   const posterUrl = getExercisePosterUrl(cleanName);
 
-  // For MP4 exercises (Chest & Back): Dedicated static poster thumbnail
+  // For MP4 exercises (Chest, Back, Shoulders & Legs): Dedicated static poster thumbnail
   const [posterLoading, setPosterLoading] = useState(true);
   const [posterFailed, setPosterFailed] = useState(false);
 
@@ -47,7 +47,7 @@ export const ExerciseSmallGif: React.FC<ExerciseSmallGifProps> = ({ name }) => {
     setGifFailedAll(false);
   }, []);
 
-  // 1. MP4 Exercises (Chest & Back): STRICTLY use dedicated static poster, NEVER fallback to GIF
+  // 1. MP4 Exercises (Chest, Back, Shoulders & Legs): STRICTLY use dedicated static poster, NEVER fallback to GIF
   if (isMp4) {
     if (posterFailed || !posterUrl) {
       const mg = getMuscleGroup(cleanName);
