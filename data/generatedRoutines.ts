@@ -66,7 +66,7 @@ export interface WeeklyRoutineSystem {
               { id: 'm-s3-e5', name: '分動器械下拉', muscleGroup: 'back', defaultSets: 4, defaultReps: 12, defaultWeight: 0 },
               { id: 'm-s3-e6', name: '坐姿器械划船', muscleGroup: 'back', defaultSets: 4, defaultReps: 10, defaultWeight: 0 },
               { id: 'm-s3-e7', name: '滑輪直臂下拉', muscleGroup: 'back', defaultSets: 3, defaultReps: 12, defaultWeight: 0 },
-              { id: 'm-s3-e8', name: 'cable直槓彎舉', muscleGroup: 'arms', defaultSets: 3, defaultReps: 12, defaultWeight: 0 }
+              { id: 'm-s3-e8', name: 'CABLE 直桿彎舉', muscleGroup: 'arms', defaultSets: 3, defaultReps: 12, defaultWeight: 0 }
             ]
           },
           {
@@ -121,7 +121,7 @@ export interface WeeklyRoutineSystem {
               { id: 'm-s4-e9', name: '上斜器械胸推', muscleGroup: 'chest', defaultSets: 4, defaultReps: 10, defaultWeight: 0 },
               { id: 'm-s4-e10', name: '坐姿器械划船', muscleGroup: 'back', defaultSets: 4, defaultReps: 12, defaultWeight: 0 },
               { id: 'm-s4-e11', name: '蝴蝶機夾胸', muscleGroup: 'chest', defaultSets: 3, defaultReps: 12, defaultWeight: 0 },
-              { id: 'm-s4-e12', name: 'cable直槓彎舉', muscleGroup: 'arms', defaultSets: 3, defaultReps: 12, defaultWeight: 0 }
+              { id: 'm-s4-e12', name: 'CABLE 直桿彎舉', muscleGroup: 'arms', defaultSets: 3, defaultReps: 12, defaultWeight: 0 }
             ]
           },
           {
