@@ -408,33 +408,47 @@ export const isCoreMp4Exercise = (name: string): boolean => {
   return Boolean(CORE_EXERCISES_WITH_MP4[cleanName]);
 };
 
-export const isMp4Exercise = (name: string): boolean => {
-  if (!name) return false;
+/**
+ * Resolves the target canonical asset name for an MP4 exercise,
+ * handling clean names, space variations, and historical/input aliases.
+ */
+export const getExerciseMp4TargetName = (name: string): string | null => {
+  if (!name) return null;
   const cleanName = name.trim();
-  return Boolean(EXERCISES_WITH_MP4[cleanName]);
+  const noSpace = cleanName.replace(/\s+/g, '');
+  const aliasResolved = EXERCISE_MEDIA_ALIASES[cleanName] || EXERCISE_MEDIA_ALIASES[noSpace] || cleanName;
+  const aliasNoSpace = aliasResolved.replace(/\s+/g, '');
+
+  return (
+    EXERCISES_WITH_MP4[cleanName] ||
+    EXERCISES_WITH_MP4[noSpace] ||
+    EXERCISES_WITH_MP4[aliasResolved] ||
+    EXERCISES_WITH_MP4[aliasNoSpace] ||
+    null
+  );
+};
+
+export const isMp4Exercise = (name: string): boolean => {
+  return Boolean(getExerciseMp4TargetName(name));
 };
 
 /**
- * Returns the hosted MP4 URL for an exercise if it is a chest or back movement with verified MP4 demonstration.
+ * Returns the hosted MP4 URL for an exercise if it is a movement with verified MP4 demonstration.
  * Returns null for exercises without MP4.
  */
 export const getExerciseMp4Url = (name: string): string | null => {
-  if (!name) return null;
-  const cleanName = name.trim();
-  const targetAssetName = EXERCISES_WITH_MP4[cleanName];
-  if (!targetAssetName) return null;
-  return `https://ironlog-pro.vercel.app/assets/${encodeURIComponent(targetAssetName)}.mp4`;
+  const target = getExerciseMp4TargetName(name);
+  if (!target) return null;
+  return `https://ironlog-pro.vercel.app/assets/${encodeURIComponent(target)}.mp4`;
 };
 
 /**
  * Returns the primary verified fallback GIF URL for an exercise.
  */
 export const getExercisePrimaryFallbackGifUrl = (name: string): string | null => {
-  if (!name) return null;
-  const cleanName = name.trim();
-  const targetAssetName = EXERCISES_WITH_MP4[cleanName];
-  if (!targetAssetName) return null;
-  return `https://ironlog-pro.vercel.app/assets/${encodeURIComponent(targetAssetName)}.gif`;
+  const target = getExerciseMp4TargetName(name);
+  if (!target) return null;
+  return `https://ironlog-pro.vercel.app/assets/${encodeURIComponent(target)}.gif`;
 };
 
 /**
@@ -443,11 +457,9 @@ export const getExercisePrimaryFallbackGifUrl = (name: string): string | null =>
  * Returns null for exercises without MP4.
  */
 export const getExercisePosterUrl = (name: string): string | null => {
-  if (!name) return null;
-  const cleanName = name.trim();
-  const targetAssetName = EXERCISES_WITH_MP4[cleanName];
-  if (!targetAssetName) return null;
-  return `/assets/posters/${encodeURIComponent(targetAssetName)}.jpg`;
+  const target = getExerciseMp4TargetName(name);
+  if (!target) return null;
+  return `/assets/posters/${encodeURIComponent(target)}.jpg`;
 };
 
 /**

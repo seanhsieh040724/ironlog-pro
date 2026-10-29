@@ -73,7 +73,7 @@ export const ExerciseSmallGif: React.FC<ExerciseSmallGifProps> = ({ name }) => {
           className="w-full h-full object-cover select-none block"
           onLoad={() => setPosterLoading(false)}
           onError={() => {
-            console.warn(`[IronLog SmallMedia] Failed to load poster for MP4 chest exercise "${cleanName}".`);
+            console.warn(`[IronLog SmallMedia] Failed to load poster for MP4 exercise "${cleanName}".`);
             setPosterLoading(false);
             setPosterFailed(true);
           }}
