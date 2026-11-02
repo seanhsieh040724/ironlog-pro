@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { getExerciseGifSources, getMuscleGroup, getMuscleGroupDisplay, getExerciseMp4Url, getExercisePosterUrl, isMp4Exercise } from '../utils/fitnessMath';
-import { Loader2, Dumbbell, Play, Pause, RotateCcw, AlertCircle } from 'lucide-react';
+import { Loader2, Dumbbell, RotateCcw, AlertCircle } from 'lucide-react';
 import { lightTheme } from '../themeStyles';
 
 interface ExerciseGifDisplayProps {
@@ -18,9 +18,12 @@ interface ExerciseMp4PlayerProps {
 
 /**
  * Dedicated MP4 Player for Exercise Movements (Chest, Back, Shoulders, Legs, Arms & Core).
- * - Prioritizes dedicated static poster on iPhone/Safari without flashing gray.
- * - Handles play/pause on user interaction without autoplay.
- * - Retains static poster preview on load errors with a retry button.
+ * - Auto-plays immediately on entering the detail page.
+ * - Infinite loop (loop) & muted playback for iOS Safari compliance.
+ * - playsInline to prevent full-screen takeover on iPhone.
+ * - Pure white #FFFFFF container background with zero gray masks, dark overlays, or blur filters.
+ * - No manual play/pause buttons or overlay controls.
+ * - Crisp static JPG poster during initial load and graceful retry upon network failure.
  * - NEVER falls back to GIF.
  */
 const ExerciseMp4Player: React.FC<ExerciseMp4PlayerProps> = ({
@@ -30,67 +33,41 @@ const ExerciseMp4Player: React.FC<ExerciseMp4PlayerProps> = ({
   containerClassName
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
   const [isVideoLoading, setIsVideoLoading] = useState(true);
   const [videoHasError, setVideoHasError] = useState(false);
-  const [hasStartedPlaying, setHasStartedPlaying] = useState(false);
 
-  // Reset state when exercise name or URL changes
+  // Attempt auto-play and ensure video is muted and playsInline for iOS Safari compliance
+  const attemptPlay = useCallback(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    video.muted = true;
+    video.playsInline = true;
+    const playPromise = video.play();
+    if (playPromise !== undefined) {
+      playPromise.catch((err) => {
+        // Quietly handle autoplay policy or pending load
+        console.warn('[IronLog Video] Autoplay pending or prevented:', err);
+      });
+    }
+  }, []);
+
+  // Trigger auto-play on mount and when exercise URL changes; cleanup on unmount/tab switch
   useEffect(() => {
-    setIsPlaying(false);
     setIsVideoLoading(true);
     setVideoHasError(false);
-    setHasStartedPlaying(false);
+
+    attemptPlay();
 
     return () => {
       if (videoRef.current) {
         try {
           videoRef.current.pause();
-          // DO NOT call removeAttribute('src') or video.load()!
-          // That causes synthetic WebKit onError during component unmount/remount.
         } catch {
           // Ignore pause error on unmount
         }
       }
     };
-  }, [cleanName, mp4Url]);
-
-  const togglePlay = useCallback((e?: React.MouseEvent) => {
-    if (e) {
-      e.stopPropagation();
-    }
-    const video = videoRef.current;
-    if (!video) return;
-
-    if (videoHasError) {
-      setVideoHasError(false);
-      setIsVideoLoading(true);
-      video.load();
-      video.play().then(() => {
-        setIsPlaying(true);
-        setHasStartedPlaying(true);
-        setIsVideoLoading(false);
-      }).catch(err => {
-        console.warn('[IronLog Video] Play retry failed:', err);
-        setVideoHasError(true);
-        setIsVideoLoading(false);
-      });
-      return;
-    }
-
-    if (video.paused) {
-      video.play().then(() => {
-        setIsPlaying(true);
-        setHasStartedPlaying(true);
-        setIsVideoLoading(false);
-      }).catch(err => {
-        console.warn('[IronLog Video] Play request failed:', err);
-      });
-    } else {
-      video.pause();
-      setIsPlaying(false);
-    }
-  }, [videoHasError]);
+  }, [cleanName, mp4Url, attemptPlay]);
 
   const handleRetry = useCallback((e?: React.MouseEvent) => {
     if (e) {
@@ -102,132 +79,95 @@ const ExerciseMp4Player: React.FC<ExerciseMp4PlayerProps> = ({
     if (video) {
       try {
         video.load();
-        video.play().then(() => {
-          setIsPlaying(true);
-          setHasStartedPlaying(true);
-          setIsVideoLoading(false);
-        }).catch(() => {
-          setIsVideoLoading(false);
-        });
+        attemptPlay();
       } catch {
         setIsVideoLoading(false);
       }
     }
-  }, []);
+  }, [attemptPlay]);
 
   const handleVideoError = useCallback(() => {
     console.warn(`[IronLog Video] MP4 playback error for "${cleanName}". Retaining poster preview; no GIF fallback.`);
     setVideoHasError(true);
     setIsVideoLoading(false);
-    setIsPlaying(false);
   }, [cleanName]);
+
+  const handleVideoClick = useCallback(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    if (video.paused) {
+      attemptPlay();
+    }
+  }, [attemptPlay]);
 
   return (
     <div style={{ backgroundColor: '#FFFFFF' }} className={containerClassName}>
-      {/* 1. Error state with retry overlay while keeping static poster visible */}
+      {/* 1. Error state: Retains crisp JPG Poster on pure white background, with sleek non-intrusive retry pill */}
       {videoHasError ? (
         <div className="w-full h-full relative flex items-center justify-center bg-white">
           {posterUrl && (
             <img
               src={posterUrl}
               alt={cleanName}
-              className="w-full h-auto max-h-[220px] sm:max-h-[260px] md:max-h-[300px] object-contain rounded-2xl block select-none opacity-85 mx-auto"
+              className="w-full h-auto max-h-[220px] sm:max-h-[260px] md:max-h-[300px] object-contain rounded-2xl block select-none mx-auto bg-white"
             />
           )}
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/45 backdrop-blur-[2px] p-4 text-center z-20 rounded-2xl">
-            <div className="bg-black/90 px-4 py-3 rounded-2xl border border-white/20 text-white flex flex-col items-center gap-2 shadow-2xl max-w-[260px]">
-              <div className="flex items-center gap-1.5 text-amber-300 text-xs font-black">
-                <AlertCircle className="w-4 h-4 shrink-0" />
-                <span>影片載入暫時中斷</span>
-              </div>
-              <p className="text-[11px] text-white/80 leading-relaxed font-medium">
-                已保留靜態姿勢預覽，請確認網路或點擊重試
-              </p>
-              <button
-                type="button"
-                onClick={handleRetry}
-                className="mt-1 px-4 py-1.5 bg-[#CCFF00] hover:bg-[#b8e600] active:scale-95 text-black font-black text-xs rounded-full flex items-center gap-1.5 shadow-md transition-all cursor-pointer"
-              >
-                <RotateCcw className="w-3.5 h-3.5 stroke-[2.5]" />
-                <span>點擊重試</span>
-              </button>
-            </div>
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-black/90 text-white px-3.5 py-1.5 rounded-full text-xs font-bold shadow-lg border border-white/10 z-20 whitespace-nowrap">
+            <AlertCircle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+            <span className="text-[11px]">影片載入暫時中斷</span>
+            <button
+              type="button"
+              onClick={handleRetry}
+              className="px-2.5 py-0.5 bg-[#CCFF00] hover:bg-[#b8e600] active:scale-95 text-black font-black text-[11px] rounded-full flex items-center gap-1 transition-all cursor-pointer shadow-xs ml-1"
+            >
+              <RotateCcw className="w-3 h-3 stroke-[2.5]" />
+              <span>重試</span>
+            </button>
           </div>
         </div>
       ) : (
         <>
-          {/* 2. Loading Spinner (only shown when buffering during play or if poster is loading) */}
-          {isVideoLoading && (!posterUrl || isPlaying) && (
-            <div 
-              style={{ backgroundColor: !posterUrl ? '#FFFFFF' : undefined }} 
-              className={`absolute inset-0 flex flex-col items-center justify-center gap-3 z-10 pointer-events-none ${
-                posterUrl ? 'bg-black/30 backdrop-blur-[2px]' : 'bg-white'
-              }`}
-            >
-              <Loader2 className={`w-8 h-8 animate-spin ${posterUrl ? 'text-white' : 'text-black'}`} />
-              <p className={`text-[11px] font-black uppercase tracking-widest ${posterUrl ? 'text-white' : 'text-black'}`}>
-                {isPlaying ? '影片載入中...' : '動作準備中...'}
-              </p>
+          {/* 2. Loading state: Pure white background, zero gray masks or blur overlays */}
+          {isVideoLoading && !posterUrl && (
+            <div className="absolute inset-0 flex items-center justify-center bg-white z-10 pointer-events-none">
+              <Loader2 className="w-6 h-6 animate-spin text-black" />
             </div>
           )}
 
-          {/* 3. Static Poster Overlay on iPhone before first play: guarantees crisp preparation posture */}
-          {!hasStartedPlaying && posterUrl && (
-            <img
-              src={posterUrl}
-              alt={cleanName}
-              className="absolute inset-0 w-full h-full object-contain pointer-events-none select-none rounded-2xl z-[5] bg-white"
-            />
-          )}
-
-          {/* 4. HTML5 Video Element */}
+          {/* 3. HTML5 Video Element: Autoplay, infinite loop, muted, playsInline, pure white background */}
           <video
             ref={videoRef}
+            key={mp4Url}
             src={mp4Url}
             poster={posterUrl || undefined}
-            playsInline
-            muted
+            autoPlay
             loop
-            preload="metadata"
-            style={{ objectFit: 'contain' }}
-            className="w-full h-auto max-h-[220px] sm:max-h-[260px] md:max-h-[300px] object-contain rounded-2xl block cursor-pointer select-none mx-auto bg-white"
-            onLoadedMetadata={() => setIsVideoLoading(false)}
-            onLoadedData={() => setIsVideoLoading(false)}
-            onCanPlay={() => setIsVideoLoading(false)}
-            onWaiting={() => setIsVideoLoading(true)}
+            muted
+            playsInline
+            preload="auto"
+            style={{ objectFit: 'contain', backgroundColor: '#FFFFFF' }}
+            className="w-full h-auto max-h-[220px] sm:max-h-[260px] md:max-h-[300px] object-contain rounded-2xl block select-none mx-auto bg-white"
+            onLoadedMetadata={() => {
+              setIsVideoLoading(false);
+              attemptPlay();
+            }}
+            onLoadedData={() => {
+              setIsVideoLoading(false);
+              attemptPlay();
+            }}
+            onCanPlay={() => {
+              setIsVideoLoading(false);
+              attemptPlay();
+            }}
             onPlaying={() => {
               setIsVideoLoading(false);
-              setIsPlaying(true);
-              setHasStartedPlaying(true);
             }}
-            onPause={() => setIsPlaying(false)}
+            onEnded={() => {
+              attemptPlay();
+            }}
             onError={handleVideoError}
-            onClick={togglePlay}
+            onClick={handleVideoClick}
           />
-
-          {/* 5. Bottom Floating Play / Pause Control Button */}
-          {(!isVideoLoading || Boolean(posterUrl)) && (
-            <div className="absolute bottom-3 right-3 flex items-center gap-2 z-20">
-              <button
-                type="button"
-                onClick={togglePlay}
-                aria-label={isPlaying ? "暫停示範" : "播放示範"}
-                className="px-3.5 py-1.5 rounded-full bg-black/75 hover:bg-black/90 active:scale-95 text-white text-xs font-black flex items-center gap-1.5 shadow-lg backdrop-blur-md border border-white/15 transition-all cursor-pointer"
-              >
-                {isPlaying ? (
-                  <>
-                    <Pause className="w-3.5 h-3.5 fill-white" />
-                    <span>暫停</span>
-                  </>
-                ) : (
-                  <>
-                    <Play className="w-3.5 h-3.5 fill-white translate-x-0.5" />
-                    <span>播放</span>
-                  </>
-                )}
-              </button>
-            </div>
-          )}
         </>
       )}
     </div>
