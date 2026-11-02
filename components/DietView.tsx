@@ -6,13 +6,34 @@ import {
   Target, Activity, Trash2, Flame, Edit3, CheckCircle2, Save, Beef, Soup, 
   Droplets, GlassWater, Plus, Share2, ScanBarcode, Camera, Sparkles, 
   Loader2, Calendar, History, Upload, Sparkle, Check, X, 
-  ChevronRight, ChevronLeft, Utensils, Dumbbell, Clock, Info, Search, RefreshCw, Layers, Lock
+  ChevronRight, ChevronLeft, Utensils, Dumbbell, Clock, Info, Search, RefreshCw, Layers, Lock,
+  Star
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { analyzeFoodImage, sanitizeFoodAnalysisText, parseFoodAnalysisResult } from '../services/aiService';
+import { 
+  analyzeFoodImage, 
+  sanitizeFoodAnalysisText, 
+  parseFoodAnalysisResult, 
+  generateDietarySuggestions 
+} from '../services/aiService';
 import { useEntitlement } from '../services/storeKitBridge';
 import { ProPaywall } from './ProPaywall';
 import Markdown from 'react-markdown';
+import { 
+  format, 
+  startOfWeek, 
+  endOfWeek, 
+  eachDayOfInterval, 
+  addWeeks, 
+  subWeeks, 
+  startOfMonth, 
+  endOfMonth, 
+  addMonths, 
+  subMonths, 
+  isSameDay, 
+  isToday, 
+  isSameMonth 
+} from 'date-fns';
 
 interface ExerciseBurnItem {
   id: string;
@@ -143,7 +164,55 @@ export const DietView: React.FC = () => {
   const [showRecalcModal, setShowRecalcModal] = useState(false);
   const [showAddFoodModal, setShowAddFoodModal] = useState(false);
   const [showAddExerciseModal, setShowAddExerciseModal] = useState(false);
+  const [showBottomSheet, setShowBottomSheet] = useState(false);
+  const [showMonthCalendarModal, setShowMonthCalendarModal] = useState(false);
+  const [showSearchFoodModal, setShowSearchFoodModal] = useState(false);
+  const [showFavoritesModal, setShowFavoritesModal] = useState(false);
+  const [showAiMealPlanModal, setShowAiMealPlanModal] = useState(false);
+  const [searchModalTerm, setSearchModalTerm] = useState('');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  // 週曆與月曆瀏覽日期狀態
+  const [viewWeekDate, setViewWeekDate] = useState<Date>(() => parseDateKey(selectedDateKey));
+  const [monthViewDate, setMonthViewDate] = useState<Date>(() => parseDateKey(selectedDateKey));
+
+  // AI 專屬餐單狀態
+  const [aiMealPlan, setAiMealPlan] = useState<string | null>(() => {
+    return localStorage.getItem('ironlog_ai_meal_plan');
+  });
+  const [isGeneratingMealPlan, setIsGeneratingMealPlan] = useState(false);
+
+  // 當前週的 7 天日期陣列 (週一至週日)
+  const weekDays = useMemo(() => {
+    const start = startOfWeek(viewWeekDate, { weekStartsOn: 1 });
+    const end = endOfWeek(viewWeekDate, { weekStartsOn: 1 });
+    return eachDayOfInterval({ start, end });
+  }, [viewWeekDate]);
+
+  // 全月曆挑選器當月日期 (含跨月頭尾補齊)
+  const monthDays = useMemo(() => {
+    const start = startOfWeek(startOfMonth(monthViewDate), { weekStartsOn: 1 });
+    const end = endOfWeek(endOfMonth(monthViewDate), { weekStartsOn: 1 });
+    return eachDayOfInterval({ start, end });
+  }, [monthViewDate]);
+
+  // 登記曾有紀錄的日期集合 (包含當日有食物紀錄者)
+  const recordedDateKeys = useMemo<Set<string>>(() => {
+    const set = new Set<string>();
+    try {
+      const saved = localStorage.getItem('ironlog_diet_recorded_dates');
+      if (saved) {
+        const arr = JSON.parse(saved);
+        if (Array.isArray(arr)) {
+          arr.forEach((k: string) => set.add(k));
+        }
+      }
+    } catch {}
+    if (foodLogs.length > 0) {
+      set.add(selectedDateKey);
+    }
+    return set;
+  }, [foodLogs.length, selectedDateKey]);
 
   // 重新計算表單狀態
   const [recalcForm, setRecalcForm] = useState({
@@ -388,6 +457,32 @@ export const DietView: React.FC = () => {
     showToast('已複製今日營養攝取摘要至剪貼簿！');
   };
 
+  // 產生/重新產生 AI 專屬飲食建議餐單
+  const handleGenerateMealPlan = async () => {
+    if (isGeneratingMealPlan) return;
+    if (!entitlement.isPro) {
+      setPaywallFeature({
+        title: 'AI 專屬增肌減脂餐單',
+        desc: '升級 IronLog Pro 即可享有 AI 根據個人 TDEE 與目標量身規劃每日專屬飲食課表。'
+      });
+      setShowPaywall(true);
+      return;
+    }
+    setIsGeneratingMealPlan(true);
+    try {
+      const plan = await generateDietarySuggestions(latest, globalGoal);
+      setAiMealPlan(plan);
+      localStorage.setItem('ironlog_ai_meal_plan', plan);
+      setShowAiMealPlanModal(true);
+      showToast('AI 專屬餐單生成完成！');
+    } catch (e) {
+      console.error(e);
+      showToast('AI 餐單生成失敗，請稍後再試');
+    } finally {
+      setIsGeneratingMealPlan(false);
+    }
+  };
+
   // 圖片 AI 辨識分析（加入手機端照片自動適度縮放壓縮，避免數位相機原始 10MB+ 超大圖導致傳輸逾時或記憶體溢出）
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -589,6 +684,50 @@ export const DietView: React.FC = () => {
     { name: '無糖豆漿 400ml', cal: 140, p: 12, c: 6, f: 7 }
   ];
 
+  const filteredSearchModalItems = useMemo(() => {
+    const all = [
+      ...supermarketPresets.map(p => ({
+        name: p.name,
+        sub: p.brand,
+        cal: p.cal,
+        p: p.p,
+        c: p.c,
+        f: p.f,
+        icon: p.icon
+      })),
+      ...quickFoodShortcuts.map(q => ({
+        name: q.name,
+        sub: '常用健身食物',
+        cal: q.cal,
+        p: q.p,
+        c: q.c,
+        f: q.f,
+        icon: '🥗'
+      }))
+    ];
+    if (!searchModalTerm.trim()) return all;
+    const term = searchModalTerm.toLowerCase();
+    return all.filter(item => 
+      item.name.toLowerCase().includes(term) || item.sub.toLowerCase().includes(term)
+    );
+  }, [searchModalTerm]);
+
+  const handleAddCustomItemToToday = (name: string, cal: number, p: number, c: number, f: number) => {
+    const newItem: FoodItem = {
+      id: crypto.randomUUID(),
+      name,
+      calories: cal,
+      protein: p,
+      carbs: c,
+      fat: f,
+      mealType: getCurrentMealType(),
+      timestamp: Date.now(),
+      dateKey: selectedDateKey
+    };
+    setFoodLogs(prev => [newItem, ...prev]);
+    showToast(`已加入「${name}」(${cal} kcal)`);
+  };
+
   return (
     <div className="space-y-4 pb-28">
       {/* 頂部大標題：食物分析 (與截圖一致) */}
@@ -643,49 +782,117 @@ export const DietView: React.FC = () => {
             transition={{ duration: 0.15 }}
             className="space-y-4"
           >
-            {/* 日期選擇器與歷史回看 */}
-            <div className="bg-white rounded-[24px] p-3.5 border border-black/5 shadow-2xs flex items-center justify-between">
-              <button
-                type="button"
-                onClick={() => {
-                  const prev = parseDateKey(selectedDateKey);
-                  prev.setDate(prev.getDate() - 1);
-                  setSelectedDateKey(formatDateKey(prev));
-                }}
-                className="w-8 h-8 rounded-xl bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-700 transition-colors active:scale-95"
-                title="前一天"
-              >
-                <ChevronLeft className="w-4 h-4 stroke-[2.5]" />
-              </button>
+            {/* 橫向週曆與「記錄飲食」整合操作區塊 */}
+            <div className="bg-white rounded-[28px] p-4 sm:p-5 border border-black/5 shadow-sm space-y-3.5">
+              {/* 週曆頂部：年份月份、回到今天、前後週切換、月曆彈窗按鈕 */}
+              <div className="flex items-center justify-between px-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
+                    {format(viewWeekDate, 'yyyy年 M月')}
+                  </span>
+                  {selectedDateKey !== todayKey && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const now = new Date();
+                        setViewWeekDate(now);
+                        setSelectedDateKey(formatDateKey(now));
+                      }}
+                      className="text-[10px] font-black bg-slate-100 hover:bg-[#CCFF00] hover:text-black text-slate-700 px-2.5 py-1 rounded-full transition-all active:scale-95 shadow-2xs"
+                    >
+                      回到今天
+                    </button>
+                  )}
+                </div>
 
-              <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-[#82CC00]" />
-                <span className="text-xs sm:text-sm font-black text-slate-900">
-                  {selectedDateKey === todayKey ? `今天 (${selectedDateKey})` : selectedDateKey}
-                </span>
-                {selectedDateKey !== todayKey && (
+                <div className="flex items-center gap-1">
                   <button
                     type="button"
-                    onClick={() => setSelectedDateKey(todayKey)}
-                    className="text-[10px] font-black bg-[#CCFF00] hover:bg-[#b8e600] text-black px-2.5 py-0.5 rounded-full transition-all active:scale-95 shadow-2xs"
+                    onClick={() => setViewWeekDate(prev => subWeeks(prev, 1))}
+                    className="w-8 h-8 rounded-xl bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-700 transition-colors active:scale-95"
+                    title="上一週"
                   >
-                    回到今天
+                    <ChevronLeft className="w-4 h-4 stroke-[2.5]" />
                   </button>
-                )}
+                  <button
+                    type="button"
+                    onClick={() => setViewWeekDate(prev => addWeeks(prev, 1))}
+                    className="w-8 h-8 rounded-xl bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-700 transition-colors active:scale-95"
+                    title="下一週"
+                  >
+                    <ChevronRight className="w-4 h-4 stroke-[2.5]" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMonthViewDate(parseDateKey(selectedDateKey));
+                      setShowMonthCalendarModal(true);
+                    }}
+                    className="w-8 h-8 rounded-xl bg-slate-50 hover:bg-[#CCFF00]/30 hover:text-black flex items-center justify-center text-slate-700 transition-colors active:scale-95 ml-0.5"
+                    title="開啟完整月曆"
+                  >
+                    <Calendar className="w-4 h-4 text-slate-800" />
+                  </button>
+                </div>
               </div>
 
-              <button
-                type="button"
-                onClick={() => {
-                  const next = parseDateKey(selectedDateKey);
-                  next.setDate(next.getDate() + 1);
-                  setSelectedDateKey(formatDateKey(next));
-                }}
-                className="w-8 h-8 rounded-xl bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-700 transition-colors active:scale-95"
-                title="後一天"
-              >
-                <ChevronRight className="w-4 h-4 stroke-[2.5]" />
-              </button>
+              {/* 橫向 7 天週曆 */}
+              <div className="grid grid-cols-7 gap-1 sm:gap-2">
+                {weekDays.map((day, idx) => {
+                  const dayKey = formatDateKey(day);
+                  const isSelected = selectedDateKey === dayKey;
+                  const hasRecord = recordedDateKeys.has(dayKey);
+                  const dayName = ['一', '二', '三', '四', '五', '六', '日'][idx];
+
+                  return (
+                    <button
+                      key={dayKey}
+                      type="button"
+                      onClick={() => {
+                        setSelectedDateKey(dayKey);
+                        setViewWeekDate(day);
+                      }}
+                      className={`py-2 sm:py-2.5 rounded-2xl flex flex-col items-center justify-center transition-all duration-150 active:scale-95 select-none ${
+                        isSelected
+                          ? 'bg-[#CCFF00] text-black shadow-xs font-black'
+                          : 'bg-slate-50 hover:bg-slate-100/90 text-slate-800 border border-slate-100'
+                      }`}
+                    >
+                      <span className={`text-[11px] mb-1 ${
+                        isSelected ? 'text-black/80 font-black' : 'text-slate-500 font-bold'
+                      }`}>
+                        {dayName}
+                      </span>
+                      <span className={`text-base sm:text-lg leading-none ${
+                        isSelected ? 'text-black font-black' : 'text-slate-900 font-black'
+                      }`}>
+                        {format(day, 'd')}
+                      </span>
+                      <div className="h-1.5 mt-1.5 flex items-center justify-center">
+                        {hasRecord ? (
+                          <span className={`w-1.5 h-1.5 rounded-full ${
+                            isSelected ? 'bg-black' : 'bg-[#82CC00]'
+                          }`} />
+                        ) : (
+                          <span className="w-1.5 h-1.5 opacity-0" />
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* 「＋ 記錄飲食」按鈕：整合在週曆卡片下方 */}
+              <div className="pt-1">
+                <button
+                  type="button"
+                  onClick={() => setShowBottomSheet(true)}
+                  className="w-full h-12 rounded-2xl bg-[#CCFF00] hover:bg-[#b8e600] text-black font-black text-xs sm:text-sm flex items-center justify-center gap-2 active:scale-[0.98] transition-all shadow-xs cursor-pointer"
+                >
+                  <Plus className="w-4 h-4 stroke-[3] text-black" />
+                  <span className="tracking-wide">記錄飲食</span>
+                </button>
+              </div>
             </div>
 
             {/* 卡片 1：每日熱量目標 (與截圖 100% 結構一致) */}
@@ -694,30 +901,51 @@ export const DietView: React.FC = () => {
                 <h2 className="text-base md:text-lg font-black text-slate-900 tracking-tight">
                   {selectedDateKey === todayKey ? '每日熱量目標' : `${selectedDateKey} 熱量目標`}
                 </h2>
-                <button
-                  onClick={() => {
-                    setRecalcForm({
-                      weight: latest.weight || 75,
-                      targetWeight: globalGoal.targetWeight || latest.weight || 75,
-                      height: latest.height || 178,
-                      age: latest.age || 26,
-                      gender: latest.gender || 'male',
-                      goalType: globalGoal.type || 'maintain',
-                      activityLevel: globalGoal.activityLevel || 1.55,
-                      proteinRatio: globalGoal.proteinRatio || 35,
-                      carbRatio: globalGoal.carbRatio || 25,
-                      fatRatio: globalGoal.fatRatio || 40
-                    });
-                    setShowRecalcModal(true);
-                  }}
-                  className="bg-slate-100 hover:bg-[#CCFF00]/20 text-slate-800 hover:text-black px-4 py-1.5 rounded-full text-xs font-black transition-all active:scale-95 shadow-2xs"
-                >
-                  重新計算
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      if (aiMealPlan) {
+                        setShowAiMealPlanModal(true);
+                      } else {
+                        handleGenerateMealPlan();
+                      }
+                    }}
+                    disabled={isGeneratingMealPlan}
+                    className="bg-slate-100 hover:bg-[#CCFF00]/20 text-slate-800 hover:text-black px-3.5 py-1.5 rounded-full text-xs font-black transition-all active:scale-95 shadow-2xs flex items-center gap-1.5"
+                  >
+                    {isGeneratingMealPlan ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin text-black" />
+                    ) : (
+                      <Sparkles className="w-3.5 h-3.5 text-[#82CC00]" />
+                    )}
+                    <span>AI 專屬餐單</span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setRecalcForm({
+                        weight: latest.weight || 75,
+                        targetWeight: globalGoal.targetWeight || latest.weight || 75,
+                        height: latest.height || 178,
+                        age: latest.age || 26,
+                        gender: latest.gender || 'male',
+                        goalType: globalGoal.type || 'maintain',
+                        activityLevel: globalGoal.activityLevel || 1.55,
+                        proteinRatio: globalGoal.proteinRatio || 35,
+                        carbRatio: globalGoal.carbRatio || 25,
+                        fatRatio: globalGoal.fatRatio || 40
+                      });
+                      setShowRecalcModal(true);
+                    }}
+                    className="bg-slate-100 hover:bg-[#CCFF00]/20 text-slate-800 hover:text-black px-3.5 py-1.5 rounded-full text-xs font-black transition-all active:scale-95 shadow-2xs"
+                  >
+                    重新計算
+                  </button>
+                </div>
               </div>
 
               <div>
-                <div className="text-5xl font-black text-[#82CC00] tracking-tight leading-none">
+                <div className="text-5xl font-black text-slate-900 tracking-tight leading-none">
                   {targetCalories}
                 </div>
                 <div className="flex flex-wrap items-center gap-2 mt-2">
@@ -808,7 +1036,7 @@ export const DietView: React.FC = () => {
                 {/* 1. 蛋白質 */}
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="font-black text-[#82CC00] text-sm">蛋白質</span>
+                    <span className="font-black text-slate-900 text-sm">蛋白質</span>
                     <span className="font-bold text-slate-800">{consumed.protein}g / {targetMacros.protein}g</span>
                   </div>
                   <div className="text-[11px] text-slate-400 font-semibold">
@@ -825,7 +1053,7 @@ export const DietView: React.FC = () => {
                 {/* 2. 碳水 */}
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="font-black text-[#82CC00] text-sm">碳水</span>
+                    <span className="font-black text-slate-900 text-sm">碳水</span>
                     <span className="font-bold text-slate-800">{consumed.carbs}g / {targetMacros.carbs}g</span>
                   </div>
                   <div className="text-[11px] text-slate-400 font-semibold">
@@ -842,7 +1070,7 @@ export const DietView: React.FC = () => {
                 {/* 3. 脂肪 */}
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="font-black text-amber-600 text-sm">脂肪</span>
+                    <span className="font-black text-slate-900 text-sm">脂肪</span>
                     <span className="font-bold text-slate-800">{consumed.fat}g / {targetMacros.fats}g</span>
                   </div>
                   <div className="text-[11px] text-slate-400 font-semibold">
@@ -940,7 +1168,7 @@ export const DietView: React.FC = () => {
                             )}
                           </div>
                           <p className="text-[10px] text-slate-500 font-bold mt-0.5">
-                            <span className="text-[#82CC00] font-black">{item.calories} kcal</span> · 蛋 {item.protein}g · 碳 {item.carbs}g · 脂 {item.fat}g
+                            <span className="text-slate-900 font-black">{item.calories} kcal</span> · 蛋 {item.protein}g · 碳 {item.carbs}g · 脂 {item.fat}g
                           </p>
                         </div>
                       </div>
@@ -983,7 +1211,7 @@ export const DietView: React.FC = () => {
                 {foodLogs.length > 0 && (
                   <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-black text-slate-900">
                     <span>當日總攝取</span>
-                    <span className="text-sm font-black text-[#82CC00]">{consumed.calories} kcal</span>
+                    <span className="text-sm font-black text-slate-900">{consumed.calories} kcal</span>
                   </div>
                 )}
               </div>
@@ -1763,6 +1991,525 @@ export const DietView: React.FC = () => {
                   </button>
                 </div>
               </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* 底部彈出選單 (Bottom Sheet): 記錄飲食 5 大入口 */}
+      <AnimatePresence>
+        {showBottomSheet && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowBottomSheet(false)}
+            className="fixed inset-0 bg-black/60 z-[1000] flex items-end sm:items-center justify-center p-0 sm:p-4 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 26, stiffness: 280 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-t-[32px] sm:rounded-[32px] p-6 max-w-md w-full shadow-2xl space-y-4 pb-10 sm:pb-6"
+            >
+              {/* 頂部拉桿 (Mobile) 與標題 */}
+              <div className="w-10 h-1 bg-slate-200 rounded-full mx-auto sm:hidden mb-2" />
+              
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-base font-black text-slate-900 tracking-tight">記錄飲食</h3>
+                  <p className="text-[11px] text-slate-400 font-bold mt-0.5">選擇記錄方式快速登錄餐點營養</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowBottomSheet(false)}
+                  className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 font-bold transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* 2 欄網格按鈕排版 */}
+              <div className="grid grid-cols-2 gap-3 pt-1">
+                {/* 1. 拍照辨識 */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowBottomSheet(false);
+                    setActiveSubTab('scanner');
+                    setTimeout(() => fileInputRef.current?.click(), 160);
+                  }}
+                  className="p-4 rounded-2xl bg-slate-50 hover:bg-[#CCFF00]/20 border border-slate-200/80 flex flex-col items-center justify-center text-center gap-2 group active:scale-95 transition-all"
+                >
+                  <div className="w-12 h-12 rounded-2xl bg-black text-[#CCFF00] flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform">
+                    <Camera className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <span className="text-xs font-black text-slate-900 block">拍照辨識</span>
+                    <span className="text-[10px] text-slate-400 font-bold block mt-0.5">AI 影像智能分析</span>
+                  </div>
+                </button>
+
+                {/* 2. 搜尋食物 */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowBottomSheet(false);
+                    setShowSearchFoodModal(true);
+                  }}
+                  className="p-4 rounded-2xl bg-slate-50 hover:bg-[#CCFF00]/20 border border-slate-200/80 flex flex-col items-center justify-center text-center gap-2 group active:scale-95 transition-all"
+                >
+                  <div className="w-12 h-12 rounded-2xl bg-slate-900 text-white flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform">
+                    <Search className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <span className="text-xs font-black text-slate-900 block">搜尋食物</span>
+                    <span className="text-[10px] text-slate-400 font-bold block mt-0.5">熱門餐品庫檢索</span>
+                  </div>
+                </button>
+
+                {/* 3. 我的最愛 */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowBottomSheet(false);
+                    setShowFavoritesModal(true);
+                  }}
+                  className="p-4 rounded-2xl bg-slate-50 hover:bg-[#CCFF00]/20 border border-slate-200/80 flex flex-col items-center justify-center text-center gap-2 group active:scale-95 transition-all"
+                >
+                  <div className="w-12 h-12 rounded-2xl bg-amber-500 text-white flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform">
+                    <Star className="w-6 h-6 fill-white" />
+                  </div>
+                  <div>
+                    <span className="text-xs font-black text-slate-900 block">我的最愛</span>
+                    <span className="text-[10px] text-slate-400 font-bold block mt-0.5">常用快速範本</span>
+                  </div>
+                </button>
+
+                {/* 4. 掃描條碼 */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowBottomSheet(false);
+                    setActiveSubTab('scanner');
+                  }}
+                  className="p-4 rounded-2xl bg-slate-50 hover:bg-[#CCFF00]/20 border border-slate-200/80 flex flex-col items-center justify-center text-center gap-2 group active:scale-95 transition-all"
+                >
+                  <div className="w-12 h-12 rounded-2xl bg-sky-500 text-white flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform">
+                    <ScanBarcode className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <span className="text-xs font-black text-slate-900 block">掃描條碼</span>
+                    <span className="text-[10px] text-slate-400 font-bold block mt-0.5">超市食品成分掃描</span>
+                  </div>
+                </button>
+
+                {/* 5. 手動輸入 */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowBottomSheet(false);
+                    setShowAddFoodModal(true);
+                  }}
+                  className="col-span-2 p-3.5 rounded-2xl bg-slate-900 hover:bg-black text-white flex items-center justify-center gap-2 active:scale-98 transition-all shadow-xs"
+                >
+                  <Utensils className="w-4 h-4 text-[#CCFF00]" />
+                  <span className="text-xs font-black">手動輸入食物熱量與營養素</span>
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Modal: 完整月曆選擇器 */}
+      <AnimatePresence>
+        {showMonthCalendarModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 z-[1000] flex items-center justify-center p-4 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 15 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 15 }}
+              className="bg-white rounded-[32px] p-6 max-w-sm w-full shadow-2xl space-y-4"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-5 h-5 text-slate-900" />
+                  <h3 className="text-base font-black text-slate-900">
+                    {format(monthViewDate, 'yyyy年 M月')}
+                  </h3>
+                </div>
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setMonthViewDate(prev => subMonths(prev, 1))}
+                    className="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-700"
+                    title="上個月"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMonthViewDate(prev => addMonths(prev, 1))}
+                    className="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-700"
+                    title="下個月"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowMonthCalendarModal(false)}
+                    className="w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 font-bold ml-1"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* 星期標題 */}
+              <div className="grid grid-cols-7 gap-1 text-center text-[11px] font-black text-slate-400">
+                {['一', '二', '三', '四', '五', '六', '日'].map(w => (
+                  <div key={w} className="py-1">{w}</div>
+                ))}
+              </div>
+
+              {/* 日期格子 */}
+              <div className="grid grid-cols-7 gap-1">
+                {monthDays.map((day) => {
+                  const dayKey = formatDateKey(day);
+                  const isCurrentMonth = isSameMonth(day, monthViewDate);
+                  const isSelected = selectedDateKey === dayKey;
+                  const hasRecord = recordedDateKeys.has(dayKey);
+
+                  return (
+                    <button
+                      key={dayKey}
+                      type="button"
+                      onClick={() => {
+                        setSelectedDateKey(dayKey);
+                        setViewWeekDate(day);
+                        setShowMonthCalendarModal(false);
+                      }}
+                      className={`h-10 rounded-xl flex flex-col items-center justify-center transition-all relative ${
+                        isSelected
+                          ? 'bg-[#CCFF00] text-black font-black shadow-xs'
+                          : isCurrentMonth
+                            ? 'hover:bg-slate-100 text-slate-900 font-bold'
+                            : 'text-slate-300 hover:bg-slate-50 font-medium'
+                      }`}
+                    >
+                      <span className="text-xs leading-none">{format(day, 'd')}</span>
+                      <div className="h-1 mt-0.5 flex items-center justify-center">
+                        {hasRecord ? (
+                          <span className={`w-1 h-1 rounded-full ${isSelected ? 'bg-black' : 'bg-[#82CC00]'}`} />
+                        ) : null}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="pt-2 flex justify-between items-center text-[11px] font-bold text-slate-500 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const now = new Date();
+                    setSelectedDateKey(formatDateKey(now));
+                    setViewWeekDate(now);
+                    setMonthViewDate(now);
+                    setShowMonthCalendarModal(false);
+                  }}
+                  className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-[#CCFF00] hover:text-black text-slate-800 transition-colors"
+                >
+                  回到今天
+                </button>
+                <div className="flex items-center gap-1.5 text-slate-400">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#82CC00]" />
+                  <span>有飲食紀錄</span>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Modal: 搜尋食物 */}
+      <AnimatePresence>
+        {showSearchFoodModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 z-[1000] flex items-center justify-center p-4 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 15 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 15 }}
+              className="bg-white rounded-[32px] p-6 max-w-sm w-full shadow-2xl space-y-4 max-h-[85vh] flex flex-col"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center text-slate-800">
+                    <Search className="w-4 h-4" />
+                  </div>
+                  <h3 className="text-base font-black text-slate-900">搜尋食物資料庫</h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowSearchFoodModal(false)}
+                  className="w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 font-bold"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* 搜尋列 */}
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="輸入食物名稱 (例: 雞胸肉、豆漿、地瓜)..."
+                  value={searchModalTerm}
+                  onChange={(e) => setSearchModalTerm(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-8 py-2.5 text-xs font-bold text-slate-900 outline-none focus:border-black"
+                  autoFocus
+                />
+                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                {searchModalTerm && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchModalTerm('')}
+                    className="w-4 h-4 text-slate-400 hover:text-black absolute right-3 top-3"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+
+              {/* 搜尋結果列表 */}
+              <div className="flex-1 overflow-y-auto space-y-2 pr-1 min-h-[220px]">
+                {filteredSearchModalItems.length > 0 ? (
+                  filteredSearchModalItems.map((item, idx) => (
+                    <div
+                      key={idx}
+                      className="p-3 rounded-2xl border border-slate-100 hover:border-slate-300 bg-slate-50/70 hover:bg-white flex items-center justify-between gap-3 transition-all"
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <span className="text-xl shrink-0">{item.icon}</span>
+                        <div className="min-w-0">
+                          <h4 className="text-xs font-black text-slate-900 truncate">{item.name}</h4>
+                          <p className="text-[10px] text-slate-500 font-bold mt-0.5">
+                            <span className="text-slate-900 font-black">{item.cal} kcal</span> · 蛋 {item.p}g · 碳 {item.c}g · 脂 {item.f}g
+                          </p>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          handleAddCustomItemToToday(item.name, item.cal, item.p, item.c, item.f);
+                        }}
+                        className="px-2.5 py-1.5 bg-[#CCFF00] hover:bg-[#b8e600] active:scale-95 text-black font-black text-xs rounded-xl shadow-xs shrink-0 flex items-center gap-1 transition-all"
+                      >
+                        <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+                        <span>加入</span>
+                      </button>
+                    </div>
+                  ))
+                ) : (
+                  <div className="py-8 text-center space-y-2">
+                    <p className="text-xs text-slate-400 font-bold">找不到相符食物</p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowSearchFoodModal(false);
+                        setFoodForm(prev => ({ ...prev, name: searchModalTerm }));
+                        setShowAddFoodModal(true);
+                      }}
+                      className="text-xs font-black text-slate-900 underline"
+                    >
+                      手動新增「{searchModalTerm}」
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              <div className="pt-2 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowSearchFoodModal(false);
+                    setShowAddFoodModal(true);
+                  }}
+                  className="w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-black flex items-center justify-center gap-1.5 transition-colors"
+                >
+                  <Utensils className="w-3.5 h-3.5" />
+                  <span>找不到？切換至手動輸入</span>
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Modal: 我的最愛常用範本 */}
+      <AnimatePresence>
+        {showFavoritesModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 z-[1000] flex items-center justify-center p-4 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 15 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 15 }}
+              className="bg-white rounded-[32px] p-6 max-w-sm w-full shadow-2xl space-y-4 max-h-[85vh] flex flex-col"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-xl bg-amber-100 flex items-center justify-center text-amber-600">
+                    <Star className="w-4 h-4 fill-amber-500" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-black text-slate-900">我的最愛食物</h3>
+                    <p className="text-[10px] text-slate-400 font-bold">高蛋白乾淨飲食一鍵登錄</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowFavoritesModal(false)}
+                  className="w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 font-bold"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto space-y-2 pr-1">
+                {quickFoodShortcuts.map((item, idx) => (
+                  <div
+                    key={idx}
+                    className="p-3.5 rounded-2xl border border-slate-100 hover:border-slate-300 bg-slate-50/70 hover:bg-white flex items-center justify-between gap-3 transition-all"
+                  >
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-amber-500 text-xs">★</span>
+                        <h4 className="text-xs font-black text-slate-900 truncate">{item.name}</h4>
+                      </div>
+                      <p className="text-[10px] text-slate-500 font-bold mt-0.5">
+                        <span className="text-slate-900 font-black">{item.cal} kcal</span> · 蛋白 {item.p}g · 碳水 {item.c}g · 脂肪 {item.f}g
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        handleAddCustomItemToToday(item.name, item.cal, item.p, item.c, item.f);
+                      }}
+                      className="px-3 py-1.5 bg-[#CCFF00] hover:bg-[#b8e600] active:scale-95 text-black font-black text-xs rounded-xl shadow-xs shrink-0 flex items-center gap-1 transition-all"
+                    >
+                      <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+                      <span>登錄</span>
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              <div className="pt-2 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowFavoritesModal(false);
+                    setShowAddFoodModal(true);
+                  }}
+                  className="w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-black flex items-center justify-center gap-1.5 transition-colors"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>新增其他自訂食物</span>
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Modal: AI 專屬餐單規劃 */}
+      <AnimatePresence>
+        {showAiMealPlanModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 z-[1000] flex items-center justify-center p-4 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 15 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 15 }}
+              className="bg-white rounded-[32px] p-6 max-w-lg w-full shadow-2xl space-y-4 max-h-[88vh] flex flex-col"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-xl bg-black text-[#CCFF00] flex items-center justify-center">
+                    <Sparkles className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-black text-slate-900">AI 專屬增肌減脂餐單</h3>
+                    <p className="text-[10px] text-slate-400 font-bold">量身推薦一日餐點與巨量營養比例</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowAiMealPlanModal(false)}
+                  className="w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 font-bold"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto bg-slate-50 rounded-2xl p-4 border border-slate-200 text-xs text-slate-800 leading-relaxed font-medium prose prose-sm max-w-none">
+                {isGeneratingMealPlan ? (
+                  <div className="py-12 text-center flex flex-col items-center justify-center gap-2">
+                    <Loader2 className="w-6 h-6 animate-spin text-black" />
+                    <p className="text-xs text-slate-500 font-bold">正在為您計算個人化餐單...</p>
+                  </div>
+                ) : aiMealPlan ? (
+                  <Markdown>{aiMealPlan}</Markdown>
+                ) : (
+                  <p className="text-slate-400 text-center py-8">尚無餐單，請點擊下方按鈕開始生成</p>
+                )}
+              </div>
+
+              <div className="flex gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={handleGenerateMealPlan}
+                  disabled={isGeneratingMealPlan}
+                  className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-2xl font-black text-xs flex items-center justify-center gap-1.5 transition-colors"
+                >
+                  {isGeneratingMealPlan ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <RefreshCw className="w-3.5 h-3.5" />
+                  )}
+                  <span>重新規劃餐單</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowAiMealPlanModal(false)}
+                  className="flex-1 py-3 bg-[#CCFF00] text-black font-black rounded-2xl text-xs hover:bg-[#b8e600] shadow-md transition-colors"
+                >
+                  確認
+                </button>
+              </div>
             </motion.div>
           </motion.div>
         )}
